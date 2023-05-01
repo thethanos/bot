@@ -1,0 +1,7 @@
+{
+	"name": "bot-dev",
+	"build": {
+		"context": "..",
+		"dockerfile": "../dev.Dockerfile"
+	}
+}
