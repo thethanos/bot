@@ -5,3 +5,5 @@ project(bot)
 add_executable(start main.cpp)
 
 include_directories(include)
+
+add_subdirectory(deps/dpp)
