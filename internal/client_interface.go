@@ -1,6 +1,7 @@
 package client_interface
 
 type ClientInterface interface {
-	Connect()
+	Connect() error
 	Disconnect()
+	SendMessage(message string)
 }

@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"multimessenger_bot/internal/config"
+	"multimessenger_bot/internal/google_calendar"
+	"multimessenger_bot/internal/telegram"
+	"multimessenger_bot/internal/whatsapp"
 	"os"
 	"os/signal"
 	"syscall"
-	"whatsapp_bot/internal/config"
-	"whatsapp_bot/internal/telegram_client"
-	"whatsapp_bot/internal/whatsapp_client"
 
 	_ "github.com/mattn/go-sqlite3"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -15,6 +16,12 @@ import (
 )
 
 func main() {
+
+	gCalendarClient, err := google_calendar.NewGoogleCalendarClient()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(gCalendarClient)
 
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	cfg, err := config.Load("config.toml")
@@ -31,11 +38,11 @@ func main() {
 
 	//clientLog := waLog.Stdout("Client", "DEBUG", true)
 
-	tgClient, _ := telegram_client.NewTelegramClient(cfg)
+	tgClient, _ := telegram.NewTelegramClient(cfg)
 	tgClient.Connect()
 
-	waClient, _ := whatsapp_client.NewWhatsAppClient(nil, cfg, container)
-	waClient.Connect()
+	waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, container)
+	//waClient.Connect()
 
 	signalHandler := setupSignalHandler()
 	<-signalHandler

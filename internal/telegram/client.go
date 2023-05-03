@@ -1,8 +1,8 @@
-package telegram_client
+package telegram
 
 import (
 	"fmt"
-	"whatsapp_bot/internal/config"
+	"multimessenger_bot/internal/config"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -16,7 +16,7 @@ func NewTelegramClient(cfg *config.Config) (*TelegramClient, error) {
 
 	client, err := tgbotapi.NewBotAPI(cfg.TgToken)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	//client.Debug = true
@@ -24,7 +24,7 @@ func NewTelegramClient(cfg *config.Config) (*TelegramClient, error) {
 	return &TelegramClient{client: client, cfg: cfg}, nil
 }
 
-func (tc *TelegramClient) Connect() {
+func (tc *TelegramClient) Connect() error {
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 30
 
@@ -38,8 +38,14 @@ func (tc *TelegramClient) Connect() {
 			fmt.Println(event.Message.Text)
 		}
 	}()
+
+	return nil
 }
 
 func (tc *TelegramClient) Disconnect() {
 	tc.client.StopReceivingUpdates()
+}
+
+func (tc *TelegramClient) SendMessage(message string) {
+
 }

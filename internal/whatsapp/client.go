@@ -1,4 +1,4 @@
-package whatsapp_client
+package whatsapp
 
 import (
 	"context"
@@ -8,10 +8,9 @@ import (
 	"go.mau.fi/whatsmeow/store"
 	waLog "go.mau.fi/whatsmeow/util/log"
 
-	"whatsapp_bot/internal/config"
-	handler "whatsapp_bot/internal/whatsapp_client/event_handler"
+	"multimessenger_bot/internal/config"
+	handler "multimessenger_bot/internal/whatsapp/event_handler"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal"
 )
 
@@ -37,11 +36,11 @@ func NewWhatsAppClient(log waLog.Logger, cfg *config.Config, dm DeviceManager) (
 	return &WhatsAppClient{client: client, cfg: cfg}, nil
 }
 
-func (wc *WhatsAppClient) Connect() {
+func (wc *WhatsAppClient) Connect() error {
 	if wc.client.Store.ID == nil {
 		qrChan, _ := wc.client.GetQRChannel(context.Background())
 		if err := wc.client.Connect(); err != nil {
-			panic(err)
+			return err
 		}
 
 		for event := range qrChan {
@@ -51,11 +50,16 @@ func (wc *WhatsAppClient) Connect() {
 		}
 	} else {
 		if err := wc.client.Connect(); err != nil {
-			panic(err)
+			return err
 		}
 	}
+	return nil
 }
 
 func (wc *WhatsAppClient) Disconnect() {
 	wc.client.Disconnect()
+}
+
+func (wc *WhatsAppClient) SendMessage(message string) {
+
 }

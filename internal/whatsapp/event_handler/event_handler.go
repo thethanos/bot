@@ -1,4 +1,4 @@
-package whatsapp_client
+package whatsapp
 
 import (
 	"fmt"
