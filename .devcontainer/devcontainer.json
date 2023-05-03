@@ -1,0 +1,7 @@
+{
+    "name" : "multimessenger_bot-dev",
+    "build" : {
+        "context" : "..",
+        "dockerfile" : "../dev.Dockerfile"
+    }
+}
