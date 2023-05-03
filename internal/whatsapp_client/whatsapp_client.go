@@ -8,6 +8,7 @@ import (
 	"go.mau.fi/whatsmeow/store"
 	waLog "go.mau.fi/whatsmeow/util/log"
 
+	"whatsapp_bot/internal/config"
 	handler "whatsapp_bot/internal/whatsapp_client/event_handler"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -20,19 +21,20 @@ type DeviceManager interface {
 
 type WhatsAppClient struct {
 	client *whatsmeow.Client
+	cfg    *config.Config
 }
 
-func NewWhatsAppClient(log waLog.Logger, dm DeviceManager) *WhatsAppClient {
+func NewWhatsAppClient(log waLog.Logger, cfg *config.Config, dm DeviceManager) (*WhatsAppClient, error) {
 
 	deviceStore, err := dm.GetFirstDevice()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	client := whatsmeow.NewClient(deviceStore, log)
 	client.AddEventHandler(handler.EventHandler)
 
-	return &WhatsAppClient{client: client}
+	return &WhatsAppClient{client: client, cfg: cfg}, nil
 }
 
 func (wc *WhatsAppClient) Connect() {

@@ -3,8 +3,10 @@ module whatsapp_bot
 go 1.20
 
 require (
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mdp/qrterminal v1.0.1
+	github.com/pelletier/go-toml v1.9.5
 	go.mau.fi/whatsmeow v0.0.0-20230427180258-7f679583b39b
 )
 
