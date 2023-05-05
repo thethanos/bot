@@ -20,6 +20,7 @@ const (
 type Message struct {
 	Text   string
 	Type   int
+	UserID string
 	WaData types.MessageInfo
 	TgData tgbotapi.Message
 }

@@ -67,7 +67,9 @@ func (wc *WhatsAppClient) Disconnect() {
 }
 
 func (wc *WhatsAppClient) SendMessage(msg ci.Message) {
-
+	if len(msg.Text) == 0 {
+		return
+	}
 	toSend := &proto.Message{Conversation: &msg.Text}
 
 	resp, err := wc.client.SendMessage(context.Background(), msg.WaData.Chat, toSend)

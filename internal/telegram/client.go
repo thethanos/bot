@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"fmt"
 	ci "multimessenger_bot/internal/client_interface"
 	"multimessenger_bot/internal/config"
 
@@ -32,8 +33,8 @@ func (tc *TelegramClient) Connect() error {
 			if event.Message == nil {
 				continue
 			}
-
-			tc.msgChan <- ci.Message{Text: event.Message.Text, Type: ci.TELEGRAM, TgData: *event.Message}
+			userId := fmt.Sprintf("tg%d", event.Message.From.ID)
+			tc.msgChan <- ci.Message{Text: event.Message.Text, Type: ci.TELEGRAM, UserID: userId, TgData: *event.Message}
 		}
 	}()
 
@@ -45,6 +46,9 @@ func (tc *TelegramClient) Disconnect() {
 }
 
 func (tc *TelegramClient) SendMessage(msg ci.Message) {
+	if len(msg.Text) == 0 {
+		return
+	}
 	tc.client.Send(tgbotapi.NewMessage(msg.TgData.From.ID, msg.Text))
 }
 
