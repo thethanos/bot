@@ -1,14 +1,18 @@
 package whatsapp
 
 import (
-	"fmt"
+	ci "multimessenger_bot/internal/client_interface"
 
 	"go.mau.fi/whatsmeow/types/events"
 )
 
-func EventHandler(event interface{}) {
+type Handler struct {
+	MsgChan chan ci.Message
+}
+
+func (h *Handler) EventHandler(event interface{}) {
 	switch v := event.(type) {
 	case *events.Message:
-		fmt.Println("Received a message!", v.Message.GetConversation())
+		h.MsgChan <- ci.Message{Text: v.Message.GetConversation(), Type: ci.WHATSAPP, WaData: v.Info}
 	}
 }

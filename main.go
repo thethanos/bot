@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
+	"multimessenger_bot/internal/bot"
+	ci "multimessenger_bot/internal/client_interface"
 	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/google_calendar"
 	"multimessenger_bot/internal/telegram"
 	"multimessenger_bot/internal/whatsapp"
 	"os"
@@ -17,21 +18,11 @@ import (
 
 func main() {
 
-	gCalendarClient, err := google_calendar.NewGoogleCalendarClient("service_credentials.json")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	calendars, err := gCalendarClient.GetCalendars()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	for _, calendar := range calendars.Items {
-		fmt.Println(calendar.Id, " ", calendar.Summary)
-		fmt.Println(gCalendarClient.DeleteCalendar(calendar.Id))
-	}
+	//gCalendarClient, err := google_calendar.NewGoogleCalendarClient("service_credentials.json")
+	//if err != nil {
+	//	  fmt.Println(err)
+	//	  return
+	//}
 
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	cfg, err := config.Load("config.toml")
@@ -48,17 +39,17 @@ func main() {
 
 	//clientLog := waLog.Stdout("Client", "DEBUG", true)
 
-	tgClient, _ := telegram.NewTelegramClient(cfg)
-	//tgClient.Connect()
+	msgChan := make(chan ci.Message)
+	tgClient, _ := telegram.NewTelegramClient(cfg, msgChan)
+	waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, container, msgChan)
 
-	waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, container)
-	//waClient.Connect()
+	bot, _ := bot.NewBot([]ci.ClientInterface{waClient, tgClient}, msgChan)
+	bot.Run()
 
 	signalHandler := setupSignalHandler()
 	<-signalHandler
 
-	tgClient.Disconnect()
-	waClient.Disconnect()
+	bot.Shutdown()
 }
 
 func setupSignalHandler() chan os.Signal {

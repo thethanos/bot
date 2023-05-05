@@ -1,27 +1,25 @@
 package telegram
 
 import (
-	"fmt"
+	ci "multimessenger_bot/internal/client_interface"
 	"multimessenger_bot/internal/config"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type TelegramClient struct {
-	client *tgbotapi.BotAPI
-	cfg    *config.Config
+	client  *tgbotapi.BotAPI
+	cfg     *config.Config
+	msgChan chan ci.Message
 }
 
-func NewTelegramClient(cfg *config.Config) (*TelegramClient, error) {
+func NewTelegramClient(cfg *config.Config, msgChan chan ci.Message) (*TelegramClient, error) {
 
 	client, err := tgbotapi.NewBotAPI(cfg.TgToken)
 	if err != nil {
 		return nil, err
 	}
-
-	//client.Debug = true
-
-	return &TelegramClient{client: client, cfg: cfg}, nil
+	return &TelegramClient{client: client, cfg: cfg, msgChan: msgChan}, nil
 }
 
 func (tc *TelegramClient) Connect() error {
@@ -35,7 +33,7 @@ func (tc *TelegramClient) Connect() error {
 				continue
 			}
 
-			fmt.Println(event.Message.Text)
+			tc.msgChan <- ci.Message{Text: event.Message.Text, Type: ci.TELEGRAM, TgData: *event.Message}
 		}
 	}()
 
@@ -46,6 +44,10 @@ func (tc *TelegramClient) Disconnect() {
 	tc.client.StopReceivingUpdates()
 }
 
-func (tc *TelegramClient) SendMessage(message string) {
+func (tc *TelegramClient) SendMessage(msg ci.Message) {
+	tc.client.Send(tgbotapi.NewMessage(msg.TgData.From.ID, msg.Text))
+}
 
+func (tc *TelegramClient) GetType() int {
+	return ci.TELEGRAM
 }
