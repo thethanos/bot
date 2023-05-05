@@ -10,8 +10,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"multimessenger_bot/internal/google_oauth"
-
 	_ "github.com/mattn/go-sqlite3"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -19,18 +17,21 @@ import (
 
 func main() {
 
-	oauthClient, err := google_oauth.NewHttpClient("credentials.json", "token.json")
+	gCalendarClient, err := google_calendar.NewGoogleCalendarClient("service_credentials.json")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	gCalendarClient, err := google_calendar.NewGoogleCalendarClient(oauthClient)
+	calendars, err := gCalendarClient.GetCalendars()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	gCalendarClient.CreateEvent()
+	for _, calendar := range calendars.Items {
+		fmt.Println(calendar.Id, " ", calendar.Summary)
+		fmt.Println(gCalendarClient.DeleteCalendar(calendar.Id))
+	}
 
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	cfg, err := config.Load("config.toml")

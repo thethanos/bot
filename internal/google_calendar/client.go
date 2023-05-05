@@ -2,7 +2,7 @@ package google_calendar
 
 import (
 	"context"
-	"net/http"
+	"os"
 
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
@@ -12,28 +12,54 @@ type GoogleCalendarClient struct {
 	client *calendar.Service
 }
 
-func NewGoogleCalendarClient(oauthClient *http.Client) (*GoogleCalendarClient, error) {
-
-	client, err := calendar.NewService(context.Background(), option.WithHTTPClient(oauthClient))
+func NewGoogleCalendarClient(credPath string) (*GoogleCalendarClient, error) {
+	file, err := os.ReadFile(credPath)
+	if err != nil {
+		return nil, err
+	}
+	client, err := calendar.NewService(context.Background(), option.WithCredentialsJSON(file))
 	if err != nil {
 		return nil, err
 	}
 	return &GoogleCalendarClient{client: client}, nil
 }
 
-func (gc *GoogleCalendarClient) CreateEvent() {
-	//event := calendar.Event{
-	//	AttendeesOmitted:   true,
-	//	EndTimeUnspecified: true,
-	//	Summary:            "test event",
-	//	Start:              &calendar.EventDateTime{Date: "2023-05-04"},
-	//}
+func (gc *GoogleCalendarClient) CreateAclRule(user, role, calendarId string) (*calendar.AclRule, error) {
+	rule := &calendar.AclRule{
+		Role: role,
+		Scope: &calendar.AclRuleScope{
+			Type:  "user",
+			Value: user,
+		},
+	}
+	return gc.client.Acl.Insert(calendarId, rule).Do()
+}
 
-	//call := gc.client.Events.Insert("03ce5d8053cc70eb468fa7b3365fc0f17c6c04d41155f50cf662846356d24349@group.calendar.google.com", &event)
-	//res, err := call.Do()
-	//if err != nil {
-	//	fmt.Println(err)
-	//} else {
-	//	fmt.Println(res.HTTPStatusCode)
-	//}
+func (gc *GoogleCalendarClient) CreateCalendar(summary string) (*calendar.Calendar, error) {
+	newCalendar := &calendar.Calendar{
+		Summary: summary,
+	}
+	return gc.client.Calendars.Insert(newCalendar).Do()
+}
+
+func (gc *GoogleCalendarClient) CreateEvent(summary, date, calendarId string) (*calendar.Event, error) {
+	event := calendar.Event{
+		Summary:            summary,
+		EndTimeUnspecified: true,
+		Start:              &calendar.EventDateTime{Date: date},
+	}
+	return gc.client.Events.Insert(calendarId, &event).Do()
+}
+
+func (gc *GoogleCalendarClient) GetCalendars() (*calendar.CalendarList, error) {
+	call := gc.client.CalendarList.List()
+	return call.Do()
+}
+
+func (gc *GoogleCalendarClient) GetEvents(calendarId string) (*calendar.Events, error) {
+	return gc.client.Events.List(calendarId).Do()
+}
+
+func (gc *GoogleCalendarClient) DeleteCalendar(calendarId string) error {
+	return gc.client.Calendars.Delete(calendarId).Do()
 }

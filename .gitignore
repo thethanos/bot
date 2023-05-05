@@ -1,3 +1,4 @@
 config.toml
 credentials.json
 token.json
+service_credentials.json
