@@ -8,6 +8,7 @@ require (
 	github.com/mdp/qrterminal v1.0.1
 	github.com/pelletier/go-toml v1.9.5
 	go.mau.fi/whatsmeow v0.0.0-20230427180258-7f679583b39b
+	golang.org/x/oauth2 v0.7.0
 	google.golang.org/api v0.120.0
 )
 
@@ -26,7 +27,6 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

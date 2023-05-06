@@ -2,19 +2,19 @@ package whatsapp
 
 import (
 	"fmt"
-	ci "multimessenger_bot/internal/client_interface"
+	ma "multimessenger_bot/internal/messenger_adapter"
 
 	"go.mau.fi/whatsmeow/types/events"
 )
 
 type Handler struct {
-	MsgChan chan ci.Message
+	RecvMsgChan chan *ma.Message
 }
 
 func (h *Handler) EventHandler(event interface{}) {
 	switch v := event.(type) {
 	case *events.Message:
 		userId := fmt.Sprintf("wa%s", v.Info.Chat.User)
-		h.MsgChan <- ci.Message{Text: v.Message.GetConversation(), Type: ci.WHATSAPP, UserID: userId, WaData: v.Info}
+		h.RecvMsgChan <- &ma.Message{Text: v.Message.GetConversation(), Type: ma.WHATSAPP, UserID: userId, UserData: ma.UserData{WaData: v.Info}}
 	}
 }

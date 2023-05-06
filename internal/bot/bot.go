@@ -1,28 +1,27 @@
 package bot
 
 import (
-	"fmt"
-	ci "multimessenger_bot/internal/client_interface"
+	ma "multimessenger_bot/internal/messenger_adapter"
 )
 
 type Bot struct {
-	clients      map[int]ci.ClientInterface
-	msgChan      chan ci.Message
+	clients      map[int]ma.ClientInterface
+	recvMsgChan  chan *ma.Message
 	userSessions map[string]*UserSession
-	sendMsgChan  chan ci.Message
+	sendMsgChan  chan *ma.Message
 }
 
-func NewBot(clientArray []ci.ClientInterface, msgChan chan ci.Message) (*Bot, error) {
+func NewBot(clientArray []ma.ClientInterface, recvMsgChan chan *ma.Message) (*Bot, error) {
 
-	clients := make(map[int]ci.ClientInterface)
+	clients := make(map[int]ma.ClientInterface)
 	for _, client := range clientArray {
 		clients[client.GetType()] = client
 	}
 
 	userSessions := make(map[string]*UserSession)
-	sendMsgChan := make(chan ci.Message)
+	sendMsgChan := make(chan *ma.Message)
 
-	return &Bot{clients: clients, msgChan: msgChan, userSessions: userSessions, sendMsgChan: sendMsgChan}, nil
+	return &Bot{clients: clients, recvMsgChan: recvMsgChan, userSessions: userSessions, sendMsgChan: sendMsgChan}, nil
 }
 
 func (b *Bot) Run() {
@@ -32,9 +31,7 @@ func (b *Bot) Run() {
 	}
 
 	go func() {
-		for msg := range b.msgChan {
-			fmt.Println(msg.Text)
-
+		for msg := range b.recvMsgChan {
 			if _, exists := b.userSessions[msg.UserID]; !exists {
 				b.userSessions[msg.UserID] = &UserSession{CurrentStep: b.createStep(MainMenuStep, nil)}
 			}
@@ -59,40 +56,43 @@ func (b *Bot) Shutdown() {
 func (b *Bot) createStep(step int, state *UserState) Step {
 	switch step {
 	case MainMenuStep:
-		return &MainMenu{State: nil}
-	case CitiesStep:
-		return &Cities{State: state}
-	case ServicesStep:
-		return &Services{State: state}
-	case MasterStep:
-		return &Master{State: state}
+		return &MainMenu{}
+	case CitySelectionStep:
+		return &CitySelection{StepBase{State: state}}
+	case ServiceSelectionStep:
+		return &ServiceSelection{StepBase{State: state}}
+	case MasterSelectionStep:
+		return &MasterSelection{StepBase{State: state}}
 	case FinalStep:
-		return &Final{State: state}
+		return &Final{StepBase{State: state}}
 	case EmptyStep:
-		return &Empty{}
+		return nil
 	default:
-		return &MainMenu{State: nil}
+		return &MainMenu{}
 	}
 }
 
-func (b *Bot) processUserSession(msg ci.Message) {
+func (b *Bot) send(msg *ma.Message) bool {
+	if msg == nil {
+		return false
+	}
+	b.sendMsgChan <- msg
+	return true
+}
+
+func (b *Bot) processUserSession(msg *ma.Message) {
 	curStep := b.userSessions[msg.UserID].CurrentStep
 	state := &b.userSessions[msg.UserID].State
 	if !curStep.IsInProgress() {
-		b.sendMsgChan <- curStep.Request(msg)
+		b.send(curStep.Request(msg))
 	} else {
 		res, next := curStep.ProcessResponse(msg)
-		b.sendMsgChan <- res
+		b.send(res)
 
-		step := b.createStep(next, state)
-
-		switch next {
-		case MainMenuStep:
-			b.sendMsgChan <- step.DefaultRequest(msg)
-			b.userSessions[msg.UserID].CurrentStep = step
+		switch step := b.createStep(next, state); next {
 		case EmptyStep:
 		default:
-			b.sendMsgChan <- step.Request(msg)
+			b.send(step.Request(msg))
 			b.userSessions[msg.UserID].CurrentStep = step
 		}
 	}

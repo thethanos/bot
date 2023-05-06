@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"multimessenger_bot/internal/bot"
-	ci "multimessenger_bot/internal/client_interface"
 	"multimessenger_bot/internal/config"
+	ma "multimessenger_bot/internal/messenger_adapter"
 	"multimessenger_bot/internal/telegram"
 	"multimessenger_bot/internal/whatsapp"
 	"os"
@@ -39,11 +39,11 @@ func main() {
 
 	//clientLog := waLog.Stdout("Client", "DEBUG", true)
 
-	msgChan := make(chan ci.Message)
-	tgClient, _ := telegram.NewTelegramClient(cfg, msgChan)
-	waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, container, msgChan)
+	recvMsgChan := make(chan *ma.Message)
+	tgClient, _ := telegram.NewTelegramClient(cfg, recvMsgChan)
+	waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, container, recvMsgChan)
 
-	bot, _ := bot.NewBot([]ci.ClientInterface{waClient, tgClient}, msgChan)
+	bot, _ := bot.NewBot([]ma.ClientInterface{waClient, tgClient}, recvMsgChan)
 	bot.Run()
 
 	signalHandler := setupSignalHandler()

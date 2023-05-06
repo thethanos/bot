@@ -2,7 +2,7 @@ package bot
 
 import (
 	"fmt"
-	ci "multimessenger_bot/internal/client_interface"
+	ma "multimessenger_bot/internal/messenger_adapter"
 )
 
 type UserSession struct {
@@ -18,79 +18,71 @@ type UserState struct {
 
 const (
 	MainMenuStep = iota
-	ServicesStep
-	CitiesStep
+	ServiceSelectionStep
+	CitySelectionStep
 	QuestionsStep
 	AboutStep
+	MasterSelectionStep
 	MasterStep
 	FinalStep
 	EmptyStep
 )
 
 type Step interface {
-	ProcessResponse(ci.Message) (ci.Message, int)
-	Request(ci.Message) ci.Message
-	DefaultRequest(ci.Message) ci.Message
+	ProcessResponse(*ma.Message) (*ma.Message, int)
+	Request(*ma.Message) *ma.Message
 	IsInProgress() bool
 }
 
-type MainMenu struct {
+type StepBase struct {
 	inProgress bool
 	State      *UserState
 }
 
-func (m *MainMenu) Request(msg ci.Message) ci.Message {
+type MainMenu struct {
+	StepBase
+}
+
+func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 	text := "1) услуги\n2) город\n3) вопросы\n4) о нас\n5)мастер"
 	m.inProgress = true
-	return ci.Message{Text: text, WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
+	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
 
-func (m *MainMenu) DefaultRequest(msg ci.Message) ci.Message {
-	return ci.Message{Text: "Хотите вернуться в главное меню?\nДа", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
-}
-
-func (m *MainMenu) ProcessResponse(msg ci.Message) (ci.Message, int) {
+func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	m.inProgress = false
 
 	switch msg.Text {
 	case "услуги":
-		return ci.Message{WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, ServicesStep
+		return nil, ServiceSelectionStep
 	case "город":
-		return ci.Message{WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, CitiesStep
+		return nil, CitySelectionStep
 	case "вопросы":
-		return ci.Message{WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, QuestionsStep
+		return nil, QuestionsStep
 	case "о нас":
-		return ci.Message{WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, AboutStep
+		return nil, AboutStep
 	case "мастер":
-		return ci.Message{WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, MasterStep
-	case "Да":
-		return ci.Message{WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, MainMenuStep
+		return nil, MasterStep
 	}
 
-	return ci.Message{Text: "Пожалуйста выберите ответ из списка.", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, EmptyStep
+	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 }
 
 func (m *MainMenu) IsInProgress() bool {
 	return m.inProgress
 }
 
-type Cities struct {
-	inProgress bool
-	State      *UserState
+type CitySelection struct {
+	StepBase
 }
 
-func (c *Cities) Request(msg ci.Message) ci.Message {
-	text := "1) Тель-Авив\n 2) Нетания\n"
+func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
+	text := "1) Тель-Авив\n2) Нетания\n"
 	c.inProgress = true
-	return ci.Message{Text: text, WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
+	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
 
-func (c *Cities) DefaultRequest(msg ci.Message) ci.Message {
-	c.inProgress = false
-	return ci.Message{Text: "something went wrong", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
-}
-
-func (c *Cities) ProcessResponse(msg ci.Message) (ci.Message, int) {
+func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	c.inProgress = false
 
 	switch msg.Text {
@@ -98,37 +90,31 @@ func (c *Cities) ProcessResponse(msg ci.Message) (ci.Message, int) {
 		c.State.city = msg.Text
 	default:
 		c.inProgress = true
-		return ci.Message{Text: "Пожалуйста выберите ответ из списка.", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, EmptyStep
+		return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 	}
 
 	if len(c.State.service) == 0 {
-		return ci.Message{Text: "", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, ServicesStep
+		return nil, ServiceSelectionStep
 	} else {
-		return ci.Message{Text: "", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, MasterStep
+		return nil, MasterSelectionStep
 	}
 }
 
-func (c *Cities) IsInProgress() bool {
+func (c *CitySelection) IsInProgress() bool {
 	return c.inProgress
 }
 
-type Services struct {
-	inProgress bool
-	State      *UserState
+type ServiceSelection struct {
+	StepBase
 }
 
-func (c *Services) Request(msg ci.Message) ci.Message {
-	text := "1) услуга1\n 2) услуга2\n"
+func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
+	text := "1) услуга1\n2) услуга2\n"
 	c.inProgress = true
-	return ci.Message{Text: text, WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
+	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
 
-func (c *Services) DefaultRequest(msg ci.Message) ci.Message {
-	c.inProgress = false
-	return ci.Message{Text: "something went wrong", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
-}
-
-func (c *Services) ProcessResponse(msg ci.Message) (ci.Message, int) {
+func (c *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	c.inProgress = false
 
 	switch msg.Text {
@@ -136,102 +122,73 @@ func (c *Services) ProcessResponse(msg ci.Message) (ci.Message, int) {
 		c.State.service = msg.Text
 	default:
 		c.inProgress = true
-		return ci.Message{Text: "Пожалуйста выберите ответ из списка.", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, EmptyStep
+		return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 	}
 
 	if len(c.State.city) == 0 {
-		return ci.Message{Text: "", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, CitiesStep
+		return nil, CitySelectionStep
 	} else {
-		return ci.Message{Text: "", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, MasterStep
+		return nil, MasterSelectionStep
 	}
 }
 
-func (c *Services) IsInProgress() bool {
+func (c *ServiceSelection) IsInProgress() bool {
 	return c.inProgress
 }
 
-type Master struct {
-	inProgress bool
-	State      *UserState
+type MasterSelection struct {
+	StepBase
 }
 
-func (m *Master) Request(msg ci.Message) ci.Message {
-	text := "1) мастер1\n 2) мастер2\n"
+func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
+	text := "1) мастер1\n2) мастер2\n"
 	m.inProgress = true
-	return ci.Message{Text: text, WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
+	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
 
-func (m *Master) DefaultRequest(msg ci.Message) ci.Message {
-	m.inProgress = false
-	return ci.Message{Text: "something went wrong", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
-}
-
-func (m *Master) ProcessResponse(msg ci.Message) (ci.Message, int) {
+func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	m.inProgress = false
 
 	switch msg.Text {
 	case "мастер1", "мастер2":
 		m.State.master = msg.Text
-		return ci.Message{WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, FinalStep
+		return nil, FinalStep
 	default:
 		m.inProgress = true
-		return ci.Message{Text: "Пожалуйста выберите ответ из списка.", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, EmptyStep
+		return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 	}
 }
 
-func (m *Master) IsInProgress() bool {
+func (m *MasterSelection) IsInProgress() bool {
 	return m.inProgress
 }
 
 type Final struct {
-	inProgress bool
-	State      *UserState
+	StepBase
 }
 
-func (f *Final) Request(msg ci.Message) ci.Message {
+func (f *Final) Request(msg *ma.Message) *ma.Message {
 	text := fmt.Sprintf("Ваша запись\nУслуга: %s\nГород: %s\nМастер: %s\nПодтвердить?\nДа\nНет", f.State.service, f.State.city, f.State.master)
 	f.inProgress = true
-	return ci.Message{Text: text, WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
+	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
 
-func (f *Final) DefaultRequest(msg ci.Message) ci.Message {
-	f.inProgress = false
-	return ci.Message{Text: "something went wrong", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}
-}
-
-func (f *Final) ProcessResponse(msg ci.Message) (ci.Message, int) {
+func (f *Final) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	f.inProgress = false
 
 	switch msg.Text {
 	case "Да":
-		return ci.Message{Text: "Запись завершена", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, MainMenuStep
+		f.State = &UserState{}
+		return &ma.Message{Text: "Запись завершена", UserData: msg.UserData, Type: msg.Type}, MainMenuStep
 	case "Нет":
-		return ci.Message{Text: "Запись отменена", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, MainMenuStep
+		f.State = &UserState{}
+		return &ma.Message{Text: "Запись отменена", UserData: msg.UserData, Type: msg.Type}, MainMenuStep
 	default:
 		f.inProgress = true
-		return ci.Message{Text: "Пожалуйста выберите ответ из списка.", WaData: msg.WaData, TgData: msg.TgData, Type: msg.Type}, EmptyStep
+		return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 	}
 }
 
 func (f *Final) IsInProgress() bool {
 	return f.inProgress
-}
-
-type Empty struct {
-}
-
-func (e *Empty) Request(msg ci.Message) ci.Message {
-	return msg
-}
-
-func (e *Empty) DefaultRequest(msg ci.Message) ci.Message {
-	return msg
-}
-
-func (e *Empty) ProcessResponse(msg ci.Message) (ci.Message, int) {
-	return msg, EmptyStep
-}
-
-func (e *Empty) IsInProgress() bool {
-	return false
 }

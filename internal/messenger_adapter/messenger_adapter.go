@@ -1,4 +1,4 @@
-package client_interface
+package messenger_adapter
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -8,7 +8,7 @@ import (
 type ClientInterface interface {
 	Connect() error
 	Disconnect()
-	SendMessage(Message)
+	SendMessage(*Message) error
 	GetType() int
 }
 
@@ -17,10 +17,14 @@ const (
 	TELEGRAM
 )
 
+type UserData struct {
+	WaData types.MessageInfo
+	TgData tgbotapi.Message
+}
+
 type Message struct {
 	Text   string
 	Type   int
 	UserID string
-	WaData types.MessageInfo
-	TgData tgbotapi.Message
+	UserData
 }
