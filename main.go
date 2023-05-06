@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"multimessenger_bot/internal/bot"
 	"multimessenger_bot/internal/config"
+	"multimessenger_bot/internal/db_adapter"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"multimessenger_bot/internal/telegram"
 	"multimessenger_bot/internal/whatsapp"
@@ -12,8 +13,6 @@ import (
 	"syscall"
 
 	_ "github.com/mattn/go-sqlite3"
-	"go.mau.fi/whatsmeow/store/sqlstore"
-	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
 func main() {
@@ -24,26 +23,33 @@ func main() {
 	//	  return
 	//}
 
-	dbLog := waLog.Stdout("Database", "DEBUG", true)
+	//dbLog := waLog.Stdout("Database", "DEBUG", true)
 	cfg, err := config.Load("config.toml")
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
-	// Make sure you add appropriate DB connector imports, e.g. github.com/mattn/go-sqlite3 for SQLite
-	container, err := sqlstore.New("sqlite3", "file:examplestore.db?_foreign_keys=on", dbLog)
+	dbAdapter, waContainer, err := db_adapter.NewDbAdapter()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
+
+	if err := dbAdapter.AutoMigrate(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	//dbAdapter.Test()
 
 	//clientLog := waLog.Stdout("Client", "DEBUG", true)
 
 	recvMsgChan := make(chan *ma.Message)
 	tgClient, _ := telegram.NewTelegramClient(cfg, recvMsgChan)
-	waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, container, recvMsgChan)
+	waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, waContainer, recvMsgChan)
 
-	bot, _ := bot.NewBot([]ma.ClientInterface{waClient, tgClient}, recvMsgChan)
+	bot, _ := bot.NewBot([]ma.ClientInterface{waClient, tgClient}, dbAdapter, recvMsgChan)
 	bot.Run()
 
 	signalHandler := setupSignalHandler()

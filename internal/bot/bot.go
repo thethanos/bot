@@ -1,17 +1,19 @@
 package bot
 
 import (
+	"multimessenger_bot/internal/db_adapter"
 	ma "multimessenger_bot/internal/messenger_adapter"
 )
 
 type Bot struct {
 	clients      map[int]ma.ClientInterface
-	recvMsgChan  chan *ma.Message
 	userSessions map[string]*UserSession
+	recvMsgChan  chan *ma.Message
 	sendMsgChan  chan *ma.Message
+	dbAdapter    *db_adapter.DbAdapter
 }
 
-func NewBot(clientArray []ma.ClientInterface, recvMsgChan chan *ma.Message) (*Bot, error) {
+func NewBot(clientArray []ma.ClientInterface, dbAdpter *db_adapter.DbAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
 
 	clients := make(map[int]ma.ClientInterface)
 	for _, client := range clientArray {
@@ -21,7 +23,15 @@ func NewBot(clientArray []ma.ClientInterface, recvMsgChan chan *ma.Message) (*Bo
 	userSessions := make(map[string]*UserSession)
 	sendMsgChan := make(chan *ma.Message)
 
-	return &Bot{clients: clients, recvMsgChan: recvMsgChan, userSessions: userSessions, sendMsgChan: sendMsgChan}, nil
+	bot := &Bot{
+		clients:      clients,
+		userSessions: userSessions,
+		recvMsgChan:  recvMsgChan,
+		dbAdapter:    dbAdpter,
+		sendMsgChan:  sendMsgChan,
+	}
+
+	return bot, nil
 }
 
 func (b *Bot) Run() {
@@ -58,13 +68,13 @@ func (b *Bot) createStep(step int, state *UserState) Step {
 	case MainMenuStep:
 		return &MainMenu{}
 	case CitySelectionStep:
-		return &CitySelection{StepBase{State: state}}
+		return &CitySelection{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case ServiceSelectionStep:
-		return &ServiceSelection{StepBase{State: state}}
+		return &ServiceSelection{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case MasterSelectionStep:
-		return &MasterSelection{StepBase{State: state}}
+		return &MasterSelection{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case FinalStep:
-		return &Final{StepBase{State: state}}
+		return &Final{StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case EmptyStep:
 		return nil
 	default:

@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"multimessenger_bot/internal/db_adapter"
 	ma "multimessenger_bot/internal/messenger_adapter"
 )
 
@@ -11,9 +12,9 @@ type UserSession struct {
 }
 
 type UserState struct {
-	city    string
-	service string
-	master  string
+	city    *db_adapter.City
+	service *db_adapter.Service
+	master  *db_adapter.Master
 }
 
 const (
@@ -37,6 +38,7 @@ type Step interface {
 type StepBase struct {
 	inProgress bool
 	State      *UserState
+	DbAdapter  *db_adapter.DbAdapter
 }
 
 type MainMenu struct {
@@ -74,10 +76,19 @@ func (m *MainMenu) IsInProgress() bool {
 
 type CitySelection struct {
 	StepBase
+	cities []*db_adapter.City
 }
 
 func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
-	text := "1) Тель-Авив\n2) Нетания\n"
+
+	cities, _ := c.DbAdapter.GetCities(c.State.service)
+
+	text := ""
+	for _, city := range cities {
+		text += fmt.Sprintf("%d) %s\n", city.ID, city.Name)
+	}
+
+	c.cities = cities
 	c.inProgress = true
 	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
@@ -85,19 +96,19 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	c.inProgress = false
 
-	switch msg.Text {
-	case "Тель-Авив", "Нетания":
-		c.State.city = msg.Text
-	default:
-		c.inProgress = true
-		return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
+	for _, city := range c.cities {
+		if msg.Text == city.Name {
+			c.State.city = city
+			if c.State.service == nil {
+				return nil, ServiceSelectionStep
+			} else {
+				return nil, MasterSelectionStep
+			}
+		}
 	}
 
-	if len(c.State.service) == 0 {
-		return nil, ServiceSelectionStep
-	} else {
-		return nil, MasterSelectionStep
-	}
+	c.inProgress = true
+	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 }
 
 func (c *CitySelection) IsInProgress() bool {
@@ -106,10 +117,19 @@ func (c *CitySelection) IsInProgress() bool {
 
 type ServiceSelection struct {
 	StepBase
+	services []*db_adapter.Service
 }
 
 func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
-	text := "1) услуга1\n2) услуга2\n"
+
+	services, _ := c.DbAdapter.GetServices(c.State.city)
+
+	text := ""
+	for _, service := range services {
+		text += fmt.Sprintf("%d) %s\n", service.ID, service.Name)
+	}
+
+	c.services = services
 	c.inProgress = true
 	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
@@ -117,19 +137,19 @@ func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 func (c *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	c.inProgress = false
 
-	switch msg.Text {
-	case "услуга1", "услуга2":
-		c.State.service = msg.Text
-	default:
-		c.inProgress = true
-		return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
+	for _, service := range c.services {
+		if msg.Text == service.Name {
+			c.State.service = service
+			if c.State.city == nil {
+				return nil, CitySelectionStep
+			} else {
+				return nil, MasterSelectionStep
+			}
+		}
 	}
 
-	if len(c.State.city) == 0 {
-		return nil, CitySelectionStep
-	} else {
-		return nil, MasterSelectionStep
-	}
+	c.inProgress = true
+	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 }
 
 func (c *ServiceSelection) IsInProgress() bool {
@@ -138,10 +158,18 @@ func (c *ServiceSelection) IsInProgress() bool {
 
 type MasterSelection struct {
 	StepBase
+	masters []*db_adapter.Master
 }
 
 func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
-	text := "1) мастер1\n2) мастер2\n"
+
+	masters, _ := m.DbAdapter.GetMasters(m.State.city, m.State.service)
+	text := ""
+	for _, master := range masters {
+		text += fmt.Sprintf("%d) %s", master.ID, master.Name)
+	}
+
+	m.masters = masters
 	m.inProgress = true
 	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
@@ -149,14 +177,15 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	m.inProgress = false
 
-	switch msg.Text {
-	case "мастер1", "мастер2":
-		m.State.master = msg.Text
-		return nil, FinalStep
-	default:
-		m.inProgress = true
-		return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
+	for _, master := range m.masters {
+		if msg.Text == master.Name {
+			m.State.master = master
+			return nil, FinalStep
+		}
 	}
+
+	m.inProgress = true
+	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 }
 
 func (m *MasterSelection) IsInProgress() bool {
@@ -168,7 +197,7 @@ type Final struct {
 }
 
 func (f *Final) Request(msg *ma.Message) *ma.Message {
-	text := fmt.Sprintf("Ваша запись\nУслуга: %s\nГород: %s\nМастер: %s\nПодтвердить?\nДа\nНет", f.State.service, f.State.city, f.State.master)
+	text := fmt.Sprintf("Ваша запись\nУслуга: %s\nГород: %s\nМастер: %s\nПодтвердить?\nДа\nНет", f.State.service.Name, f.State.city.Name, f.State.master.Name)
 	f.inProgress = true
 	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
