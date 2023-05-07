@@ -49,7 +49,14 @@ func (tc *TelegramClient) SendMessage(msg *ma.Message) error {
 	if msg == nil {
 		return nil
 	}
-	_, err := tc.client.Send(tgbotapi.NewMessage(msg.TgData.From.ID, msg.Text))
+
+	send := tgbotapi.NewMessage(msg.TgData.From.ID, msg.Text)
+	if msg.TgMarkup != nil {
+		send.ReplyMarkup = *msg.TgMarkup
+	} else {
+		send.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+	}
+	_, err := tc.client.Send(send)
 	return err
 }
 

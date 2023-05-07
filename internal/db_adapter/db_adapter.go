@@ -97,19 +97,22 @@ func (d *DbAdapter) Test() {
 			Model: gorm.Model{
 				ID: 1,
 			},
-			Name: "Tel-Aviv",
+			Name:      "Tel-Aviv",
+			ServiceID: 1,
 		},
 		{
 			Model: gorm.Model{
 				ID: 2,
 			},
-			Name: "Jerusalem",
+			Name:      "Jerusalem",
+			ServiceID: 2,
 		},
 		{
 			Model: gorm.Model{
 				ID: 3,
 			},
-			Name: "Netanya",
+			Name:      "Netanya",
+			ServiceID: 3,
 		},
 	}
 

@@ -43,7 +43,7 @@ func (b *Bot) Run() {
 	go func() {
 		for msg := range b.recvMsgChan {
 			if _, exists := b.userSessions[msg.UserID]; !exists {
-				b.userSessions[msg.UserID] = &UserSession{CurrentStep: b.createStep(MainMenuStep, nil)}
+				b.userSessions[msg.UserID] = &UserSession{State: UserState{cursor: 0}, CurrentStep: b.createStep(MainMenuStep, nil)}
 			}
 
 			b.processUserSession(msg)
@@ -75,6 +75,12 @@ func (b *Bot) createStep(step int, state *UserState) Step {
 		return &MasterSelection{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case FinalStep:
 		return &Final{StepBase{State: state, DbAdapter: b.dbAdapter}}
+	case MasterStep:
+		return &Master{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
+	case RegistrationStep:
+		return &Registration{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}, Questions: MasterQuestions}
+	case RegistrationFinalStep:
+		return &RegistrationFinal{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case EmptyStep:
 		return nil
 	default:

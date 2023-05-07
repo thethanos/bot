@@ -27,4 +27,5 @@ type Message struct {
 	Type   int
 	UserID string
 	UserData
+	TgMarkup *tgbotapi.ReplyKeyboardMarkup
 }

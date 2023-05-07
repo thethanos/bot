@@ -7,7 +7,6 @@ import (
 	"multimessenger_bot/internal/db_adapter"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"multimessenger_bot/internal/telegram"
-	"multimessenger_bot/internal/whatsapp"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,7 +29,7 @@ func main() {
 		return
 	}
 
-	dbAdapter, waContainer, err := db_adapter.NewDbAdapter()
+	dbAdapter, _, err := db_adapter.NewDbAdapter()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -47,9 +46,9 @@ func main() {
 
 	recvMsgChan := make(chan *ma.Message)
 	tgClient, _ := telegram.NewTelegramClient(cfg, recvMsgChan)
-	waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, waContainer, recvMsgChan)
+	//waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, waContainer, recvMsgChan)
 
-	bot, _ := bot.NewBot([]ma.ClientInterface{waClient, tgClient}, dbAdapter, recvMsgChan)
+	bot, _ := bot.NewBot([]ma.ClientInterface{tgClient}, dbAdapter, recvMsgChan)
 	bot.Run()
 
 	signalHandler := setupSignalHandler()
