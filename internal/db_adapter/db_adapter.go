@@ -2,6 +2,10 @@ package db_adapter
 
 import (
 	"database/sql"
+	"fmt"
+	"multimessenger_bot/internal/entities"
+	"multimessenger_bot/internal/models"
+	"time"
 
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"gorm.io/driver/sqlite"
@@ -33,152 +37,230 @@ func NewDbAdapter() (*DbAdapter, *sqlstore.Container, error) {
 }
 
 func (d *DbAdapter) AutoMigrate() error {
-	if err := d.dbConn.AutoMigrate(&City{}); err != nil {
+	if err := d.dbConn.AutoMigrate(&models.City{}); err != nil {
 		return err
 	}
-	if err := d.dbConn.AutoMigrate(&Service{}); err != nil {
+	if err := d.dbConn.AutoMigrate(&models.Service{}); err != nil {
 		return err
 	}
-	if err := d.dbConn.AutoMigrate(&Master{}); err != nil {
+	if err := d.dbConn.AutoMigrate(&models.Master{}); err != nil {
 		return err
 	}
-
+	if err := d.dbConn.AutoMigrate(&models.Join{}); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (d *DbAdapter) GetCities(service *Service) ([]*City, error) {
-	cities := make([]*City, 0)
-	if service == nil {
-		tx := d.dbConn.Find(&cities)
-		return cities, tx.Error
+func (d *DbAdapter) GetCities(serviceId string) ([]*entities.City, error) {
+
+	result := make([]*entities.City, 0)
+	cities := make([]*models.City, 0)
+
+	if serviceId == "" {
+		if err := d.dbConn.Find(&cities).Error; err != nil {
+			return nil, err
+		}
+		for _, city := range cities {
+			result = append(result, &entities.City{ID: city.ID, Name: city.Name})
+		}
+		return result, nil
 	}
 
-	tx := d.dbConn.Where("service_id == ?", service.ID).Find(&cities)
-	return cities, tx.Error
-}
-
-func (d *DbAdapter) GetServices(city *City) ([]*Service, error) {
-	services := make([]*Service, 0)
-	if city == nil {
-		tx := d.dbConn.Find(&services)
-		return services, tx.Error
+	joins := make([]*models.Join, 0)
+	if err := d.dbConn.Where("service_id == ?", serviceId).Find(&joins).Error; err != nil {
+		return nil, err
 	}
 
-	tx := d.dbConn.Where("city_id == ?", city.ID).Find(&services)
-	return services, tx.Error
-}
-
-func (d *DbAdapter) GetMasters(city *City, service *Service) ([]*Master, error) {
-
-	masters := make([]*Master, 0)
-	if city == nil && service == nil {
-		tx := d.dbConn.Find(&masters)
-		return masters, tx.Error
+	cityIds := make([]string, 0)
+	for _, join := range joins {
+		cityIds = append(cityIds, join.CityID)
 	}
 
-	if city != nil && service == nil {
-		tx := d.dbConn.Where("city_id == ?", city.ID).Find(&masters)
-		return masters, tx.Error
+	if err := d.dbConn.Where("id IN ?", cityIds).Find(&cities).Error; err != nil {
+		return nil, err
 	}
-
-	if service != nil && city == nil {
-		tx := d.dbConn.Where("service_id == ?", service.ID).Find(&masters)
-		return masters, tx.Error
-	}
-
-	d.dbConn.Where("city_id == ? AND service_id == ?", city.ID, service.ID).Find(&masters)
-	return masters, nil
-}
-
-func (d *DbAdapter) Test() {
-
-	cities := []City{
-		{
-			Model: gorm.Model{
-				ID: 1,
-			},
-			Name:      "Tel-Aviv",
-			ServiceID: 1,
-		},
-		{
-			Model: gorm.Model{
-				ID: 2,
-			},
-			Name:      "Jerusalem",
-			ServiceID: 2,
-		},
-		{
-			Model: gorm.Model{
-				ID: 3,
-			},
-			Name:      "Netanya",
-			ServiceID: 3,
-		},
-	}
-
 	for _, city := range cities {
-		d.dbConn.Create(&city)
+		result = append(result, &entities.City{ID: city.ID, Name: city.Name})
+	}
+	return result, nil
+}
+
+func (d *DbAdapter) GetServices(cityId string) ([]*entities.Service, error) {
+	result := make([]*entities.Service, 0)
+	services := make([]*models.Service, 0)
+
+	if cityId == "" {
+		if err := d.dbConn.Find(&services).Error; err != nil {
+			return nil, err
+		}
+		for _, service := range services {
+			result = append(result, &entities.Service{ID: service.ID, Name: service.Name})
+		}
+		return result, nil
 	}
 
-	masters := []Master{
-		{
-			Model: gorm.Model{
-				ID: 1,
-			},
-			Name:      "Masha",
-			CityID:    1,
-			ServiceID: 1,
-		},
-		{
-			Model: gorm.Model{
-				ID: 2,
-			},
-			Name:      "Sasha",
-			CityID:    2,
-			ServiceID: 2,
-		},
-		{
-			Model: gorm.Model{
-				ID: 3,
-			},
-			Name:      "Pasha",
-			CityID:    3,
-			ServiceID: 3,
-		},
+	joins := make([]*models.Join, 0)
+	if err := d.dbConn.Where("city_id == ?", cityId).Find(&joins).Error; err != nil {
+		return nil, err
 	}
 
+	serviceIds := make([]string, 0)
+	for _, join := range joins {
+		serviceIds = append(serviceIds, join.ServiceID)
+	}
+
+	if err := d.dbConn.Where("id IN ?", serviceIds).Find(&services).Error; err != nil {
+		return nil, err
+	}
+	for _, service := range services {
+		result = append(result, &entities.Service{ID: service.ID, Name: service.Name})
+	}
+	return result, nil
+}
+
+func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, error) {
+	result := make([]*entities.Master, 0)
+	masters := make([]*models.Master, 0)
+
+	if cityId == "" && serviceId == "" {
+		if err := d.dbConn.Find(&masters).Error; err != nil {
+			return nil, err
+		}
+		for _, master := range masters {
+			result = append(result, &entities.Master{ID: master.ID, Name: master.Name})
+		}
+		return result, nil
+	}
+
+	joins := make([]*models.Join, 0)
+	if err := d.dbConn.Where("city_id == ? AND service_id == ?", cityId, serviceId).Find(&joins).Error; err != nil {
+		return nil, err
+	}
+
+	masterIds := make([]string, 0)
+	for _, join := range joins {
+		masterIds = append(masterIds, join.MasterID)
+	}
+
+	if err := d.dbConn.Where("id IN ?", masterIds).Find(&masters).Error; err != nil {
+		return nil, err
+	}
 	for _, master := range masters {
-		d.dbConn.Create(&master)
+		result = append(result, &entities.Master{ID: master.ID, Name: master.Name})
+	}
+	return result, nil
+}
+
+func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
+	id := fmt.Sprintf("%d", time.Now().Unix())
+	master := &models.Master{
+		ID:     id,
+		Name:   data.RawInput["name"],
+		CityID: data.City.ID,
 	}
 
-	services := []Service{
+	if err := d.dbConn.Create(master).Error; err != nil {
+		return err
+	}
+
+	tx := d.dbConn.Create(&models.Join{CityID: data.City.ID, ServiceID: data.Service.ID, MasterID: id})
+
+	return tx.Error
+}
+
+func (d *DbAdapter) getCityByName(name string) (*models.City, error) {
+	city := &models.City{}
+	tx := d.dbConn.Where("name == ?", name).Find(city)
+	return city, tx.Error
+}
+
+func (d *DbAdapter) getServiceByName(name string) (*models.Service, error) {
+	service := &models.Service{}
+	tx := d.dbConn.Where("name == ?", name).Find(service)
+	return service, tx.Error
+}
+
+func (d *DbAdapter) Test() error {
+
+	cities := []*models.City{
 		{
-			Model: gorm.Model{
-				ID: 1,
-			},
-			Name:     "Service1",
-			MasterID: 1,
-			CityID:   1,
+			ID:   "1",
+			Name: "Тель-Авив",
 		},
 		{
-			Model: gorm.Model{
-				ID: 2,
-			},
-			Name:     "Service2",
-			CityID:   2,
-			MasterID: 2,
+			ID:   "2",
+			Name: "Хайфа",
 		},
 		{
-			Model: gorm.Model{
-				ID: 3,
+			ID:   "3",
+			Name: "Иерусалим",
+		},
+		{
+			ID:   "4",
+			Name: "Нетания",
+		},
+	}
+	/*
+		masters := []*Master{
+			{
+				Model: gorm.Model{
+					ID: 1,
+				},
+				Name: "Наталья",
 			},
-			Name:     "Service3",
-			MasterID: 3,
-			CityID:   3,
+			{
+				Model: gorm.Model{
+					ID: 2,
+				},
+				Name: "Мария",
+			},
+			{
+				Model: gorm.Model{
+					ID: 3,
+				},
+				Name: "Александра",
+			},
+			{
+				Model: gorm.Model{
+					ID: 4,
+				},
+				Name: "Юлия",
+			},
+		}
+	*/
+	services := []*models.Service{
+		{
+			ID:   "1",
+			Name: "Наращивание ресниц",
+		},
+		{
+			ID:   "2",
+			Name: "Окрашивание бровей",
+		},
+		{
+			ID:   "3",
+			Name: "Окрашивание ресниц",
+		},
+		{
+			ID:   "4",
+			Name: "Снятие ресниц",
 		},
 	}
 
 	for _, service := range services {
-		d.dbConn.Create(&service)
+		if err := d.dbConn.Create(service).Error; err != nil {
+			fmt.Println(err)
+			return err
+		}
 	}
+
+	for _, city := range cities {
+		if err := d.dbConn.Create(city).Error; err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+
+	return nil
 }

@@ -2,50 +2,12 @@ package bot
 
 import (
 	"fmt"
-	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/entities"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
-
-type UserSession struct {
-	CurrentStep Step
-	State       UserState
-}
-
-type UserState struct {
-	city    *db_adapter.City
-	service *db_adapter.Service
-	master  *db_adapter.Master
-	cursor  int
-}
-
-const (
-	MainMenuStep = iota
-	ServiceSelectionStep
-	CitySelectionStep
-	QuestionsStep
-	AboutStep
-	MasterSelectionStep
-	MasterStep
-	FinalStep
-	EmptyStep
-	RegistrationStep
-	RegistrationFinalStep
-)
-
-type Step interface {
-	ProcessResponse(*ma.Message) (*ma.Message, int)
-	Request(*ma.Message) *ma.Message
-	IsInProgress() bool
-}
-
-type StepBase struct {
-	inProgress bool
-	State      *UserState
-	DbAdapter  *db_adapter.DbAdapter
-}
 
 type MainMenu struct {
 	StepBase
@@ -67,7 +29,7 @@ func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 		return &ma.Message{Text: "Главное меню", UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
 	}
 
-	text := "1) услуги\n2) город\n3) вопросы\n4) о нас\n5)мастер"
+	text := "1. услуги\n2. город\n3. вопросы\n4. о нас\n5. мастер"
 	m.inProgress = true
 	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
@@ -91,18 +53,23 @@ func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 }
 
-func (m *MainMenu) IsInProgress() bool {
-	return m.inProgress
-}
-
 type CitySelection struct {
 	StepBase
-	cities []*db_adapter.City
+	cities       []*entities.City
+	filter       bool
+	checkService bool
+	nextStep     int
+	errStep      int
 }
 
 func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 
-	cities, _ := c.DbAdapter.GetCities(c.State.service)
+	var cities []*entities.City
+	if c.filter && c.State.Service != nil {
+		cities, _ = c.DbAdapter.GetCities(c.State.Service.ID)
+	} else {
+		cities, _ = c.DbAdapter.GetCities("")
+	}
 
 	if msg.Type == ma.TELEGRAM {
 
@@ -134,31 +101,44 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	userAnswer := strings.ToLower(msg.Text)
 	for idx, city := range c.cities {
 		if userAnswer == strings.ToLower(city.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
-			c.State.city = city
-			if c.State.service == nil {
-				return nil, ServiceSelectionStep
+			c.State.City = city
+			if c.checkService {
+				if c.State.Service == nil {
+					return nil, ServiceSelectionStep
+				} else {
+					return nil, c.nextStep
+				}
 			} else {
-				return nil, MasterSelectionStep
+				return nil, c.nextStep
 			}
 		}
 	}
 
 	c.inProgress = true
-	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
-}
-
-func (c *CitySelection) IsInProgress() bool {
-	return c.inProgress
+	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, c.errStep
 }
 
 type ServiceSelection struct {
 	StepBase
-	services []*db_adapter.Service
+	services  []*entities.Service
+	filter    bool
+	checkCity bool
+	nextStep  int
+	errStep   int
 }
 
 func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 
-	services, _ := c.DbAdapter.GetServices(c.State.city)
+	var services []*entities.Service
+	if c.filter && c.State.City != nil {
+		services, _ = c.DbAdapter.GetServices(c.State.City.ID)
+	} else {
+		services, _ = c.DbAdapter.GetServices("")
+	}
+
+	if len(services) == 0 {
+
+	}
 
 	if msg.Type == ma.TELEGRAM {
 
@@ -190,31 +170,31 @@ func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	userAnswer := strings.ToLower(msg.Text)
 	for idx, service := range s.services {
 		if userAnswer == strings.ToLower(service.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
-			s.State.service = service
-			if s.State.city == nil {
-				return nil, CitySelectionStep
+			s.State.Service = service
+			if s.checkCity {
+				if s.State.City == nil {
+					return nil, CitySelectionStep
+				} else {
+					return nil, s.nextStep
+				}
 			} else {
-				return nil, MasterSelectionStep
+				return nil, s.nextStep
 			}
 		}
 	}
 
 	s.inProgress = true
-	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
-}
-
-func (s *ServiceSelection) IsInProgress() bool {
-	return s.inProgress
+	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, s.errStep
 }
 
 type MasterSelection struct {
 	StepBase
-	masters []*db_adapter.Master
+	masters []*entities.Master
 }
 
 func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 
-	masters, _ := m.DbAdapter.GetMasters(m.State.city, m.State.service)
+	masters, _ := m.DbAdapter.GetMasters(m.State.City.ID, m.State.Service.ID)
 
 	if msg.Type == ma.TELEGRAM {
 
@@ -246,7 +226,7 @@ func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	userAnswer := strings.ToLower(msg.Text)
 	for idx, master := range m.masters {
 		if userAnswer == strings.ToLower(master.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
-			m.State.master = master
+			m.State.Master = master
 			return nil, FinalStep
 		}
 	}
@@ -255,15 +235,17 @@ func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 }
 
-func (m *MasterSelection) IsInProgress() bool {
-	return m.inProgress
-}
-
 type Final struct {
 	StepBase
 }
 
 func (f *Final) Request(msg *ma.Message) *ma.Message {
+
+	text := fmt.Sprintf("Ваша запись\nУслуга: %s\nГород: %s\nМастер: %s\n\nПодтвердить?",
+		f.State.Service.Name,
+		f.State.City.Name,
+		f.State.Master.Name,
+	)
 
 	if msg.Type == ma.TELEGRAM {
 
@@ -273,23 +255,12 @@ func (f *Final) Request(msg *ma.Message) *ma.Message {
 
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
-		text := fmt.Sprintf("Ваша запись\nУслуга: %s\nГород: %s\nМастер: %s\nПодтвердить?",
-			f.State.service.Name,
-			f.State.city.Name,
-			f.State.master.Name,
-		)
-
 		f.inProgress = true
 		return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
 	}
 
-	text := fmt.Sprintf("Ваша запись\nУслуга: %s\nГород: %s\nМастер: %s\nПодтвердить?\nДа\nНет",
-		f.State.service.Name,
-		f.State.city.Name,
-		f.State.master.Name,
-	)
 	f.inProgress = true
-	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
+	return &ma.Message{Text: fmt.Sprintf("%s\n1. Да\n2. Нет", text), UserData: msg.UserData, Type: msg.Type}
 }
 
 func (f *Final) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
@@ -297,17 +268,13 @@ func (f *Final) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 
 	switch msg.Text {
 	case "Да":
-		f.State = &UserState{}
-		return &ma.Message{Text: "Запись завершена", UserData: msg.UserData, Type: msg.Type}, MainMenuStep
+		f.State.Reset()
+		return &ma.Message{Text: "Запись завершена", UserData: msg.UserData, Type: msg.Type}, MainMenuRequestStep
 	case "Нет":
-		f.State = &UserState{}
-		return &ma.Message{Text: "Запись отменена", UserData: msg.UserData, Type: msg.Type}, MainMenuStep
+		f.State.Reset()
+		return &ma.Message{Text: "Запись отменена", UserData: msg.UserData, Type: msg.Type}, MainMenuRequestStep
 	default:
 		f.inProgress = true
 		return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, EmptyStep
 	}
-}
-
-func (f *Final) IsInProgress() bool {
-	return f.inProgress
 }

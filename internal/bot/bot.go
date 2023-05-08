@@ -2,8 +2,15 @@ package bot
 
 import (
 	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/entities"
 	ma "multimessenger_bot/internal/messenger_adapter"
+	"time"
 )
+
+type UserSession struct {
+	CurrentStep Step
+	State       entities.UserState
+}
 
 type Bot struct {
 	clients      map[int]ma.ClientInterface
@@ -43,7 +50,10 @@ func (b *Bot) Run() {
 	go func() {
 		for msg := range b.recvMsgChan {
 			if _, exists := b.userSessions[msg.UserID]; !exists {
-				b.userSessions[msg.UserID] = &UserSession{State: UserState{cursor: 0}, CurrentStep: b.createStep(MainMenuStep, nil)}
+				b.userSessions[msg.UserID] = &UserSession{
+					State:       entities.UserState{Cursor: 0, RawInput: make(map[string]string)},
+					CurrentStep: b.createStep(MainMenuStep, nil),
+				}
 			}
 
 			b.processUserSession(msg)
@@ -63,22 +73,58 @@ func (b *Bot) Shutdown() {
 	}
 }
 
-func (b *Bot) createStep(step int, state *UserState) Step {
+func (b *Bot) createStep(step int, state *entities.UserState) Step {
 	switch step {
 	case MainMenuStep:
 		return &MainMenu{}
+	case MainMenuRequestStep:
+		return &YesNo{question: Question{Text: "Вурнуться в главное меню?"}, yesStep: MainMenuStep, noStep: EmptyStep}
 	case CitySelectionStep:
-		return &CitySelection{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
+		return &CitySelection{
+			StepBase:     StepBase{State: state, DbAdapter: b.dbAdapter},
+			checkService: true,
+			filter:       true,
+			nextStep:     MasterSelectionStep,
+			errStep:      EmptyStep,
+		}
 	case ServiceSelectionStep:
-		return &ServiceSelection{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
+		return &ServiceSelection{
+			StepBase:  StepBase{State: state, DbAdapter: b.dbAdapter},
+			checkCity: true,
+			filter:    true,
+			nextStep:  MasterSelectionStep,
+			errStep:   EmptyStep,
+		}
 	case MasterSelectionStep:
 		return &MasterSelection{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case FinalStep:
 		return &Final{StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case MasterStep:
-		return &Master{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
+		return &YesNo{
+			StepBase: StepBase{State: state, DbAdapter: b.dbAdapter},
+			question: Question{Text: "Хотите зарегистрироваться как мастер?"},
+			yesStep:  RegistrationStep,
+			noStep:   MainMenuStep,
+		}
 	case RegistrationStep:
-		return &Registration{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}, Questions: MasterQuestions}
+		return &Prompt{
+			StepBase: StepBase{State: state, DbAdapter: b.dbAdapter},
+			question: Question{Text: "Как вас называть?", Field: "name"},
+			nextStep: RegistrationStepCity,
+			errStep:  RegistrationStep,
+		}
+	case RegistrationStepCity:
+		return &CitySelection{
+			StepBase: StepBase{State: state, DbAdapter: b.dbAdapter},
+			nextStep: RegistrationStepService,
+			errStep:  EmptyStep,
+		}
+	case RegistrationStepService:
+		return &ServiceSelection{
+			StepBase: StepBase{State: state, DbAdapter: b.dbAdapter},
+			nextStep: RegistrationFinalStep,
+			errStep:  EmptyStep,
+		}
 	case RegistrationFinalStep:
 		return &RegistrationFinal{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case EmptyStep:
@@ -107,6 +153,9 @@ func (b *Bot) processUserSession(msg *ma.Message) {
 
 		switch step := b.createStep(next, state); next {
 		case EmptyStep:
+		case MainMenuRequestStep:
+			time.Sleep(1 * time.Second)
+			fallthrough
 		default:
 			b.send(step.Request(msg))
 			b.userSessions[msg.UserID].CurrentStep = step

@@ -1,60 +1,22 @@
 package bot
 
-import ma "multimessenger_bot/internal/messenger_adapter"
+import (
+	"fmt"
+	ma "multimessenger_bot/internal/messenger_adapter"
+	"strings"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
 
 type Question struct {
-	Text   string
-	Answer string
-	Field  string
+	Text  string
+	Field string
 }
 
 var MasterQuestions = []*Question{
-	{Text: "Name?"},
-	{Text: "City?"},
-	{Text: "Service?"},
-}
-
-type Master struct {
-	StepBase
-}
-
-func (m *Master) Request(msg *ma.Message) *ma.Message {
-	m.inProgress = true
-	return &ma.Message{Text: "Register?", UserData: msg.UserData, Type: msg.Type}
-}
-
-func (m *Master) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
-	m.inProgress = false
-	return nil, RegistrationStep
-}
-
-func (m *Master) IsInProgress() bool {
-	return m.inProgress
-}
-
-type Registration struct {
-	StepBase
-	Questions []*Question
-}
-
-func (r *Registration) Request(msg *ma.Message) *ma.Message {
-	r.inProgress = true
-	return &ma.Message{Text: r.Questions[r.State.cursor].Text, UserData: msg.UserData, Type: msg.Type}
-}
-
-func (r *Registration) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
-	r.inProgress = false
-	r.Questions[r.State.cursor].Answer = msg.Text
-	r.State.cursor = r.State.cursor + 1
-	if r.State.cursor >= len(r.Questions) {
-		r.State.cursor = 0
-		return nil, RegistrationFinalStep
-	}
-	return nil, RegistrationStep
-}
-
-func (r *Registration) IsInProgress() bool {
-	return r.inProgress
+	{Text: "Как вас называть?", Field: "name"},
+	{Text: "В каком городе вы работаете?", Field: "city"},
+	{Text: "Какую услугу предоставляете?", Field: "service"},
 }
 
 type RegistrationFinal struct {
@@ -63,13 +25,33 @@ type RegistrationFinal struct {
 
 func (r *RegistrationFinal) Request(msg *ma.Message) *ma.Message {
 	r.inProgress = true
-	return nil
+	data := FormatMapToString(r.State.RawInput)
+	if msg.Type == ma.TELEGRAM {
+		rows := make([][]tgbotapi.KeyboardButton, 2)
+		rows[0] = []tgbotapi.KeyboardButton{{Text: "Да"}}
+		rows[1] = []tgbotapi.KeyboardButton{{Text: "Нет"}}
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
+		return &ma.Message{Text: fmt.Sprintf("%s\nПодтвердить регистрацию?", data), UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
+	}
+	return &ma.Message{Text: fmt.Sprintf("%s\nПодтвердить регистрацию?\n1. Да\n2. Нет", data), UserData: msg.UserData, Type: msg.Type}
 }
 
 func (r *RegistrationFinal) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
-	return nil, MainMenuStep
+	r.inProgress = false
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "да" || userAnswer == "1" {
+		r.DbAdapter.SaveNewMaster(r.State)
+		r.State.Reset()
+		return &ma.Message{Text: "Регистрация прошла успешно!", UserData: msg.UserData, Type: msg.Type}, MainMenuRequestStep
+	}
+	r.State.Reset()
+	return nil, MainMenuRequestStep
 }
 
-func (r *RegistrationFinal) IsInProgress() bool {
-	return r.inProgress
+func FormatMapToString(data map[string]string) string {
+	res := ""
+	for key, val := range data {
+		res += fmt.Sprintf("%s: %s\n", key, val)
+	}
+	return res
 }
