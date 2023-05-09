@@ -40,11 +40,6 @@ func main() {
 		return
 	}
 
-	if err := dbAdapter.Test(); err != nil {
-		fmt.Println(err)
-		return
-	}
-
 	//dbAdapter.Test()
 
 	//clientLog := waLog.Stdout("Client", "DEBUG", true)

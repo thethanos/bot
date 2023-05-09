@@ -26,6 +26,7 @@ const (
 	RegistrationStepCity
 	RegistrationFinalStep
 	PreviousStep
+	TestStep
 )
 
 type StepStack struct {
@@ -85,9 +86,9 @@ func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Да"}}
 		rows[1] = []tgbotapi.KeyboardButton{{Text: "Нет"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return &ma.Message{Text: y.question.Text, UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
+		return ma.NewMessage(y.question.Text, msg, keyboard, nil)
 	}
-	return &ma.Message{Text: fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), UserData: msg.UserData, Type: msg.Type}
+	return ma.NewMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), msg, nil, nil)
 }
 
 func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
@@ -108,11 +109,46 @@ type Prompt struct {
 
 func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 	p.inProgress = true
-	return &ma.Message{Text: p.question.Text, UserData: msg.UserData, Type: msg.Type}
+	return ma.NewMessage(p.question.Text, msg, nil, nil)
 }
 
 func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	p.inProgress = false
 	p.State.RawInput[p.question.Field] = msg.Text
 	return nil, p.nextStep
+}
+
+type Test struct {
+	StepBase
+}
+
+func (t *Test) Request(msg *ma.Message) *ma.Message {
+	t.inProgress = true
+	row1 := tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonURL("1.com", "http://1.com"),
+		tgbotapi.NewInlineKeyboardButtonData("2", "2"),
+		tgbotapi.NewInlineKeyboardButtonData("3", "3"),
+	)
+
+	row2 := tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("4", "4"),
+		tgbotapi.NewInlineKeyboardButtonData("5", "5"),
+		tgbotapi.NewInlineKeyboardButtonData("6", "6"),
+	)
+
+	var keyboard [][]tgbotapi.InlineKeyboardButton
+
+	keyboard = append(keyboard, row1)
+	keyboard = append(keyboard, row2)
+
+	numericKeyboard := &tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: keyboard,
+	}
+
+	return ma.NewMessage("text", msg, nil, numericKeyboard)
+}
+
+func (t *Test) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
+	t.inProgress = false
+	return nil, EmptyStep
 }

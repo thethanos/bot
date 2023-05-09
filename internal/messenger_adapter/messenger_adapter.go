@@ -15,11 +15,18 @@ type ClientInterface interface {
 const (
 	WHATSAPP = iota
 	TELEGRAM
+	TELEGRAM_CALLBACK
 )
 
 type UserData struct {
-	WaData types.MessageInfo
-	TgData tgbotapi.Message
+	WaData     types.MessageInfo
+	TgData     *tgbotapi.Message
+	TgCallback *tgbotapi.CallbackQuery
+}
+
+type TgMarkup struct {
+	ReplyMarkup  *tgbotapi.ReplyKeyboardMarkup
+	InlineMarkup *tgbotapi.InlineKeyboardMarkup
 }
 
 type Message struct {
@@ -27,5 +34,18 @@ type Message struct {
 	Type   int
 	UserID string
 	UserData
-	TgMarkup *tgbotapi.ReplyKeyboardMarkup
+	TgMarkup *TgMarkup
+}
+
+func NewMessage(text string, msg *Message, replyMarkup *tgbotapi.ReplyKeyboardMarkup, inlineMarkup *tgbotapi.InlineKeyboardMarkup) *Message {
+	return &Message{
+		Text:     text,
+		UserData: msg.UserData,
+		UserID:   msg.UserID,
+		Type:     msg.Type,
+		TgMarkup: &TgMarkup{
+			ReplyMarkup:  replyMarkup,
+			InlineMarkup: inlineMarkup,
+		},
+	}
 }

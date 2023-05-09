@@ -30,11 +30,22 @@ func (tc *TelegramClient) Connect() error {
 	events := tc.client.GetUpdatesChan(updateConfig)
 	go func() {
 		for event := range events {
-			if event.Message == nil {
-				continue
+			if event.Message != nil {
+				msg := &ma.Message{
+					Text:     event.Message.Text,
+					Type:     ma.TELEGRAM,
+					UserID:   fmt.Sprintf("tg%d", event.Message.From.ID),
+					UserData: ma.UserData{TgData: event.Message},
+				}
+				tc.recvMsgChan <- msg
+			} else if event.CallbackQuery != nil {
+				msg := &ma.Message{
+					Type:     ma.TELEGRAM_CALLBACK,
+					UserID:   fmt.Sprintf("tg%d", event.CallbackQuery.From.ID),
+					UserData: ma.UserData{TgCallback: event.CallbackQuery},
+				}
+				tc.recvMsgChan <- msg
 			}
-			userId := fmt.Sprintf("tg%d", event.Message.From.ID)
-			tc.recvMsgChan <- &ma.Message{Text: event.Message.Text, Type: ma.TELEGRAM, UserID: userId, UserData: ma.UserData{TgData: *event.Message}}
 		}
 	}()
 
@@ -52,7 +63,11 @@ func (tc *TelegramClient) SendMessage(msg *ma.Message) error {
 
 	send := tgbotapi.NewMessage(msg.TgData.From.ID, msg.Text)
 	if msg.TgMarkup != nil {
-		send.ReplyMarkup = *msg.TgMarkup
+		if msg.TgMarkup.ReplyMarkup != nil {
+			send.ReplyMarkup = msg.TgMarkup.ReplyMarkup
+		} else {
+			send.ReplyMarkup = msg.TgMarkup.InlineMarkup
+		}
 	} else {
 		send.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 	}

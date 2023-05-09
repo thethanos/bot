@@ -132,6 +132,8 @@ func (b *Bot) createStep(step int, state *entities.UserState) Step {
 		return &RegistrationFinal{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	case EmptyStep:
 		return nil
+	case TestStep:
+		return &Test{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
 	default:
 		return &MainMenu{StepBase: StepBase{State: state}}
 	}
