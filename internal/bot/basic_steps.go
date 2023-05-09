@@ -25,12 +25,37 @@ const (
 	RegistrationStepService
 	RegistrationStepCity
 	RegistrationFinalStep
+	PreviousStep
 )
+
+type StepStack struct {
+	steps []Step
+}
+
+func (s *StepStack) Push(step Step) {
+	if s.steps == nil {
+		s.steps = make([]Step, 0)
+	}
+	s.steps = append(s.steps, step)
+}
+
+func (s *StepStack) Pop() {
+	s.steps = s.steps[:len(s.steps)-1]
+}
+
+func (s *StepStack) Top() Step {
+	return s.steps[len(s.steps)-1]
+}
+
+func (s *StepStack) Empty() bool {
+	return len(s.steps) == 0
+}
 
 type Step interface {
 	ProcessResponse(*ma.Message) (*ma.Message, int)
 	Request(*ma.Message) *ma.Message
 	IsInProgress() bool
+	Reset()
 }
 
 type StepBase struct {
@@ -41,6 +66,9 @@ type StepBase struct {
 
 func (s *StepBase) IsInProgress() bool {
 	return s.inProgress
+}
+
+func (s *StepBase) Reset() {
 }
 
 type YesNo struct {

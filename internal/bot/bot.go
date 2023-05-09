@@ -9,7 +9,8 @@ import (
 
 type UserSession struct {
 	CurrentStep Step
-	State       entities.UserState
+	PrevSteps   StepStack
+	State       *entities.UserState
 }
 
 type Bot struct {
@@ -50,9 +51,11 @@ func (b *Bot) Run() {
 	go func() {
 		for msg := range b.recvMsgChan {
 			if _, exists := b.userSessions[msg.UserID]; !exists {
+				state := &entities.UserState{Cursor: 0, RawInput: make(map[string]string)}
 				b.userSessions[msg.UserID] = &UserSession{
-					State:       entities.UserState{Cursor: 0, RawInput: make(map[string]string)},
-					CurrentStep: b.createStep(MainMenuStep, nil),
+					State:       state,
+					CurrentStep: b.createStep(MainMenuStep, state),
+					PrevSteps:   StepStack{},
 				}
 			}
 
@@ -76,7 +79,7 @@ func (b *Bot) Shutdown() {
 func (b *Bot) createStep(step int, state *entities.UserState) Step {
 	switch step {
 	case MainMenuStep:
-		return &MainMenu{}
+		return &MainMenu{StepBase: StepBase{State: state}}
 	case MainMenuRequestStep:
 		return &YesNo{question: Question{Text: "Вурнуться в главное меню?"}, yesStep: MainMenuStep, noStep: EmptyStep}
 	case CitySelectionStep:
@@ -130,7 +133,7 @@ func (b *Bot) createStep(step int, state *entities.UserState) Step {
 	case EmptyStep:
 		return nil
 	default:
-		return &MainMenu{}
+		return &MainMenu{StepBase: StepBase{State: state}}
 	}
 }
 
@@ -144,7 +147,7 @@ func (b *Bot) send(msg *ma.Message) bool {
 
 func (b *Bot) processUserSession(msg *ma.Message) {
 	curStep := b.userSessions[msg.UserID].CurrentStep
-	state := &b.userSessions[msg.UserID].State
+	state := b.userSessions[msg.UserID].State
 	if !curStep.IsInProgress() {
 		b.send(curStep.Request(msg))
 	} else {
@@ -152,6 +155,17 @@ func (b *Bot) processUserSession(msg *ma.Message) {
 		b.send(res)
 
 		switch step := b.createStep(next, state); next {
+		case PreviousStep:
+			if b.userSessions[msg.UserID].PrevSteps.Empty() {
+				return
+			}
+
+			prevStep := b.userSessions[msg.UserID].PrevSteps.Top()
+			b.userSessions[msg.UserID].PrevSteps.Pop()
+			prevStep.Reset()
+
+			b.send(prevStep.Request(msg))
+			b.userSessions[msg.UserID].CurrentStep = prevStep
 		case EmptyStep:
 		case MainMenuRequestStep:
 			time.Sleep(1 * time.Second)
@@ -159,6 +173,7 @@ func (b *Bot) processUserSession(msg *ma.Message) {
 		default:
 			b.send(step.Request(msg))
 			b.userSessions[msg.UserID].CurrentStep = step
+			b.userSessions[msg.UserID].PrevSteps.Push(curStep)
 		}
 	}
 }

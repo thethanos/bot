@@ -14,7 +14,7 @@ type MainMenu struct {
 }
 
 func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
-
+	m.State.Reset()
 	if msg.Type == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 5)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Услуги"}}
@@ -63,6 +63,7 @@ type CitySelection struct {
 }
 
 func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
+	c.inProgress = true
 
 	var cities []*entities.City
 	if c.filter && c.State.Service != nil {
@@ -73,15 +74,20 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 
 	if msg.Type == ma.TELEGRAM {
 
-		rows := make([][]tgbotapi.KeyboardButton, len(cities))
+		rows := make([][]tgbotapi.KeyboardButton, len(cities)+1)
 		for idx, city := range cities {
 			rows[idx] = make([]tgbotapi.KeyboardButton, 0)
 			rows[idx] = append(rows[idx], tgbotapi.KeyboardButton{Text: city.Name})
 		}
+		rows[len(cities)] = make([]tgbotapi.KeyboardButton, 0)
+		rows[len(cities)] = append(rows[len(cities)], tgbotapi.KeyboardButton{Text: "Назад"})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
+		if len(cities) == 0 {
+			return &ma.Message{Text: "По вашему запросу ничего не найдено", UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
+		}
+
 		c.cities = cities
-		c.inProgress = true
 		return &ma.Message{Text: " Выберите город", UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
 	}
 
@@ -89,9 +95,9 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 	for idx, city := range cities {
 		text += fmt.Sprintf("%d. %s\n", idx+1, city.Name)
 	}
+	text += fmt.Sprintf("%d. Назад\n", len(cities)+1)
 
 	c.cities = cities
-	c.inProgress = true
 	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
 
@@ -99,6 +105,10 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	c.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" || userAnswer == fmt.Sprintf("%d", len(c.cities)+1) {
+		return nil, PreviousStep
+	}
+
 	for idx, city := range c.cities {
 		if userAnswer == strings.ToLower(city.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
 			c.State.City = city
@@ -118,6 +128,10 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, c.errStep
 }
 
+func (c *CitySelection) Reset() {
+	c.State.City = nil
+}
+
 type ServiceSelection struct {
 	StepBase
 	services  []*entities.Service
@@ -128,6 +142,7 @@ type ServiceSelection struct {
 }
 
 func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
+	c.inProgress = true
 
 	var services []*entities.Service
 	if c.filter && c.State.City != nil {
@@ -136,21 +151,22 @@ func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 		services, _ = c.DbAdapter.GetServices("")
 	}
 
-	if len(services) == 0 {
-
-	}
-
 	if msg.Type == ma.TELEGRAM {
 
-		rows := make([][]tgbotapi.KeyboardButton, len(services))
+		rows := make([][]tgbotapi.KeyboardButton, len(services)+1)
 		for idx, service := range services {
 			rows[idx] = make([]tgbotapi.KeyboardButton, 0)
 			rows[idx] = append(rows[idx], tgbotapi.KeyboardButton{Text: service.Name})
 		}
+		rows[len(services)] = make([]tgbotapi.KeyboardButton, 0)
+		rows[len(services)] = append(rows[len(services)], tgbotapi.KeyboardButton{Text: "Назад"})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
+		if len(services) == 0 {
+			return &ma.Message{Text: "По вашему запросу ничего не найдено", UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
+		}
+
 		c.services = services
-		c.inProgress = true
 		return &ma.Message{Text: " Выберите услугу", UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
 	}
 
@@ -158,9 +174,9 @@ func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 	for idx, service := range services {
 		text += fmt.Sprintf("%d. %s\n", idx+1, service.Name)
 	}
+	text += fmt.Sprintf("%d. Назад\n", len(services)+1)
 
 	c.services = services
-	c.inProgress = true
 	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
 
@@ -168,6 +184,9 @@ func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	s.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" || userAnswer == fmt.Sprintf("%d", len(s.services)+1) {
+		return nil, PreviousStep
+	}
 	for idx, service := range s.services {
 		if userAnswer == strings.ToLower(service.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
 			s.State.Service = service
@@ -187,26 +206,36 @@ func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	return &ma.Message{Text: "Пожалуйста выберите ответ из списка.", UserData: msg.UserData, Type: msg.Type}, s.errStep
 }
 
+func (s *ServiceSelection) Reset() {
+	s.State.Service = nil
+}
+
 type MasterSelection struct {
 	StepBase
 	masters []*entities.Master
 }
 
 func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
+	m.inProgress = true
 
 	masters, _ := m.DbAdapter.GetMasters(m.State.City.ID, m.State.Service.ID)
 
 	if msg.Type == ma.TELEGRAM {
 
-		rows := make([][]tgbotapi.KeyboardButton, len(masters))
+		rows := make([][]tgbotapi.KeyboardButton, len(masters)+1)
 		for idx, master := range masters {
 			rows[idx] = make([]tgbotapi.KeyboardButton, 0)
 			rows[idx] = append(rows[idx], tgbotapi.KeyboardButton{Text: master.Name})
 		}
+		rows[len(masters)] = make([]tgbotapi.KeyboardButton, 0)
+		rows[len(masters)] = append(rows[len(masters)], tgbotapi.KeyboardButton{Text: "Назад"})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
+		if len(masters) == 0 {
+			return &ma.Message{Text: "По вашему запросу ничего не найдено", UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
+		}
+
 		m.masters = masters
-		m.inProgress = true
 		return &ma.Message{Text: " Выберите мастера", UserData: msg.UserData, Type: msg.Type, TgMarkup: keyboard}
 	}
 
@@ -216,7 +245,6 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 	}
 
 	m.masters = masters
-	m.inProgress = true
 	return &ma.Message{Text: text, UserData: msg.UserData, Type: msg.Type}
 }
 
@@ -224,6 +252,9 @@ func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	m.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" || userAnswer == fmt.Sprintf("%d", len(m.masters)+1) {
+		return nil, PreviousStep
+	}
 	for idx, master := range m.masters {
 		if userAnswer == strings.ToLower(master.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
 			m.State.Master = master
