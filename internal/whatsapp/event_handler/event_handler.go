@@ -15,6 +15,15 @@ func (h *Handler) EventHandler(event interface{}) {
 	switch v := event.(type) {
 	case *events.Message:
 		userId := fmt.Sprintf("wa%s", v.Info.Chat.User)
-		h.RecvMsgChan <- &ma.Message{Text: v.Message.GetConversation(), Type: ma.WHATSAPP, UserID: userId, UserData: ma.UserData{WaData: v.Info}}
+		msg := &ma.Message{
+			Text:   v.Message.GetConversation(),
+			Type:   ma.REGULAR,
+			Source: ma.WHATSAPP,
+			UserID: userId,
+			Data: &ma.MessageData{
+				WaData: v.Info,
+			},
+		}
+		h.RecvMsgChan <- msg
 	}
 }

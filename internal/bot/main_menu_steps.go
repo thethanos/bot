@@ -6,7 +6,7 @@ import (
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
 
 type MainMenu struct {
@@ -15,7 +15,7 @@ type MainMenu struct {
 
 func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 	m.State.Reset()
-	if msg.Type == ma.TELEGRAM {
+	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 6)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Услуги"}}
 		rows[1] = []tgbotapi.KeyboardButton{{Text: "Город"}}
@@ -27,15 +27,19 @@ func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		m.inProgress = true
-		return ma.NewMessage("Главное меню", msg, keyboard, nil)
+		return ma.NewMessage("Главное меню", ma.REGULAR, msg, keyboard, nil)
 	}
 
 	text := "1. услуги\n2. город\n3. вопросы\n4. о нас\n5. мастер"
 	m.inProgress = true
-	return ma.NewMessage(text, msg, nil, nil)
+	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
 }
 
-func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
+func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+
+	if msg.Type == ma.CALLBACK {
+		return nil, EmptyStep
+	}
 	m.inProgress = false
 
 	switch strings.ToLower(msg.Text) {
@@ -53,7 +57,7 @@ func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 		return nil, TestStep
 	}
 
-	return ma.NewMessage("Пожалуйста выберите ответ из списка.", msg, nil, nil), EmptyStep
+	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
 }
 
 type CitySelection struct {
@@ -61,8 +65,8 @@ type CitySelection struct {
 	cities       []*entities.City
 	filter       bool
 	checkService bool
-	nextStep     int
-	errStep      int
+	nextStep     StepType
+	errStep      StepType
 }
 
 func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
@@ -75,7 +79,7 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 		cities, _ = c.DbAdapter.GetCities("")
 	}
 
-	if msg.Type == ma.TELEGRAM {
+	if msg.Source == ma.TELEGRAM {
 
 		rows := make([][]tgbotapi.KeyboardButton, len(cities)+1)
 		for idx, city := range cities {
@@ -87,11 +91,11 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(cities) == 0 {
-			return ma.NewMessage("По вашему запросу ничего не найдено", msg, keyboard, nil)
+			return ma.NewMessage("По вашему запросу ничего не найдено", ma.REGULAR, msg, keyboard, nil)
 		}
 
 		c.cities = cities
-		return ma.NewMessage(" Выберите город", msg, keyboard, nil)
+		return ma.NewMessage(" Выберите город", ma.REGULAR, msg, keyboard, nil)
 	}
 
 	text := ""
@@ -101,10 +105,14 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 	text += fmt.Sprintf("%d. Назад\n", len(cities)+1)
 
 	c.cities = cities
-	return ma.NewMessage(text, msg, nil, nil)
+	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
 }
 
-func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
+func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+
+	if msg.Type == ma.CALLBACK {
+		return nil, EmptyStep
+	}
 	c.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
@@ -128,7 +136,7 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	}
 
 	c.inProgress = true
-	return ma.NewMessage("Пожалуйста выберите ответ из списка.", msg, nil, nil), c.errStep
+	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), c.errStep
 }
 
 func (c *CitySelection) Reset() {
@@ -140,8 +148,8 @@ type ServiceSelection struct {
 	services  []*entities.Service
 	filter    bool
 	checkCity bool
-	nextStep  int
-	errStep   int
+	nextStep  StepType
+	errStep   StepType
 }
 
 func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
@@ -154,7 +162,7 @@ func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 		services, _ = c.DbAdapter.GetServices("")
 	}
 
-	if msg.Type == ma.TELEGRAM {
+	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, len(services)+1)
 		for idx, service := range services {
 			rows[idx] = make([]tgbotapi.KeyboardButton, 0)
@@ -165,11 +173,11 @@ func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(services) == 0 {
-			return ma.NewMessage("По вашему запросу ничего не найдено", msg, keyboard, nil)
+			return ma.NewMessage("По вашему запросу ничего не найдено", ma.REGULAR, msg, keyboard, nil)
 		}
 
 		c.services = services
-		return ma.NewMessage(" Выберите услугу", msg, keyboard, nil)
+		return ma.NewMessage(" Выберите услугу", ma.REGULAR, msg, keyboard, nil)
 	}
 
 	text := ""
@@ -179,10 +187,14 @@ func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 	text += fmt.Sprintf("%d. Назад\n", len(services)+1)
 
 	c.services = services
-	return ma.NewMessage(text, msg, nil, nil)
+	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
 }
 
-func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
+func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+
+	if msg.Type == ma.CALLBACK {
+		return nil, EmptyStep
+	}
 	s.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
@@ -205,7 +217,7 @@ func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	}
 
 	s.inProgress = true
-	return ma.NewMessage("Пожалуйста выберите ответ из списка.", msg, nil, nil), s.errStep
+	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), s.errStep
 }
 
 func (s *ServiceSelection) Reset() {
@@ -222,7 +234,7 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 
 	masters, _ := m.DbAdapter.GetMasters(m.State.City.ID, m.State.Service.ID)
 
-	if msg.Type == ma.TELEGRAM {
+	if msg.Source == ma.TELEGRAM {
 
 		rows := make([][]tgbotapi.KeyboardButton, len(masters)+1)
 		for idx, master := range masters {
@@ -234,11 +246,11 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(masters) == 0 {
-			return ma.NewMessage("По вашему запросу ничего не найдено", msg, keyboard, nil)
+			return ma.NewMessage("По вашему запросу ничего не найдено", ma.REGULAR, msg, keyboard, nil)
 		}
 
 		m.masters = masters
-		return ma.NewMessage(" Выберите мастера", msg, keyboard, nil)
+		return ma.NewMessage(" Выберите мастера", ma.REGULAR, msg, keyboard, nil)
 	}
 
 	text := ""
@@ -247,10 +259,14 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 	}
 
 	m.masters = masters
-	return ma.NewMessage(text, msg, nil, nil)
+	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
 }
 
-func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
+func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+
+	if msg.Type == ma.CALLBACK {
+		return nil, EmptyStep
+	}
 	m.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
@@ -265,7 +281,7 @@ func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 	}
 
 	m.inProgress = true
-	return ma.NewMessage("Пожалуйста выберите ответ из списка.", msg, nil, nil), EmptyStep
+	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
 }
 
 type Final struct {
@@ -280,7 +296,7 @@ func (f *Final) Request(msg *ma.Message) *ma.Message {
 		f.State.Master.Name,
 	)
 
-	if msg.Type == ma.TELEGRAM {
+	if msg.Source == ma.TELEGRAM {
 
 		rows := make([][]tgbotapi.KeyboardButton, 2)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Да"}}
@@ -289,25 +305,29 @@ func (f *Final) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		f.inProgress = true
-		return ma.NewMessage(text, msg, keyboard, nil)
+		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
 	}
 
 	f.inProgress = true
-	return ma.NewMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", text), msg, nil, nil)
+	return ma.NewMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", text), ma.REGULAR, msg, nil, nil)
 }
 
-func (f *Final) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
+func (f *Final) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+
+	if msg.Type == ma.CALLBACK {
+		return nil, EmptyStep
+	}
 	f.inProgress = false
 
 	switch msg.Text {
 	case "Да":
 		f.State.Reset()
-		return ma.NewMessage("Запись завершена", msg, nil, nil), MainMenuRequestStep
+		return ma.NewMessage("Запись завершена", ma.REGULAR, msg, nil, nil), MainMenuRequestStep
 	case "Нет":
 		f.State.Reset()
-		return ma.NewMessage("Запись отменена", msg, nil, nil), MainMenuRequestStep
+		return ma.NewMessage("Запись отменена", ma.REGULAR, msg, nil, nil), MainMenuRequestStep
 	default:
 		f.inProgress = true
-		return ma.NewMessage("Пожалуйста выберите ответ из списка.", msg, nil, nil), EmptyStep
+		return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
 	}
 }

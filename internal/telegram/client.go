@@ -1,22 +1,32 @@
 package telegram
 
 import (
-	"fmt"
 	"multimessenger_bot/internal/config"
 	ma "multimessenger_bot/internal/messenger_adapter"
+	"net/http"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	handler "multimessenger_bot/internal/telegram/event_handler"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 )
 
 type TelegramClient struct {
-	client      *tgbotapi.BotAPI
+	client      *tgbotapi.Bot
 	cfg         *config.Config
 	recvMsgChan chan *ma.Message
 }
 
 func NewTelegramClient(cfg *config.Config, recvMsgChan chan *ma.Message) (*TelegramClient, error) {
 
-	client, err := tgbotapi.NewBotAPI(cfg.TgToken)
+	client, err := tgbotapi.NewBot(cfg.TgToken, &gotgbot.BotOpts{
+		Client: http.Client{},
+		DefaultRequestOpts: &gotgbot.RequestOpts{
+			Timeout: gotgbot.DefaultTimeout,
+			APIURL:  gotgbot.DefaultAPIURL,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -24,36 +34,20 @@ func NewTelegramClient(cfg *config.Config, recvMsgChan chan *ma.Message) (*Teleg
 }
 
 func (tc *TelegramClient) Connect() error {
-	updateConfig := tgbotapi.NewUpdate(0)
-	updateConfig.Timeout = 30
 
-	events := tc.client.GetUpdatesChan(updateConfig)
-	go func() {
-		for event := range events {
-			if event.Message != nil {
-				msg := &ma.Message{
-					Text:     event.Message.Text,
-					Type:     ma.TELEGRAM,
-					UserID:   fmt.Sprintf("tg%d", event.Message.From.ID),
-					UserData: ma.UserData{TgData: event.Message},
-				}
-				tc.recvMsgChan <- msg
-			} else if event.CallbackQuery != nil {
-				msg := &ma.Message{
-					Type:     ma.TELEGRAM_CALLBACK,
-					UserID:   fmt.Sprintf("tg%d", event.CallbackQuery.From.ID),
-					UserData: ma.UserData{TgCallback: event.CallbackQuery},
-				}
-				tc.recvMsgChan <- msg
-			}
-		}
-	}()
+	dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{})
+	updates := ext.NewUpdater(&ext.UpdaterOpts{Dispatcher: dispatcher})
 
+	updates.StartPolling(tc.client, &ext.PollingOpts{
+		DropPendingUpdates: true,
+	})
+
+	handler := &handler.Handler{RecvMsgChan: tc.recvMsgChan}
+	dispatcher.AddHandler(handler)
 	return nil
 }
 
 func (tc *TelegramClient) Disconnect() {
-	tc.client.StopReceivingUpdates()
 }
 
 func (tc *TelegramClient) SendMessage(msg *ma.Message) error {
@@ -61,20 +55,11 @@ func (tc *TelegramClient) SendMessage(msg *ma.Message) error {
 		return nil
 	}
 
-	send := tgbotapi.NewMessage(msg.TgData.From.ID, msg.Text)
-	if msg.TgMarkup != nil {
-		if msg.TgMarkup.ReplyMarkup != nil {
-			send.ReplyMarkup = msg.TgMarkup.ReplyMarkup
-		} else {
-			send.ReplyMarkup = msg.TgMarkup.InlineMarkup
-		}
-	} else {
-		send.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
-	}
-	_, err := tc.client.Send(send)
+	opts := &tgbotapi.SendMessageOpts{ReplyMarkup: msg.GetTgMarkup()}
+	_, err := tc.client.SendMessage(msg.GetTgID(), msg.Text, opts)
 	return err
 }
 
-func (tc *TelegramClient) GetType() int {
+func (tc *TelegramClient) GetType() ma.MessageSource {
 	return ma.TELEGRAM
 }

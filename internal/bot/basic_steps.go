@@ -7,11 +7,13 @@ import (
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
 
+type StepType uint
+
 const (
-	MainMenuStep = iota
+	MainMenuStep StepType = iota
 	MainMenuRequestStep
 	ServiceSelectionStep
 	CitySelectionStep
@@ -53,10 +55,12 @@ func (s *StepStack) Empty() bool {
 }
 
 type Step interface {
-	ProcessResponse(*ma.Message) (*ma.Message, int)
+	ProcessResponse(*ma.Message) (*ma.Message, StepType)
 	Request(*ma.Message) *ma.Message
 	IsInProgress() bool
+	IsCallBackStep() bool
 	Reset()
+	SetInProgress(bool)
 }
 
 type StepBase struct {
@@ -69,29 +73,42 @@ func (s *StepBase) IsInProgress() bool {
 	return s.inProgress
 }
 
+func (s *StepBase) IsCallBackStep() bool {
+	return false
+}
+
 func (s *StepBase) Reset() {
+}
+
+func (s *StepBase) SetInProgress(flag bool) {
+	s.inProgress = flag
 }
 
 type YesNo struct {
 	StepBase
 	question Question
-	yesStep  int
-	noStep   int
+	yesStep  StepType
+	noStep   StepType
 }
 
 func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 	y.inProgress = true
-	if msg.Type == ma.TELEGRAM {
+	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 2)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Да"}}
 		rows[1] = []tgbotapi.KeyboardButton{{Text: "Нет"}}
-		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewMessage(y.question.Text, msg, keyboard, nil)
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
+		return ma.NewMessage(y.question.Text, ma.REGULAR, msg, keyboard, nil)
 	}
-	return ma.NewMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), msg, nil, nil)
+	return ma.NewMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), ma.REGULAR, msg, nil, nil)
 }
 
-func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
+func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+
+	if msg.Type == ma.CALLBACK {
+		return nil, EmptyStep
+	}
+
 	y.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "да" || userAnswer == "1" {
@@ -103,16 +120,33 @@ func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
 type Prompt struct {
 	StepBase
 	question Question
-	nextStep int
-	errStep  int
+	nextStep StepType
+	errStep  StepType
 }
 
 func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 	p.inProgress = true
-	return ma.NewMessage(p.question.Text, msg, nil, nil)
+	if msg.Source == ma.TELEGRAM {
+		rows := make([][]tgbotapi.KeyboardButton, 1)
+		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
+		return ma.NewMessage(p.question.Text, ma.REGULAR, msg, keyboard, nil)
+	}
+
+	return ma.NewMessage(p.question.Text, ma.REGULAR, msg, nil, nil)
 }
 
-func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
+func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+
+	if msg.Type == ma.CALLBACK {
+		return nil, EmptyStep
+	}
+
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" {
+		return nil, PreviousStep
+	}
+
 	p.inProgress = false
 	p.State.RawInput[p.question.Field] = msg.Text
 	return nil, p.nextStep
@@ -124,31 +158,26 @@ type Test struct {
 
 func (t *Test) Request(msg *ma.Message) *ma.Message {
 	t.inProgress = true
-	row1 := tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonURL("1.com", "http://1.com"),
-		tgbotapi.NewInlineKeyboardButtonData("2", "2"),
-		tgbotapi.NewInlineKeyboardButtonData("3", "3"),
-	)
-
-	row2 := tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("4", "4"),
-		tgbotapi.NewInlineKeyboardButtonData("5", "5"),
-		tgbotapi.NewInlineKeyboardButtonData("6", "6"),
-	)
+	row1 := []tgbotapi.InlineKeyboardButton{
+		{Text: "btn1", Url: "https://google.com"},
+		{Text: "btn2", CallbackData: "test"},
+	}
 
 	var keyboard [][]tgbotapi.InlineKeyboardButton
 
 	keyboard = append(keyboard, row1)
-	keyboard = append(keyboard, row2)
 
 	numericKeyboard := &tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: keyboard,
 	}
 
-	return ma.NewMessage("text", msg, nil, numericKeyboard)
+	return ma.NewMessage("text", ma.CALLBACK, msg, nil, numericKeyboard)
 }
 
-func (t *Test) ProcessResponse(msg *ma.Message) (*ma.Message, int) {
-	t.inProgress = false
-	return nil, EmptyStep
+func (t *Test) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	return ma.NewMessage("test", ma.CALLBACK, msg, nil, nil), EmptyStep
+}
+
+func (t *Test) IsCallBackStep() bool {
+	return true
 }

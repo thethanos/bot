@@ -70,10 +70,10 @@ func (wc *WhatsAppClient) SendMessage(msg *ma.Message) error {
 	}
 	toSend := &proto.Message{Conversation: &msg.Text}
 
-	_, err := wc.client.SendMessage(context.Background(), msg.WaData.Chat, toSend)
+	_, err := wc.client.SendMessage(context.Background(), msg.GetWaID(), toSend)
 	return err
 }
 
-func (wc *WhatsAppClient) GetType() int {
+func (wc *WhatsAppClient) GetType() ma.MessageSource {
 	return ma.WHATSAPP
 }

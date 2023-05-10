@@ -8,13 +8,15 @@ import (
 )
 
 type UserSession struct {
-	CurrentStep Step
-	PrevSteps   StepStack
-	State       *entities.UserState
+	CurrentStep         Step
+	СurrentCallbackStep Step
+	PrevSteps           StepStack
+	PrevCallBackSteps   StepStack
+	State               *entities.UserState
 }
 
 type Bot struct {
-	clients      map[int]ma.ClientInterface
+	clients      map[ma.MessageSource]ma.ClientInterface
 	userSessions map[string]*UserSession
 	recvMsgChan  chan *ma.Message
 	sendMsgChan  chan *ma.Message
@@ -23,7 +25,7 @@ type Bot struct {
 
 func NewBot(clientArray []ma.ClientInterface, dbAdpter *db_adapter.DbAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
 
-	clients := make(map[int]ma.ClientInterface)
+	clients := make(map[ma.MessageSource]ma.ClientInterface)
 	for _, client := range clientArray {
 		clients[client.GetType()] = client
 	}
@@ -65,7 +67,7 @@ func (b *Bot) Run() {
 
 	go func() {
 		for msg := range b.sendMsgChan {
-			b.clients[msg.Type].SendMessage(msg)
+			b.clients[msg.Source].SendMessage(msg)
 		}
 	}()
 }
@@ -76,7 +78,7 @@ func (b *Bot) Shutdown() {
 	}
 }
 
-func (b *Bot) createStep(step int, state *entities.UserState) Step {
+func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	switch step {
 	case MainMenuStep:
 		return &MainMenu{StepBase: StepBase{State: state}}
@@ -147,7 +149,7 @@ func (b *Bot) send(msg *ma.Message) bool {
 	return true
 }
 
-func (b *Bot) processUserSession(msg *ma.Message) {
+func (b *Bot) processMessage(msg *ma.Message) {
 	curStep := b.userSessions[msg.UserID].CurrentStep
 	state := b.userSessions[msg.UserID].State
 	if !curStep.IsInProgress() {
@@ -174,8 +176,71 @@ func (b *Bot) processUserSession(msg *ma.Message) {
 			fallthrough
 		default:
 			b.send(step.Request(msg))
-			b.userSessions[msg.UserID].CurrentStep = step
-			b.userSessions[msg.UserID].PrevSteps.Push(curStep)
+
+			if step.IsCallBackStep() {
+				curStep.SetInProgress(true)
+				b.userSessions[msg.UserID].СurrentCallbackStep = step
+			} else {
+				b.userSessions[msg.UserID].CurrentStep = step
+			}
+
+			if curStep.IsCallBackStep() {
+				b.userSessions[msg.UserID].PrevCallBackSteps.Push(curStep)
+			} else {
+				b.userSessions[msg.UserID].PrevSteps.Push(curStep)
+			}
 		}
+	}
+}
+
+func (b *Bot) processCallback(msg *ma.Message) {
+	curStep := b.userSessions[msg.UserID].СurrentCallbackStep
+	state := b.userSessions[msg.UserID].State
+	if !curStep.IsInProgress() {
+		b.send(curStep.Request(msg))
+	} else {
+		res, next := curStep.ProcessResponse(msg)
+		b.send(res)
+
+		switch step := b.createStep(next, state); next {
+		case PreviousStep:
+			if b.userSessions[msg.UserID].PrevCallBackSteps.Empty() {
+				return
+			}
+
+			prevStep := b.userSessions[msg.UserID].PrevCallBackSteps.Top()
+			b.userSessions[msg.UserID].PrevCallBackSteps.Pop()
+			prevStep.Reset()
+
+			b.send(prevStep.Request(msg))
+			b.userSessions[msg.UserID].СurrentCallbackStep = prevStep
+		case EmptyStep:
+		case MainMenuRequestStep:
+			time.Sleep(1 * time.Second)
+			fallthrough
+		default:
+			b.send(step.Request(msg))
+
+			if step.IsCallBackStep() {
+				b.userSessions[msg.UserID].СurrentCallbackStep = step
+			} else {
+				b.userSessions[msg.UserID].CurrentStep = step
+			}
+
+			if curStep.IsCallBackStep() {
+				b.userSessions[msg.UserID].PrevCallBackSteps.Push(curStep)
+			} else {
+				b.userSessions[msg.UserID].PrevSteps.Push(curStep)
+			}
+		}
+	}
+}
+
+func (b *Bot) processUserSession(msg *ma.Message) {
+
+	if msg.Type == ma.CALLBACK {
+		b.processCallback(msg)
+	} else {
+		b.processMessage(msg)
 	}
 }
