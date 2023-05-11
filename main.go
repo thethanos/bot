@@ -61,11 +61,11 @@ func main() {
 	// This serves our "validation" API, which checks if the input data is valid.
 	server := http.Server{
 		Handler: mux,
-		Addr:    "0.0.0.0:8082",
+		Addr:    ":443",
 	}
 
 	go func() {
-		if err := server.ListenAndServeTLS("localhost.pem", "localhost-key.pem"); err != nil {
+		if err := server.ListenAndServeTLS("dev-full.crt", "dev-key.key"); err != nil {
 			panic("failed to listen and serve: " + err.Error())
 		}
 	}()
