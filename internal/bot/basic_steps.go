@@ -160,7 +160,7 @@ func (t *Test) Request(msg *ma.Message) *ma.Message {
 	t.inProgress = true
 
 	row1 := []tgbotapi.KeyboardButton{
-		{Text: "WebApp1", WebApp: &tgbotapi.WebAppInfo{Url: "https://revenkroz.github.io/telegram-web-app-bot-example/index.html"}},
+		{Text: "WebApp1", WebApp: &tgbotapi.WebAppInfo{Url: "https://bot-dev-domain.com"}},
 		{Text: "WebApp2", WebApp: &tgbotapi.WebAppInfo{Url: "https://youtube.com"}},
 	}
 
