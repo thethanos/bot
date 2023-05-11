@@ -162,6 +162,7 @@ func (t *Test) Request(msg *ma.Message) *ma.Message {
 	row1 := []tgbotapi.KeyboardButton{
 		{Text: "WebApp1", WebApp: &tgbotapi.WebAppInfo{Url: "https://bot-dev-domain.com"}},
 		{Text: "WebApp2", WebApp: &tgbotapi.WebAppInfo{Url: "https://youtube.com"}},
+		{Text: "Назад"},
 	}
 
 	var keyboard [][]tgbotapi.KeyboardButton
@@ -173,13 +174,19 @@ func (t *Test) Request(msg *ma.Message) *ma.Message {
 		ResizeKeyboard: true,
 	}
 
-	return ma.NewMessage("text", ma.CALLBACK, msg, numericKeyboard, nil)
+	return ma.NewMessage("WebApp test step", ma.REGULAR, msg, numericKeyboard, nil)
 }
 
 func (t *Test) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-	return nil, ServiceSelectionStep
+	t.inProgress = false
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" {
+		return nil, PreviousStep
+	}
+
+	return nil, EmptyStep
 }
 
 func (t *Test) IsCallBackStep() bool {
-	return true
+	return false
 }
