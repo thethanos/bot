@@ -3,3 +3,4 @@ credentials.json
 token.json
 service_credentials.json
 *.db
+*.pem
