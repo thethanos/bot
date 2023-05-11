@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
 	ma "multimessenger_bot/internal/messenger_adapter"
@@ -67,7 +68,9 @@ func (b *Bot) Run() {
 
 	go func() {
 		for msg := range b.sendMsgChan {
-			b.clients[msg.Source].SendMessage(msg)
+			if err := b.clients[msg.Source].SendMessage(msg); err != nil {
+				fmt.Println(err)
+			}
 		}
 	}()
 }
@@ -160,12 +163,13 @@ func (b *Bot) processMessage(msg *ma.Message) {
 
 		switch step := b.createStep(next, state); next {
 		case PreviousStep:
+			var prevStep Step
 			if b.userSessions[msg.UserID].PrevSteps.Empty() {
-				return
+				prevStep = b.createStep(MainMenuStep, state)
+			} else {
+				prevStep = b.userSessions[msg.UserID].PrevSteps.Top()
+				b.userSessions[msg.UserID].PrevSteps.Pop()
 			}
-
-			prevStep := b.userSessions[msg.UserID].PrevSteps.Top()
-			b.userSessions[msg.UserID].PrevSteps.Pop()
 			prevStep.Reset()
 
 			b.send(prevStep.Request(msg))

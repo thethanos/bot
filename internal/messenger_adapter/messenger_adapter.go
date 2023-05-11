@@ -24,6 +24,7 @@ type MessageType uint
 const (
 	REGULAR MessageType = iota
 	CALLBACK
+	WEBAPP
 )
 
 type TgMarkup struct {

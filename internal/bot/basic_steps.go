@@ -158,24 +158,26 @@ type Test struct {
 
 func (t *Test) Request(msg *ma.Message) *ma.Message {
 	t.inProgress = true
-	row1 := []tgbotapi.InlineKeyboardButton{
-		{Text: "btn1", Url: "https://google.com"},
-		{Text: "btn2", CallbackData: "test"},
+
+	row1 := []tgbotapi.KeyboardButton{
+		{Text: "WebApp1", WebApp: &tgbotapi.WebAppInfo{Url: "https://revenkroz.github.io/telegram-web-app-bot-example/index.html"}},
+		{Text: "WebApp2", WebApp: &tgbotapi.WebAppInfo{Url: "https://youtube.com"}},
 	}
 
-	var keyboard [][]tgbotapi.InlineKeyboardButton
+	var keyboard [][]tgbotapi.KeyboardButton
 
 	keyboard = append(keyboard, row1)
 
-	numericKeyboard := &tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: keyboard,
+	numericKeyboard := &tgbotapi.ReplyKeyboardMarkup{
+		Keyboard:       keyboard,
+		ResizeKeyboard: true,
 	}
 
-	return ma.NewMessage("text", ma.CALLBACK, msg, nil, numericKeyboard)
+	return ma.NewMessage("text", ma.CALLBACK, msg, numericKeyboard, nil)
 }
 
 func (t *Test) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-	return ma.NewMessage("test", ma.CALLBACK, msg, nil, nil), EmptyStep
+	return nil, ServiceSelectionStep
 }
 
 func (t *Test) IsCallBackStep() bool {
