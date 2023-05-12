@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"multimessenger_bot/internal/bot"
 	"multimessenger_bot/internal/config"
 	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/logger"
 	ma "multimessenger_bot/internal/messenger_adapter"
+	srv "multimessenger_bot/internal/server"
 	"multimessenger_bot/internal/telegram"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -24,49 +24,40 @@ func main() {
 	//	  return
 	//}
 
-	//dbLog := waLog.Stdout("Database", "DEBUG", true)
+	logger := logger.NewLogger()
+
 	cfg, err := config.Load("config.toml")
 	if err != nil {
-		fmt.Print(err)
+		logger.Error("main::config::Load", err)
 		return
 	}
 
-	dbAdapter, _, err := db_adapter.NewDbAdapter()
+	dbAdapter, _, err := db_adapter.NewDbAdapter(logger)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error("main::db_adapter::NewDbAdapter", err)
 		return
 	}
 
 	if err := dbAdapter.AutoMigrate(); err != nil {
-		fmt.Println(err)
 		return
 	}
 
-	//dbAdapter.Test()
-
-	//clientLog := waLog.Stdout("Client", "DEBUG", true)
-
 	recvMsgChan := make(chan *ma.Message)
-	tgClient, _ := telegram.NewTelegramClient(cfg, recvMsgChan)
-	//waClient, _ := whatsapp.NewWhatsAppClient(nil, cfg, waContainer, recvMsgChan)
+	tgClient, _ := telegram.NewTelegramClient(logger, cfg, recvMsgChan)
+	//waClient, _ := whatsapp.NewWhatsAppClient(logger, cfg, waContainer, recvMsgChan)
 
-	bot, _ := bot.NewBot([]ma.ClientInterface{tgClient}, dbAdapter, recvMsgChan)
+	bot, _ := bot.NewBot(logger, []ma.ClientInterface{tgClient}, dbAdapter, recvMsgChan)
 	bot.Run()
 
-	// Setup new HTTP server mux to handle different paths.
-	mux := http.NewServeMux()
-	// This serves the home page.
-	fileServer := http.FileServer(http.Dir("./static"))
-	mux.Handle("/", fileServer)
-	// This serves our "validation" API, which checks if the input data is valid.
-	server := http.Server{
-		Handler: mux,
-		Addr:    ":443",
+	server, err := srv.NewServer(logger, dbAdapter)
+	if err != nil {
+		logger.Error(err)
+		return
 	}
 
 	go func() {
 		if err := server.ListenAndServeTLS("dev-full.crt", "dev-key.key"); err != nil {
-			panic("failed to listen and serve: " + err.Error())
+			logger.Fatal(err)
 		}
 	}()
 
@@ -80,6 +71,5 @@ func main() {
 func setupSignalHandler() chan os.Signal {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-
 	return ch
 }

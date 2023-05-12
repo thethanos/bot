@@ -17,22 +17,17 @@ func (u *UserState) Reset() {
 }
 
 type City struct {
-	ID       string     `json:"id"`
-	Name     string     `json:"name"`
-	Services []*Service `json:"services"`
-	Masters  []*Master  `json:"masters"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type Service struct {
-	ID      string    `json:"id"`
-	Name    string    `json:"name"`
-	Cities  []*City   `json:"cities"`
-	Masters []*Master `json:"masters"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type Master struct {
-	ID       string     `json:"id"`
-	Name     string     `json:"name"`
-	CityID   string     `json:"city_id"`
-	Services []*Service `json:"services"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	CityID string `json:"city_id"`
 }

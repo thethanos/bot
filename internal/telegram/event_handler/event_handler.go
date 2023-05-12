@@ -6,10 +6,19 @@ import (
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
-	RecvMsgChan chan *ma.Message
+	logger      *zap.SugaredLogger
+	recvMsgChan chan *ma.Message
+}
+
+func NewHandler(logger *zap.SugaredLogger, recvMsgChan chan *ma.Message) *Handler {
+	return &Handler{
+		logger:      logger,
+		recvMsgChan: recvMsgChan,
+	}
 }
 
 func (h *Handler) CheckUpdate(client *tgbotapi.Bot, ctx *ext.Context) bool {
@@ -26,7 +35,7 @@ func (h *Handler) HandleUpdate(client *tgbotapi.Bot, ctx *ext.Context) error {
 			UserID: fmt.Sprintf("tg%d", event.Message.From.Id),
 			Data:   &ma.MessageData{TgData: event.Message},
 		}
-		h.RecvMsgChan <- msg
+		h.recvMsgChan <- msg
 	} else if event.CallbackQuery != nil {
 		msg := &ma.Message{
 			Type:   ma.CALLBACK,
@@ -34,7 +43,7 @@ func (h *Handler) HandleUpdate(client *tgbotapi.Bot, ctx *ext.Context) error {
 			UserID: fmt.Sprintf("tg%d", event.CallbackQuery.From.Id),
 			Data:   &ma.MessageData{TgCallback: event.CallbackQuery},
 		}
-		h.RecvMsgChan <- msg
+		h.recvMsgChan <- msg
 	}
 	return nil
 }

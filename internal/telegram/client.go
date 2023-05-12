@@ -10,15 +10,17 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"go.uber.org/zap"
 )
 
 type TelegramClient struct {
-	client      *tgbotapi.Bot
+	logger      *zap.SugaredLogger
 	cfg         *config.Config
 	recvMsgChan chan *ma.Message
+	client      *tgbotapi.Bot
 }
 
-func NewTelegramClient(cfg *config.Config, recvMsgChan chan *ma.Message) (*TelegramClient, error) {
+func NewTelegramClient(logger *zap.SugaredLogger, cfg *config.Config, recvMsgChan chan *ma.Message) (*TelegramClient, error) {
 
 	client, err := tgbotapi.NewBot(cfg.TgToken, &gotgbot.BotOpts{
 		Client: http.Client{},
@@ -42,7 +44,7 @@ func (tc *TelegramClient) Connect() error {
 		DropPendingUpdates: true,
 	})
 
-	handler := &handler.Handler{RecvMsgChan: tc.recvMsgChan}
+	handler := handler.NewHandler(tc.logger, tc.recvMsgChan)
 	dispatcher.AddHandler(handler)
 	return nil
 }

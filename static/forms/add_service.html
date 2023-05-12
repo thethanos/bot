@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>"Добавление услуг"</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+    <div class="box">
+        <div>
+            <input type="text" name="name" id="service_name" placeholder="Услуга">
+        </div>
+        <div>
+            <button onclick="sendToBackend()">Добавить</button>
+        </div>
+    </div>
+    <script>
+        async function sendToBackend() {
+            var service_name = document.getElementById("service_name").value;
+            const response = await fetch("https://bot-dev-domain.com/service", {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ "name": service_name })
+            })
+            const jsonData = await response.json()
+            alert(jsonData)
+        }
+    </script>
+</body>
