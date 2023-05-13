@@ -39,6 +39,7 @@ func main() {
 	}
 
 	if err := dbAdapter.AutoMigrate(); err != nil {
+		logger.Error("main::db_adapter::AutoMigrate", err)
 		return
 	}
 
@@ -46,18 +47,21 @@ func main() {
 	tgClient, _ := telegram.NewTelegramClient(logger, cfg, recvMsgChan)
 	//waClient, _ := whatsapp.NewWhatsAppClient(logger, cfg, waContainer, recvMsgChan)
 
-	bot, _ := bot.NewBot(logger, []ma.ClientInterface{tgClient}, dbAdapter, recvMsgChan)
+	bot, err := bot.NewBot(logger, []ma.ClientInterface{tgClient}, dbAdapter, recvMsgChan)
+	if err != nil {
+		logger.Error("main::bot::NewBot", err)
+	}
 	bot.Run()
 
 	server, err := srv.NewServer(logger, dbAdapter)
 	if err != nil {
-		logger.Error(err)
+		logger.Error("main::server::NewServer", err)
 		return
 	}
 
 	go func() {
 		if err := server.ListenAndServeTLS("dev-full.crt", "dev-key.key"); err != nil {
-			logger.Fatal(err)
+			logger.Fatal("main::server::ListenAndServeTLS", err)
 		}
 	}()
 

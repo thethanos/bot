@@ -40,19 +40,15 @@ func NewDbAdapter(logger *zap.SugaredLogger) (*DbAdapter, *sqlstore.Container, e
 
 func (d *DbAdapter) AutoMigrate() error {
 	if err := d.dbConn.AutoMigrate(&models.City{}); err != nil {
-		d.logger.Error("db_adapter::DbAdapter::AutoMigrate", err)
 		return err
 	}
 	if err := d.dbConn.AutoMigrate(&models.Service{}); err != nil {
-		d.logger.Error("db_adapter::DbAdapter::AutoMigrate", err)
 		return err
 	}
 	if err := d.dbConn.AutoMigrate(&models.Master{}); err != nil {
-		d.logger.Error("db_adapter::DbAdapter::AutoMigrate", err)
 		return err
 	}
 	if err := d.dbConn.AutoMigrate(&models.Join{}); err != nil {
-		d.logger.Error("db_adapter::DbAdapter::AutoMigrate", err)
 		return err
 	}
 
@@ -164,22 +160,30 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 	return result, nil
 }
 
-func (d *DbAdapter) SaveNewCity(name string) error {
-	id := fmt.Sprintf("%d", time.Now().Unix())
-	city := &models.City{
-		ID:   id,
-		Name: name,
-	}
-	return d.dbConn.Create(city).Error
-}
-
 func (d *DbAdapter) SaveNewService(name string) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	service := &models.Service{
 		ID:   id,
 		Name: name,
 	}
-	return d.dbConn.Create(service).Error
+	if err := d.dbConn.Create(service).Error; err != nil {
+		return err
+	}
+	d.logger.Infof("New service added successfully, id: %s, name: %s", id, name)
+	return nil
+}
+
+func (d *DbAdapter) SaveNewCity(name string) error {
+	id := fmt.Sprintf("%d", time.Now().Unix())
+	city := &models.City{
+		ID:   id,
+		Name: name,
+	}
+	if err := d.dbConn.Create(city).Error; err != nil {
+		return err
+	}
+	d.logger.Infof("New city added successfully, id: %s, name: %s", id, name)
+	return nil
 }
 
 func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {

@@ -24,6 +24,7 @@ type RegistrationFinal struct {
 }
 
 func (r *RegistrationFinal) Request(msg *ma.Message) *ma.Message {
+	r.logger.Infof("RegistrationFinal step is sending request")
 	r.inProgress = true
 	data := FormatMapToString(r.State.RawInput)
 	if msg.Source == ma.TELEGRAM {
@@ -37,7 +38,7 @@ func (r *RegistrationFinal) Request(msg *ma.Message) *ma.Message {
 }
 
 func (r *RegistrationFinal) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-
+	r.logger.Infof("RegistrationFinal step is processing response")
 	if msg.Type == ma.CALLBACK {
 		return nil, EmptyStep
 	}

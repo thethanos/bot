@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
+	"go.uber.org/zap"
 )
 
 type StepType uint
@@ -28,17 +29,68 @@ const (
 	RegistrationStepCity
 	RegistrationFinalStep
 	PreviousStep
+	AdminStep
+	AddServiceStep
+	AddCityStep
 	TestStep
 )
+
+func getStepTypeName(step StepType) string {
+	switch step {
+	case MainMenuStep:
+		return "MainMenuStep"
+	case MainMenuRequestStep:
+		return "MainMenuRequestStep"
+	case ServiceSelectionStep:
+		return "ServiceSelectionStep"
+	case CitySelectionStep:
+		return "CitySelectionStep"
+	case QuestionsStep:
+		return "QuestionStep"
+	case AboutStep:
+		return "AboutStep"
+	case MasterSelectionStep:
+		return "MasterSelectionStep"
+	case MasterStep:
+		return "MasterStep"
+	case FinalStep:
+		return "FinalStep"
+	case EmptyStep:
+		return "EmptyStep"
+	case RegistrationStep:
+		return "RegistrationStep"
+	case RegistrationStepService:
+		return "RegistrationStepService"
+	case RegistrationStepCity:
+		return "RegistrationStepCity"
+	case RegistrationFinalStep:
+		return "RegistrationFinalStep"
+	case PreviousStep:
+		return "PreviousStep"
+	case AdminStep:
+		return "AdminStep"
+	case AddServiceStep:
+		return "AddServiceStep"
+	case AddCityStep:
+		return "AddCityStep"
+	case TestStep:
+		return "TestStep"
+	default:
+		return "Unknown type"
+	}
+}
 
 type StepStack struct {
 	steps []Step
 }
 
-func (s *StepStack) Push(step Step) {
-	if s.steps == nil {
-		s.steps = make([]Step, 0)
+func NewStepStack() *StepStack {
+	return &StepStack{
+		steps: make([]Step, 0),
 	}
+}
+
+func (s *StepStack) Push(step Step) {
 	s.steps = append(s.steps, step)
 }
 
@@ -64,6 +116,7 @@ type Step interface {
 }
 
 type StepBase struct {
+	logger     *zap.SugaredLogger
 	inProgress bool
 	State      *entities.UserState
 	DbAdapter  *db_adapter.DbAdapter
@@ -92,6 +145,7 @@ type YesNo struct {
 }
 
 func (y *YesNo) Request(msg *ma.Message) *ma.Message {
+	y.logger.Infof("YesNo step is sending request")
 	y.inProgress = true
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 2)
@@ -104,7 +158,7 @@ func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 }
 
 func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-
+	y.logger.Infof("YesNo step is processing response")
 	if msg.Type == ma.CALLBACK {
 		return nil, EmptyStep
 	}
@@ -112,8 +166,10 @@ func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	y.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "да" || userAnswer == "1" {
+		y.logger.Infof("Next step is %s", getStepTypeName(y.yesStep))
 		return nil, y.yesStep
 	}
+	y.logger.Infof("Next step is %s", getStepTypeName(y.yesStep))
 	return nil, y.noStep
 }
 
@@ -125,6 +181,7 @@ type Prompt struct {
 }
 
 func (p *Prompt) Request(msg *ma.Message) *ma.Message {
+	p.logger.Infof("Prompt step is sending request")
 	p.inProgress = true
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
@@ -137,18 +194,20 @@ func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 }
 
 func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-
+	p.logger.Infof("Prompt step is processing response")
 	if msg.Type == ma.CALLBACK {
 		return nil, EmptyStep
 	}
 
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "назад" {
+		p.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
 
 	p.inProgress = false
 	p.State.RawInput[p.question.Field] = msg.Text
+	p.logger.Infof("Next step is %s", getStepTypeName(p.nextStep))
 	return nil, p.nextStep
 }
 
@@ -157,6 +216,7 @@ type Test struct {
 }
 
 func (t *Test) Request(msg *ma.Message) *ma.Message {
+	t.logger.Infof("Test step is sending request")
 	t.inProgress = true
 
 	row1 := []tgbotapi.KeyboardButton{
@@ -178,6 +238,7 @@ func (t *Test) Request(msg *ma.Message) *ma.Message {
 }
 
 func (t *Test) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	t.logger.Infof("Test step is processing response")
 	t.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "назад" {

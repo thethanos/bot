@@ -38,6 +38,7 @@ func NewBot(logger *zap.SugaredLogger, clientArray []ma.ClientInterface, dbAdpte
 	sendMsgChan := make(chan *ma.Message)
 
 	bot := &Bot{
+		logger:       logger,
 		clients:      clients,
 		userSessions: userSessions,
 		recvMsgChan:  recvMsgChan,
@@ -87,12 +88,17 @@ func (b *Bot) Shutdown() {
 func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	switch step {
 	case MainMenuStep:
-		return &MainMenu{StepBase: StepBase{State: state}}
+		return &MainMenu{
+			StepBase: StepBase{logger: b.logger, State: state},
+		}
 	case MainMenuRequestStep:
-		return &YesNo{question: Question{Text: "Вурнуться в главное меню?"}, yesStep: MainMenuStep, noStep: EmptyStep}
+		return &YesNo{
+			StepBase: StepBase{logger: b.logger},
+			question: Question{Text: "Вурнуться в главное меню?"}, yesStep: MainMenuStep, noStep: EmptyStep,
+		}
 	case CitySelectionStep:
 		return &CitySelection{
-			StepBase:     StepBase{State: state, DbAdapter: b.dbAdapter},
+			StepBase:     StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 			checkService: true,
 			filter:       true,
 			nextStep:     MasterSelectionStep,
@@ -100,50 +106,56 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 		}
 	case ServiceSelectionStep:
 		return &ServiceSelection{
-			StepBase:  StepBase{State: state, DbAdapter: b.dbAdapter},
+			StepBase:  StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 			checkCity: true,
 			filter:    true,
 			nextStep:  MasterSelectionStep,
 			errStep:   EmptyStep,
 		}
 	case MasterSelectionStep:
-		return &MasterSelection{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
+		return &MasterSelection{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case FinalStep:
-		return &Final{StepBase{State: state, DbAdapter: b.dbAdapter}}
+		return &Final{StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case MasterStep:
 		return &YesNo{
-			StepBase: StepBase{State: state, DbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 			question: Question{Text: "Хотите зарегистрироваться как мастер?"},
 			yesStep:  RegistrationStep,
 			noStep:   MainMenuStep,
 		}
 	case RegistrationStep:
 		return &Prompt{
-			StepBase: StepBase{State: state, DbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 			question: Question{Text: "Как вас называть?", Field: "name"},
 			nextStep: RegistrationStepCity,
 			errStep:  RegistrationStep,
 		}
 	case RegistrationStepCity:
 		return &CitySelection{
-			StepBase: StepBase{State: state, DbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 			nextStep: RegistrationStepService,
 			errStep:  EmptyStep,
 		}
 	case RegistrationStepService:
 		return &ServiceSelection{
-			StepBase: StepBase{State: state, DbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 			nextStep: RegistrationFinalStep,
 			errStep:  EmptyStep,
 		}
 	case RegistrationFinalStep:
-		return &RegistrationFinal{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
+		return &RegistrationFinal{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case EmptyStep:
 		return nil
+	case AdminStep:
+		return &Admin{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
+	case AddServiceStep:
+		return &AddService{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
+	case AddCityStep:
+		return &AddCity{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case TestStep:
-		return &Test{StepBase: StepBase{State: state, DbAdapter: b.dbAdapter}}
+		return &Test{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	default:
-		return &MainMenu{StepBase: StepBase{State: state}}
+		return &MainMenu{StepBase: StepBase{logger: b.logger, State: state}}
 	}
 }
 
@@ -152,6 +164,7 @@ func (b *Bot) send(msg *ma.Message) bool {
 		return false
 	}
 	b.sendMsgChan <- msg
+	b.logger.Infof("sending a message: %s", msg.Text)
 	return true
 }
 
