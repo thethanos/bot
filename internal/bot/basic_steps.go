@@ -16,8 +16,10 @@ type StepType uint
 const (
 	MainMenuStep StepType = iota
 	MainMenuRequestStep
+	ServiceCategorySelectionStep
 	ServiceSelectionStep
 	CitySelectionStep
+	CityPromptStep
 	QuestionsStep
 	AboutStep
 	MasterSelectionStep
@@ -30,6 +32,8 @@ const (
 	RegistrationFinalStep
 	PreviousStep
 	AdminStep
+	AdminServiceCategorySelectionStep
+	AddServiceCategoryStep
 	AddServiceStep
 	AddCityStep
 	TestStep
@@ -41,6 +45,8 @@ func getStepTypeName(step StepType) string {
 		return "MainMenuStep"
 	case MainMenuRequestStep:
 		return "MainMenuRequestStep"
+	case ServiceCategorySelectionStep:
+		return "ServiceCategorySelectionStep"
 	case ServiceSelectionStep:
 		return "ServiceSelectionStep"
 	case CitySelectionStep:
@@ -69,6 +75,8 @@ func getStepTypeName(step StepType) string {
 		return "PreviousStep"
 	case AdminStep:
 		return "AdminStep"
+	case AddServiceCategoryStep:
+		return "AddServiceCategoryStep"
 	case AddServiceStep:
 		return "AddServiceStep"
 	case AddCityStep:
@@ -104,6 +112,10 @@ func (s *StepStack) Top() Step {
 
 func (s *StepStack) Empty() bool {
 	return len(s.steps) == 0
+}
+
+func (s *StepStack) Clear() {
+	s.steps = make([]Step, 0)
 }
 
 type Step interface {

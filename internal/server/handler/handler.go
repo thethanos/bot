@@ -41,12 +41,12 @@ func (h *Handler) SaveNewService(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	if err := h.dbAdapter.SaveNewService(service.Name); err != nil {
-		h.logger.Error("server::Handler::SaveNewService", err)
-		rw.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
+	/*
+		if err := h.dbAdapter.SaveNewService(service.Name); err != nil {
+			h.logger.Error("server::Handler::SaveNewService", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	*/
 	rw.WriteHeader(http.StatusOK)
 }

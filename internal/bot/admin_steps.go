@@ -7,6 +7,36 @@ import (
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
 
+type AddServiceCategory struct {
+	StepBase
+}
+
+func (a *AddServiceCategory) Request(msg *ma.Message) *ma.Message {
+	a.logger.Info("AddServiceCategory step is sending request")
+	a.inProgress = true
+	text := "Введите название категории услуги"
+	if msg.Source == ma.TELEGRAM {
+		rows := make([][]tgbotapi.KeyboardButton, 1)
+		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
+		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
+	}
+	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
+}
+
+func (a *AddServiceCategory) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	a.logger.Info("AddServiceCategory step is processing response")
+	a.inProgress = false
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" {
+		a.logger.Info("Next step is PreviousStep")
+		return nil, PreviousStep
+	}
+	a.DbAdapter.SaveNewServiceCategory(msg.Text)
+	a.logger.Info("Next step is PreviousStep")
+	return nil, PreviousStep
+}
+
 type AddService struct {
 	StepBase
 }
@@ -18,7 +48,7 @@ func (a *AddService) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
-		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
 	}
 	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
@@ -32,7 +62,7 @@ func (a *AddService) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.DbAdapter.SaveNewService(msg.Text)
+	a.DbAdapter.SaveNewService(msg.Text, a.State.ServiceCategory.ID)
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
 }

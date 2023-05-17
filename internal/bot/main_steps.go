@@ -18,11 +18,11 @@ func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 	m.State.Reset()
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 6)
-		rows[0] = []tgbotapi.KeyboardButton{{Text: "Услуги"}}
-		rows[1] = []tgbotapi.KeyboardButton{{Text: "Город"}}
-		rows[2] = []tgbotapi.KeyboardButton{{Text: "Вопросы"}}
-		rows[3] = []tgbotapi.KeyboardButton{{Text: "О нас"}}
-		rows[4] = []tgbotapi.KeyboardButton{{Text: "Мастер"}}
+		rows[0] = []tgbotapi.KeyboardButton{{Text: "Список услуг"}}
+		rows[1] = []tgbotapi.KeyboardButton{{Text: "По городу"}}
+		rows[2] = []tgbotapi.KeyboardButton{{Text: "О нас"}}
+		rows[3] = []tgbotapi.KeyboardButton{{Text: "Для мастеров"}}
+		rows[4] = []tgbotapi.KeyboardButton{{Text: "Модель"}}
 		rows[5] = []tgbotapi.KeyboardButton{{Text: "Test"}}
 
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
@@ -44,15 +44,15 @@ func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	m.inProgress = false
 
 	switch strings.ToLower(msg.Text) {
-	case "услуги":
-		return nil, ServiceSelectionStep
-	case "город":
-		return nil, CitySelectionStep
-	case "вопросы":
-		return nil, QuestionsStep
+	case "список услуг":
+		return nil, ServiceCategorySelectionStep
+	case "по городу":
+		return nil, CityPromptStep
 	case "о нас":
+		return nil, QuestionsStep
+	case "для мастеров":
 		return nil, AboutStep
-	case "мастер":
+	case "модель":
 		return nil, MasterStep
 	case "админ":
 		return nil, AdminStep
@@ -147,27 +147,140 @@ func (c *CitySelection) Reset() {
 	c.State.City = nil
 }
 
-type ServiceSelection struct {
+type CityPrompt struct {
 	StepBase
-	services  []*entities.Service
-	filter    bool
-	checkCity bool
-	nextStep  StepType
-	errStep   StepType
 }
 
-func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
-	c.logger.Infof("ServiceSelection step is sending request")
+func (c *CityPrompt) Request(msg *ma.Message) *ma.Message {
+	c.logger.Infof("CityPrompt step is sending request")
 	c.inProgress = true
 
-	var services []*entities.Service
-	if c.filter && c.State.City != nil {
-		services, _ = c.DbAdapter.GetServices(c.State.City.ID)
+	text := "Введите город"
+	if msg.Source == ma.TELEGRAM {
+		rows := make([][]tgbotapi.KeyboardButton, 1)
+		rows[0] = []tgbotapi.KeyboardButton{{Text: "Главное меню"}}
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
+		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
+	}
+
+	return ma.NewMessage(fmt.Sprintf("%s\n1. Назад\n2. Главное меню", text), ma.REGULAR, msg, nil, nil)
+}
+
+func (c *CityPrompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	c.logger.Infof("CityPrompt step is processing response")
+	c.inProgress = false
+
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "главное меню" || userAnswer == "1" {
+		return nil, MainMenuStep
+	}
+
+	city, err := c.DbAdapter.GetCity(msg.Text)
+	if err != nil {
+		c.inProgress = true
+		c.logger.Infof("Next step is EmptyStep")
+		return ma.NewMessage(fmt.Sprintf("По запросу %s ничего не найдено", msg.Text), ma.REGULAR, msg, nil, nil), EmptyStep
+	}
+	c.State.City = city
+	if c.State.ServiceCategory == nil {
+		c.logger.Infof("Next step is ServiceSelectionStep")
+		return nil, ServiceCategorySelectionStep
+	}
+	c.logger.Infof("Next step is MasterSelectionStep")
+	return nil, MasterSelectionStep
+}
+
+type ServiceCategorySelection struct {
+	StepBase
+	categories []*entities.ServiceCategory
+	filter     bool
+	addSrvMode bool
+	errStep    StepType
+}
+
+func (s *ServiceCategorySelection) Request(msg *ma.Message) *ma.Message {
+	s.logger.Infof("ServiceCategorySelection step is sending request")
+	s.inProgress = true
+
+	var categories []*entities.ServiceCategory
+	if s.filter && s.State.City != nil {
+		categories, _ = s.DbAdapter.GetCategories(s.State.City.ID)
 	} else {
-		services, _ = c.DbAdapter.GetServices("")
+		categories, _ = s.DbAdapter.GetCategories("")
 	}
 
 	if msg.Source == ma.TELEGRAM {
+		rows := make([][]tgbotapi.KeyboardButton, len(categories)+1)
+		for idx, category := range categories {
+			rows[idx] = make([]tgbotapi.KeyboardButton, 0)
+			rows[idx] = append(rows[idx], tgbotapi.KeyboardButton{Text: category.Name})
+		}
+		rows[len(categories)] = make([]tgbotapi.KeyboardButton, 0)
+		rows[len(categories)] = append(rows[len(categories)], tgbotapi.KeyboardButton{Text: "Назад"})
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
+
+		if len(categories) == 0 {
+			return ma.NewMessage("Услуги не найдены", ma.REGULAR, msg, keyboard, nil)
+		}
+
+		s.categories = categories
+		return ma.NewMessage(" Выберите категорию услуг", ma.REGULAR, msg, keyboard, nil)
+	}
+
+	text := ""
+	for idx, category := range categories {
+		text += fmt.Sprintf("%d. %s\n", idx+1, category.Name)
+	}
+	text += fmt.Sprintf("%d. Назад\n", len(categories)+1)
+
+	s.categories = categories
+	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
+}
+
+func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	s.logger.Info("ServiceCategorySelection step is processing response")
+	if msg.Type == ma.CALLBACK {
+		return nil, EmptyStep
+	}
+	s.inProgress = false
+
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" || userAnswer == fmt.Sprintf("%d", len(s.categories)+1) {
+		return nil, PreviousStep
+	}
+	for idx, service := range s.categories {
+		if userAnswer == strings.ToLower(service.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
+			s.State.ServiceCategory = service
+			if s.addSrvMode {
+				s.logger.Info("Next step is AddServiceStep")
+				return nil, AddServiceStep
+			}
+			s.logger.Info("Next step is ServiceSelectionStep")
+			return nil, ServiceSelectionStep
+		}
+	}
+
+	s.inProgress = true
+	s.logger.Infof("Next step is %s", getStepTypeName(s.errStep))
+	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), s.errStep
+}
+
+func (s *ServiceCategorySelection) Reset() {
+	s.State.ServiceCategory = nil
+}
+
+type ServiceSelection struct {
+	StepBase
+	services []*entities.Service
+}
+
+func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
+	s.logger.Infof("ServiceSelection step is sending request")
+	s.inProgress = true
+	services, _ := s.DbAdapter.GetServices(s.State.ServiceCategory.ID)
+
+	if msg.Source == ma.TELEGRAM {
+
 		rows := make([][]tgbotapi.KeyboardButton, len(services)+1)
 		for idx, service := range services {
 			rows[idx] = make([]tgbotapi.KeyboardButton, 0)
@@ -181,52 +294,42 @@ func (c *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 			return ma.NewMessage("По вашему запросу ничего не найдено", ma.REGULAR, msg, keyboard, nil)
 		}
 
-		c.services = services
+		s.services = services
 		return ma.NewMessage(" Выберите услугу", ma.REGULAR, msg, keyboard, nil)
 	}
 
 	text := ""
 	for idx, service := range services {
-		text += fmt.Sprintf("%d. %s\n", idx+1, service.Name)
+		text += fmt.Sprintf("%d. %s", idx+1, service.Name)
 	}
-	text += fmt.Sprintf("%d. Назад\n", len(services)+1)
 
-	c.services = services
+	s.services = services
 	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
 }
 
 func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-	s.logger.Infof("ServiceSelection step is processing response")
-	if msg.Type == ma.CALLBACK {
-		return nil, EmptyStep
-	}
+	s.logger.Info("ServiceSelection step is processing response")
 	s.inProgress = false
-
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "назад" || userAnswer == fmt.Sprintf("%d", len(s.services)+1) {
+		s.logger.Infof("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
 	for idx, service := range s.services {
 		if userAnswer == strings.ToLower(service.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
 			s.State.Service = service
-			if s.checkCity {
-				if s.State.City == nil {
-					return nil, CitySelectionStep
-				} else {
-					return nil, s.nextStep
-				}
-			} else {
-				return nil, s.nextStep
+			if s.State.City == nil {
+				s.logger.Infof("Next step is CityPromptStep")
+				return nil, CityPromptStep
 			}
+			s.logger.Infof("Next step is MasterSelectionStep")
+			return nil, MasterSelectionStep
 		}
 	}
 
 	s.inProgress = true
-	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), s.errStep
-}
-
-func (s *ServiceSelection) Reset() {
-	s.State.Service = nil
+	s.logger.Infof("Next step is EmptyStep")
+	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
 }
 
 type MasterSelection struct {
@@ -271,7 +374,7 @@ func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepTyp
 	if msg.Type == ma.CALLBACK {
 		return nil, EmptyStep
 	}
-	m.logger.Infof("Next step is MainMenuRequestStep")
+	m.logger.Infof("MasterSelection step is processing response")
 	m.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
@@ -348,14 +451,15 @@ func (a *Admin) Request(msg *ma.Message) *ma.Message {
 
 	text := "Панель управления"
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 3)
-		rows[0] = []tgbotapi.KeyboardButton{{Text: "Добавить услугу"}}
-		rows[1] = []tgbotapi.KeyboardButton{{Text: "Добавить город"}}
-		rows[2] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
+		rows := make([][]tgbotapi.KeyboardButton, 4)
+		rows[0] = []tgbotapi.KeyboardButton{{Text: "Добавить категорию услуг"}}
+		rows[1] = []tgbotapi.KeyboardButton{{Text: "Добавить услугу"}}
+		rows[2] = []tgbotapi.KeyboardButton{{Text: "Добавить город"}}
+		rows[3] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
 	}
-	return ma.NewMessage(fmt.Sprintf("%s\n1: Добавить услугу\n2. Добавить город\n3. Назад", text), ma.REGULAR, msg, nil, nil)
+	return ma.NewMessage(fmt.Sprintf("%s\n1. Добавить категорию услуг\n2: Добавить услугу\n3. Добавить город\n4. Назад", text), ma.REGULAR, msg, nil, nil)
 }
 
 func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -372,15 +476,18 @@ func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	}
 
 	switch userAnswer {
+	case "добавить категорию услуг":
+		a.logger.Info("Next step is AddServiceCategory")
+		return nil, AddServiceCategoryStep
 	case "добавить услугу":
-		a.logger.Infof("Next step is AddServiceStep")
-		return nil, AddServiceStep
+		a.logger.Info("Next step is AddServiceStep")
+		return nil, AdminServiceCategorySelectionStep
 	case "добавить город":
-		a.logger.Infof("Next step is AddCityStep")
+		a.logger.Info("Next step is AddCityStep")
 		return nil, AddCityStep
 	default:
 		a.inProgress = true
-		a.logger.Infof("Next step is EmptyStep")
+		a.logger.Info("Next step is EmptyStep")
 		return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
 	}
 }

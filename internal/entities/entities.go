@@ -1,11 +1,12 @@
 package entities
 
 type UserState struct {
-	City     *City
-	Service  *Service
-	Master   *Master
-	Cursor   int
-	RawInput map[string]string
+	City            *City
+	ServiceCategory *ServiceCategory
+	Service         *Service
+	Master          *Master
+	Cursor          int
+	RawInput        map[string]string
 }
 
 func (u *UserState) Reset() {
@@ -17,17 +18,27 @@ func (u *UserState) Reset() {
 }
 
 type City struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID       string `json:"id"`
+	IndexStr string `json:"index_str"`
+	Name     string `json:"name"`
+}
+
+type ServiceCategory struct {
+	ID       string `json:"id"`
+	IndexStr string `json:"index_str"`
+	Name     string `json:"name"`
 }
 
 type Service struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID         string `json:"id"`
+	IndexStr   string `json:"index_str"`
+	Name       string `json:"name"`
+	CategoryID string `json:"category_id"`
 }
 
 type Master struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	CityID string `json:"city_id"`
+	ID       string `json:"id"`
+	IndexStr string `json:"index_str"`
+	Name     string `json:"name"`
+	CityID   string `json:"city_id"`
 }

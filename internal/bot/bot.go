@@ -104,13 +104,19 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 			nextStep:     MasterSelectionStep,
 			errStep:      EmptyStep,
 		}
+	case CityPromptStep:
+		return &CityPrompt{
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+		}
+	case ServiceCategorySelectionStep:
+		return &ServiceCategorySelection{
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			filter:   true,
+			errStep:  EmptyStep,
+		}
 	case ServiceSelectionStep:
 		return &ServiceSelection{
-			StepBase:  StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			checkCity: true,
-			filter:    true,
-			nextStep:  MasterSelectionStep,
-			errStep:   EmptyStep,
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 		}
 	case MasterSelectionStep:
 		return &MasterSelection{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
@@ -139,8 +145,6 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	case RegistrationStepService:
 		return &ServiceSelection{
 			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			nextStep: RegistrationFinalStep,
-			errStep:  EmptyStep,
 		}
 	case RegistrationFinalStep:
 		return &RegistrationFinal{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
@@ -148,6 +152,15 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 		return nil
 	case AdminStep:
 		return &Admin{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
+	case AdminServiceCategorySelectionStep:
+		return &ServiceCategorySelection{
+			StepBase:   StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			addSrvMode: true,
+			filter:     false,
+			errStep:    EmptyStep,
+		}
+	case AddServiceCategoryStep:
+		return &AddServiceCategory{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case AddServiceStep:
 		return &AddService{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case AddCityStep:
@@ -191,6 +204,10 @@ func (b *Bot) processMessage(msg *ma.Message) {
 			b.send(prevStep.Request(msg))
 			b.userSessions[msg.UserID].CurrentStep = prevStep
 		case EmptyStep:
+		case MainMenuStep:
+			b.send(step.Request(msg))
+			b.userSessions[msg.UserID].CurrentStep = step
+			b.userSessions[msg.UserID].PrevSteps.Clear()
 		case MainMenuRequestStep:
 			time.Sleep(1 * time.Second)
 			fallthrough
