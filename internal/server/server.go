@@ -16,6 +16,7 @@ func NewServer(logger *zap.SugaredLogger, dbAdapter *db_adapter.DbAdapter) (*htt
 	router := mux.NewRouter()
 	getRouter := router.Methods(http.MethodGet).Subrouter()
 	getRouter.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
+	getRouter.HandleFunc("/masters", handler.GetMastersList)
 
 	postRouter := router.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/city", handler.SaveNewCity)

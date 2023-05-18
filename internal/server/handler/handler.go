@@ -22,12 +22,17 @@ func NewHandler(logger *zap.SugaredLogger, dbAdapter *db_adapter.DbAdapter) *Han
 	}
 }
 
+func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+	rw.Write([]byte("Success"))
+}
+
 func (h *Handler) SaveNewCity(rw http.ResponseWriter, req *http.Request) {
 
 }
 
 func (h *Handler) SaveNewService(rw http.ResponseWriter, req *http.Request) {
-	h.logger.Infof("Request received %s", req.URL)
+	h.logger.Infof("Request received: %s", req.URL)
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		h.logger.Error("server::Handler::SaveNewService", err)

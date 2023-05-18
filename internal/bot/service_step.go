@@ -158,6 +158,7 @@ func (s *ServiceCategorySelection) Reset() {
 
 type ServiceSelectionStepMode interface {
 	NextStep() StepType
+	MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton
 	Buttons() [][]tgbotapi.KeyboardButton
 }
 
@@ -165,7 +166,17 @@ type BaseServiceSelectionMode struct {
 }
 
 func (b *BaseServiceSelectionMode) NextStep() StepType {
-	return MasterSelectionStep
+	return EmptyStep
+}
+
+func (b *BaseServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
+	rows := make([][]tgbotapi.KeyboardButton, 0)
+	for _, service := range services {
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name, WebApp: &tgbotapi.WebAppInfo{
+			Url: fmt.Sprintf("https://bot-dev-domain.com?city=%s&service=%s", cityId, service.ID),
+		}}})
+	}
+	return rows
 }
 
 func (b *BaseServiceSelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
@@ -183,12 +194,28 @@ func (m *MainMenuServiceSelectionMode) NextStep() StepType {
 	return CitySelectionStep
 }
 
+func (m *MainMenuServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
+	rows := make([][]tgbotapi.KeyboardButton, 0)
+	for _, service := range services {
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name}})
+	}
+	return rows
+}
+
 type RegistrationServiceSelectionMode struct {
 	BaseServiceSelectionMode
 }
 
 func (b *RegistrationServiceSelectionMode) NextStep() StepType {
 	return MasterRegistrationFinalStep
+}
+
+func (b *RegistrationServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
+	rows := make([][]tgbotapi.KeyboardButton, 0)
+	for _, service := range services {
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name}})
+	}
+	return rows
 }
 
 type ServiceSelection struct {
@@ -203,10 +230,7 @@ func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 	services, _ := s.dbAdapter.GetServices(s.state.ServiceCategory.ID)
 
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 0)
-		for _, service := range services {
-			rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name}})
-		}
+		rows := s.mode.MenuItems(s.state.GetCityID(), services)
 		rows = append(rows, s.mode.Buttons()...)
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
