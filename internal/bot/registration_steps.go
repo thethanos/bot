@@ -28,9 +28,9 @@ func (r *RegistrationFinal) Request(msg *ma.Message) *ma.Message {
 	r.inProgress = true
 	data := FormatMapToString(r.State.RawInput)
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 2)
-		rows[0] = []tgbotapi.KeyboardButton{{Text: "Да"}}
-		rows[1] = []tgbotapi.KeyboardButton{{Text: "Нет"}}
+		rows := make([][]tgbotapi.KeyboardButton, 0)
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Да"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Нет"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?", data), ma.REGULAR, msg, keyboard, nil)
 	}

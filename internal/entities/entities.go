@@ -11,6 +11,7 @@ type UserState struct {
 
 func (u *UserState) Reset() {
 	u.City = nil
+	u.ServiceCategory = nil
 	u.Service = nil
 	u.Master = nil
 	u.Cursor = 0

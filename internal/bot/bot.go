@@ -96,16 +96,13 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 			StepBase: StepBase{logger: b.logger},
 			question: Question{Text: "Вурнуться в главное меню?"}, yesStep: MainMenuStep, noStep: EmptyStep,
 		}
-	case CitySelectionStep:
-		return &CitySelection{
-			StepBase:     StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			checkService: true,
-			filter:       true,
-			nextStep:     MasterSelectionStep,
-			errStep:      EmptyStep,
-		}
 	case CityPromptStep:
 		return &CityPrompt{
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			nextStep: ServiceCategorySelectionStep,
+		}
+	case CitySelectionStep:
+		return &CitySelection{
 			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 		}
 	case ServiceCategorySelectionStep:
@@ -117,36 +114,38 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	case ServiceSelectionStep:
 		return &ServiceSelection{
 			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			nextStep: MasterSelectionStep,
 		}
-	case MasterSelectionStep:
-		return &MasterSelection{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
-	case FinalStep:
-		return &Final{StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case MasterStep:
 		return &YesNo{
 			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 			question: Question{Text: "Хотите зарегистрироваться как мастер?"},
-			yesStep:  RegistrationStep,
+			yesStep:  MasterRegistrationStep,
 			noStep:   MainMenuStep,
 		}
-	case RegistrationStep:
+	case MasterRegistrationStep:
 		return &Prompt{
 			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
 			question: Question{Text: "Как вас называть?", Field: "name"},
-			nextStep: RegistrationStepCity,
-			errStep:  RegistrationStep,
+			nextStep: MasterCityPromptStep,
+			errStep:  MasterRegistrationStep,
 		}
-	case RegistrationStepCity:
-		return &CitySelection{
+	case MasterCityPromptStep:
+		return &CityPrompt{
 			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			nextStep: RegistrationStepService,
-			errStep:  EmptyStep,
+			nextStep: MasterServiceCategorySecletionStep,
 		}
-	case RegistrationStepService:
+	case MasterServiceCategorySecletionStep:
+		return &ServiceCategorySelection{
+			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			filter:   false,
+		}
+	case MasterServiceSelectionStep:
 		return &ServiceSelection{
 			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			nextStep: MasterRegistrationFinalStep,
 		}
-	case RegistrationFinalStep:
+	case MasterRegistrationFinalStep:
 		return &RegistrationFinal{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case EmptyStep:
 		return nil
@@ -165,8 +164,6 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 		return &AddService{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	case AddCityStep:
 		return &AddCity{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
-	case TestStep:
-		return &Test{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
 	default:
 		return &MainMenu{StepBase: StepBase{logger: b.logger, State: state}}
 	}

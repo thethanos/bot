@@ -18,25 +18,23 @@ const (
 	MainMenuRequestStep
 	ServiceCategorySelectionStep
 	ServiceSelectionStep
-	CitySelectionStep
 	CityPromptStep
-	QuestionsStep
-	AboutStep
+	CitySelectionStep
 	MasterSelectionStep
+	AboutStep
 	MasterStep
-	FinalStep
-	EmptyStep
-	RegistrationStep
-	RegistrationStepService
-	RegistrationStepCity
-	RegistrationFinalStep
+	MasterRegistrationStep
+	MasterCityPromptStep
+	MasterServiceCategorySecletionStep
+	MasterServiceSelectionStep
+	MasterRegistrationFinalStep
 	PreviousStep
 	AdminStep
 	AdminServiceCategorySelectionStep
 	AddServiceCategoryStep
 	AddServiceStep
 	AddCityStep
-	TestStep
+	EmptyStep
 )
 
 func getStepTypeName(step StepType) string {
@@ -49,27 +47,21 @@ func getStepTypeName(step StepType) string {
 		return "ServiceCategorySelectionStep"
 	case ServiceSelectionStep:
 		return "ServiceSelectionStep"
-	case CitySelectionStep:
-		return "CitySelectionStep"
-	case QuestionsStep:
-		return "QuestionStep"
-	case AboutStep:
-		return "AboutStep"
 	case MasterSelectionStep:
 		return "MasterSelectionStep"
+	case AboutStep:
+		return "AboutStep"
 	case MasterStep:
 		return "MasterStep"
-	case FinalStep:
-		return "FinalStep"
 	case EmptyStep:
 		return "EmptyStep"
-	case RegistrationStep:
-		return "RegistrationStep"
-	case RegistrationStepService:
-		return "RegistrationStepService"
-	case RegistrationStepCity:
-		return "RegistrationStepCity"
-	case RegistrationFinalStep:
+	case MasterRegistrationStep:
+		return "MasterRegistrationStep"
+	case MasterServiceCategorySecletionStep:
+		return "MasterServiceCategorySecletionStep"
+	case MasterServiceSelectionStep:
+		return "MasterServiceSelectionStep"
+	case MasterRegistrationFinalStep:
 		return "RegistrationFinalStep"
 	case PreviousStep:
 		return "PreviousStep"
@@ -81,8 +73,6 @@ func getStepTypeName(step StepType) string {
 		return "AddServiceStep"
 	case AddCityStep:
 		return "AddCityStep"
-	case TestStep:
-		return "TestStep"
 	default:
 		return "Unknown type"
 	}
