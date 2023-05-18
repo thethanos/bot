@@ -173,7 +173,7 @@ func (b *BaseServiceSelectionMode) MenuItems(cityId string, services []*entities
 	rows := make([][]tgbotapi.KeyboardButton, 0)
 	for _, service := range services {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name, WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("https://bot-dev-domain.com?city=%s&service=%s", cityId, service.ID),
+			Url: fmt.Sprintf("https://bot-dev-domain.com/masters?city=%s&service=%s", cityId, service.ID),
 		}}})
 	}
 	return rows
