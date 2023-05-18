@@ -16,6 +16,8 @@ type StepType uint
 const (
 	MainMenuStep StepType = iota
 	MainMenuRequestStep
+	MainMenuServiceCategorySelectionStep
+	MainMenuSericeSelectionStep
 	ServiceCategorySelectionStep
 	ServiceSelectionStep
 	CityPromptStep
@@ -43,6 +45,10 @@ func getStepTypeName(step StepType) string {
 		return "MainMenuStep"
 	case MainMenuRequestStep:
 		return "MainMenuRequestStep"
+	case MainMenuServiceCategorySelectionStep:
+		return "MainMenuServiceCategorySelectionStep"
+	case MainMenuSericeSelectionStep:
+		return "MainMenuSericeSelectionStep"
 	case ServiceCategorySelectionStep:
 		return "ServiceCategorySelectionStep"
 	case ServiceSelectionStep:
@@ -120,8 +126,8 @@ type Step interface {
 type StepBase struct {
 	logger     *zap.SugaredLogger
 	inProgress bool
-	State      *entities.UserState
-	DbAdapter  *db_adapter.DbAdapter
+	state      *entities.UserState
+	dbAdapter  *db_adapter.DbAdapter
 }
 
 func (s *StepBase) IsInProgress() bool {
@@ -208,7 +214,7 @@ func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	}
 
 	p.inProgress = false
-	p.State.RawInput[p.question.Field] = msg.Text
+	p.state.RawInput[p.question.Field] = msg.Text
 	p.logger.Infof("Next step is %s", getStepTypeName(p.nextStep))
 	return nil, p.nextStep
 }

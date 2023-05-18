@@ -13,12 +13,6 @@ type Question struct {
 	Field string
 }
 
-var MasterQuestions = []*Question{
-	{Text: "Как вас называть?", Field: "name"},
-	{Text: "В каком городе вы работаете?", Field: "city"},
-	{Text: "Какую услугу предоставляете?", Field: "service"},
-}
-
 type RegistrationFinal struct {
 	StepBase
 }
@@ -26,7 +20,7 @@ type RegistrationFinal struct {
 func (r *RegistrationFinal) Request(msg *ma.Message) *ma.Message {
 	r.logger.Infof("RegistrationFinal step is sending request")
 	r.inProgress = true
-	data := FormatMapToString(r.State.RawInput)
+	data := FormatMapToString(r.state.RawInput)
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Да"}})
@@ -45,11 +39,11 @@ func (r *RegistrationFinal) ProcessResponse(msg *ma.Message) (*ma.Message, StepT
 	r.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "да" || userAnswer == "1" {
-		r.DbAdapter.SaveNewMaster(r.State)
-		r.State.Reset()
+		r.dbAdapter.SaveNewMaster(r.state)
+		r.state.Reset()
 		return ma.NewMessage("Регистрация прошла успешно!", ma.REGULAR, msg, nil, nil), MainMenuRequestStep
 	}
-	r.State.Reset()
+	r.state.Reset()
 	return nil, MainMenuRequestStep
 }
 

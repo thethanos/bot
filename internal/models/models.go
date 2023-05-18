@@ -27,7 +27,12 @@ type Master struct {
 }
 
 type Join struct {
+	CityID    string `gorm:"city_id"`
+	ServiceID string `gorm:"service_id"`
+	MasterID  string `gorm:"master_id"`
+}
+
+type JoinCityCategory struct {
 	CityID            string `gorm:"city_id"`
 	ServiceCategoryID string `gorm:"service_category_id"`
-	MasterID          string `gorm:"master_id"`
 }

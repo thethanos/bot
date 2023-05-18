@@ -89,83 +89,104 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	switch step {
 	case MainMenuStep:
 		return &MainMenu{
-			StepBase: StepBase{logger: b.logger, State: state},
+			StepBase: StepBase{logger: b.logger, state: state},
 		}
 	case MainMenuRequestStep:
 		return &YesNo{
 			StepBase: StepBase{logger: b.logger},
 			question: Question{Text: "Вурнуться в главное меню?"}, yesStep: MainMenuStep, noStep: EmptyStep,
 		}
+	case ServiceCategorySelectionStep:
+		return &ServiceCategorySelection{
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			mode: &BaseServiceCategoryMode{
+				dbAdapter: b.dbAdapter,
+			},
+		}
 	case CityPromptStep:
 		return &CityPrompt{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			nextStep: ServiceCategorySelectionStep,
+			StepBase: StepBase{
+				logger:    b.logger,
+				state:     state,
+				dbAdapter: b.dbAdapter,
+			},
+			mode: &MainMenuCityPromptMode{},
 		}
 	case CitySelectionStep:
 		return &CitySelection{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
 		}
-	case ServiceCategorySelectionStep:
+	case MainMenuServiceCategorySelectionStep:
 		return &ServiceCategorySelection{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			filter:   true,
-			errStep:  EmptyStep,
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			mode: &MainMenuServiceCategoryMode{
+				BaseServiceCategoryMode: BaseServiceCategoryMode{
+					dbAdapter: b.dbAdapter,
+				},
+			},
+		}
+	case MainMenuSericeSelectionStep:
+		return &ServiceSelection{
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			mode:     &MainMenuServiceSelectionMode{},
 		}
 	case ServiceSelectionStep:
 		return &ServiceSelection{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			nextStep: MasterSelectionStep,
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			mode:     &BaseServiceSelectionMode{},
 		}
 	case MasterStep:
 		return &YesNo{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
 			question: Question{Text: "Хотите зарегистрироваться как мастер?"},
 			yesStep:  MasterRegistrationStep,
 			noStep:   MainMenuStep,
 		}
 	case MasterRegistrationStep:
 		return &Prompt{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
 			question: Question{Text: "Как вас называть?", Field: "name"},
 			nextStep: MasterCityPromptStep,
 			errStep:  MasterRegistrationStep,
 		}
 	case MasterCityPromptStep:
 		return &CityPrompt{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			nextStep: MasterServiceCategorySecletionStep,
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			mode:     &RegistrationCityPromptMode{},
 		}
 	case MasterServiceCategorySecletionStep:
 		return &ServiceCategorySelection{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			filter:   false,
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			mode: &MasterServiceCategoryMode{
+				BaseServiceCategoryMode: BaseServiceCategoryMode{dbAdapter: b.dbAdapter},
+			},
 		}
 	case MasterServiceSelectionStep:
 		return &ServiceSelection{
-			StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			nextStep: MasterRegistrationFinalStep,
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			mode:     &RegistrationServiceSelectionMode{},
 		}
 	case MasterRegistrationFinalStep:
-		return &RegistrationFinal{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
+		return &RegistrationFinal{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	case EmptyStep:
 		return nil
 	case AdminStep:
-		return &Admin{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
+		return &Admin{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	case AdminServiceCategorySelectionStep:
 		return &ServiceCategorySelection{
-			StepBase:   StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter},
-			addSrvMode: true,
-			filter:     false,
-			errStep:    EmptyStep,
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			mode: &AdminServiceCategoryMode{
+				BaseServiceCategoryMode: BaseServiceCategoryMode{dbAdapter: b.dbAdapter},
+			},
 		}
 	case AddServiceCategoryStep:
-		return &AddServiceCategory{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
+		return &AddServiceCategory{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	case AddServiceStep:
-		return &AddService{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
+		return &AddService{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	case AddCityStep:
-		return &AddCity{StepBase: StepBase{logger: b.logger, State: state, DbAdapter: b.dbAdapter}}
+		return &AddCity{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	default:
-		return &MainMenu{StepBase: StepBase{logger: b.logger, State: state}}
+		return &MainMenu{StepBase: StepBase{logger: b.logger, state: state}}
 	}
 }
 

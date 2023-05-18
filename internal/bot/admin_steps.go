@@ -32,7 +32,7 @@ func (a *AddServiceCategory) ProcessResponse(msg *ma.Message) (*ma.Message, Step
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.DbAdapter.SaveNewServiceCategory(msg.Text)
+	a.dbAdapter.SaveNewServiceCategory(msg.Text)
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
 }
@@ -62,7 +62,7 @@ func (a *AddService) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.DbAdapter.SaveNewService(msg.Text, a.State.ServiceCategory.ID)
+	a.dbAdapter.SaveNewService(msg.Text, a.state.ServiceCategory.ID)
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
 }
@@ -78,7 +78,7 @@ func (a *AddCity) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
-		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
 	}
 	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
@@ -92,7 +92,7 @@ func (a *AddCity) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.DbAdapter.SaveNewCity(msg.Text)
+	a.dbAdapter.SaveNewCity(msg.Text)
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
 }

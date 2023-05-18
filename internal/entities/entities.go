@@ -18,6 +18,13 @@ func (u *UserState) Reset() {
 	u.RawInput = make(map[string]string)
 }
 
+func (u *UserState) GetCityID() string {
+	if u.City != nil {
+		return u.City.ID
+	}
+	return ""
+}
+
 type City struct {
 	ID       string `json:"id"`
 	IndexStr string `json:"index_str"`

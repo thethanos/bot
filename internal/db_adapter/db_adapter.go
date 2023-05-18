@@ -54,7 +54,9 @@ func (d *DbAdapter) AutoMigrate() error {
 	if err := d.dbConn.AutoMigrate(&models.Join{}); err != nil {
 		return err
 	}
-
+	if err := d.dbConn.AutoMigrate(&models.JoinCityCategory{}); err != nil {
+		return err
+	}
 	d.logger.Info("Auto-migration: success")
 	return nil
 }
@@ -127,7 +129,7 @@ func (d *DbAdapter) GetCategories(cityId string) ([]*entities.ServiceCategory, e
 		return result, nil
 	}
 
-	joins := make([]*models.Join, 0)
+	joins := make([]*models.JoinCityCategory, 0)
 	if err := d.dbConn.Where("city_id == ?", cityId).Find(&joins).Error; err != nil {
 		return nil, err
 	}
@@ -252,7 +254,17 @@ func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
 		return err
 	}
 
-	return d.dbConn.Create(&models.Join{CityID: data.City.ID, ServiceCategoryID: data.ServiceCategory.ID, MasterID: id}).Error
+	if err := d.dbConn.Where("city_id == ? AND service_category_id == ?", data.City.ID, data.ServiceCategory.ID).First(&models.JoinCityCategory{}).Error; err != nil {
+		if err := d.dbConn.Create(&models.JoinCityCategory{CityID: data.City.ID, ServiceCategoryID: data.ServiceCategory.ID}).Error; err != nil {
+			return err
+		}
+	}
+
+	if err := d.dbConn.Create(&models.Join{CityID: data.City.ID, ServiceID: data.Service.ID, MasterID: id}).Error; err != nil {
+		return err
+	}
+	d.logger.Infof("New city added successfully, id: %s, name: %s", id, master.Name)
+	return nil
 }
 
 func (d *DbAdapter) getCityByName(name string) (*models.City, error) {
