@@ -171,17 +171,6 @@ func (d *DbAdapter) GetServices(categoryId string) ([]*entities.Service, error) 
 func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, error) {
 	result := make([]*entities.Master, 0)
 	masters := make([]*models.Master, 0)
-
-	if cityId == "" && serviceId == "" {
-		if err := d.dbConn.Find(&masters).Error; err != nil {
-			return nil, err
-		}
-		for _, master := range masters {
-			result = append(result, &entities.Master{ID: master.ID, Name: master.Name})
-		}
-		return result, nil
-	}
-
 	joins := make([]*models.Join, 0)
 	if err := d.dbConn.Where("city_id == ? AND service_id == ?", cityId, serviceId).Find(&joins).Error; err != nil {
 		return nil, err
