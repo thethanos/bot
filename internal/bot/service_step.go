@@ -59,7 +59,7 @@ func (m *MainMenuServiceCategoryMode) Buttons() [][]tgbotapi.KeyboardButton {
 }
 
 func (m *MainMenuServiceCategoryMode) NextStep() StepType {
-	return MainMenuSericeSelectionStep
+	return MainMenuServiceSelectionStep
 }
 
 type MasterServiceCategoryMode struct {
@@ -68,6 +68,10 @@ type MasterServiceCategoryMode struct {
 
 func (m *MasterServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
 	return m.dbAdapter.GetCategories("")
+}
+
+func (m *MasterServiceCategoryMode) NextStep() StepType {
+	return MasterServiceSelectionStep
 }
 
 type AdminServiceCategoryMode struct {

@@ -17,7 +17,7 @@ const (
 	MainMenuStep StepType = iota
 	MainMenuRequestStep
 	MainMenuServiceCategorySelectionStep
-	MainMenuSericeSelectionStep
+	MainMenuServiceSelectionStep
 	ServiceCategorySelectionStep
 	ServiceSelectionStep
 	CityPromptStep
@@ -47,12 +47,14 @@ func getStepTypeName(step StepType) string {
 		return "MainMenuRequestStep"
 	case MainMenuServiceCategorySelectionStep:
 		return "MainMenuServiceCategorySelectionStep"
-	case MainMenuSericeSelectionStep:
-		return "MainMenuSericeSelectionStep"
+	case MainMenuServiceSelectionStep:
+		return "MainMenuServiceSelectionStep"
 	case ServiceCategorySelectionStep:
 		return "ServiceCategorySelectionStep"
 	case ServiceSelectionStep:
 		return "ServiceSelectionStep"
+	case CitySelectionStep:
+		return "CitySelectionStep"
 	case MasterSelectionStep:
 		return "MasterSelectionStep"
 	case AboutStep:

@@ -125,7 +125,7 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 				},
 			},
 		}
-	case MainMenuSericeSelectionStep:
+	case MainMenuServiceSelectionStep:
 		return &ServiceSelection{
 			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
 			mode:     &MainMenuServiceSelectionMode{},
