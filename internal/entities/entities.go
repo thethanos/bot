@@ -45,8 +45,11 @@ type Service struct {
 }
 
 type Master struct {
-	ID       string `json:"id"`
-	IndexStr string `json:"index_str"`
-	Name     string `json:"name"`
-	CityID   string `json:"city_id"`
+	ID          string `json:"id"`
+	IndexStr    string `json:"index_str"`
+	Name        string `json:"name"`
+	CityID      string `json:"city_id"`
+	Stars       float64
+	Description string
+	Img         string
 }

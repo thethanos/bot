@@ -1,14 +1,29 @@
 package server
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"bytes"
+	"fmt"
 	"multimessenger_bot/internal/db_adapter"
-	"multimessenger_bot/internal/entities"
 	"net/http"
+	"text/template"
 
 	"go.uber.org/zap"
 )
+
+type product struct {
+	Img         string
+	Name        string
+	Stars       float64
+	Description string
+}
+
+func subtr(a, b float64) float64 {
+	return a - b
+}
+
+func list(e ...float64) []float64 {
+	return e
+}
 
 type Handler struct {
 	logger    *zap.SugaredLogger
@@ -36,42 +51,25 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	data, err := json.Marshal(masters)
-	if err != nil {
-		h.logger.Error("server::Handler::GetMastersList::Marshal")
-		rw.WriteHeader(http.StatusInternalServerError)
-		return
+	for idx, master := range masters {
+		master.Stars = float64(idx)
+		master.Description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+		master.Img = "images/1.png"
 	}
+
+	allFiles := []string{"content.tmpl", "footer.tmpl", "header.tmpl", "page.tmpl"}
+
+	var allPaths []string
+	for _, tmpl := range allFiles {
+		allPaths = append(allPaths, "./page/templates/"+tmpl)
+	}
+
+	templates := template.Must(template.New("").Funcs(template.FuncMap{"subtr": subtr, "list": list}).ParseFiles(allPaths...))
+
+	var processed bytes.Buffer
+	templates.ExecuteTemplate(&processed, "page", masters)
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Write(data)
-}
-
-func (h *Handler) SaveNewCity(rw http.ResponseWriter, req *http.Request) {
-
-}
-
-func (h *Handler) SaveNewService(rw http.ResponseWriter, req *http.Request) {
-	h.logger.Infof("Request received: %s", req.URL)
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		h.logger.Error("server::Handler::SaveNewService", err)
-		rw.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	service := &entities.Service{}
-	if err := json.Unmarshal(body, service); err != nil {
-		h.logger.Error("server::Handler::SaveNewService", err)
-		rw.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	/*
-		if err := h.dbAdapter.SaveNewService(service.Name); err != nil {
-			h.logger.Error("server::Handler::SaveNewService", err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	*/
-	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprint(rw, string(processed.Bytes()))
 }
