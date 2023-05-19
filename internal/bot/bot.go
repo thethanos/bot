@@ -129,12 +129,12 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	case MainMenuServiceSelectionStep:
 		return &ServiceSelection{
 			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode:     &MainMenuServiceSelectionMode{},
+			mode:     &MainMenuServiceSelectionMode{BaseServiceSelectionMode{dbAdapter: b.dbAdapter}},
 		}
 	case ServiceSelectionStep:
 		return &ServiceSelection{
 			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode:     &BaseServiceSelectionMode{},
+			mode:     &BaseServiceSelectionMode{dbAdapter: b.dbAdapter},
 		}
 	case MasterStep:
 		return &YesNo{
@@ -165,7 +165,7 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	case MasterServiceSelectionStep:
 		return &ServiceSelection{
 			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode:     &RegistrationServiceSelectionMode{},
+			mode:     &RegistrationServiceSelectionMode{BaseServiceSelectionMode{dbAdapter: b.dbAdapter}},
 		}
 	case MasterRegistrationFinalStep:
 		return &RegistrationFinal{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}

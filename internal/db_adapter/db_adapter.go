@@ -148,12 +148,26 @@ func (d *DbAdapter) GetCategories(cityId string) ([]*entities.ServiceCategory, e
 	return result, nil
 }
 
-func (d *DbAdapter) GetServices(categoryId string) ([]*entities.Service, error) {
+func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service, error) {
 	result := make([]*entities.Service, 0)
 	services := make([]*models.Service, 0)
 
 	if len(categoryId) == 0 {
 		if err := d.dbConn.Find(&services).Error; err != nil {
+			return nil, err
+		}
+	} else if len(cityId) != 0 {
+		joins := make([]*models.Join, 0)
+		if err := d.dbConn.Select("service_id").Distinct().Where("city_id == ?", cityId).Find(&joins).Error; err != nil {
+			return nil, err
+		}
+
+		serviceIds := make([]string, 0)
+		for _, join := range joins {
+			serviceIds = append(serviceIds, join.ServiceID)
+		}
+
+		if err := d.dbConn.Where("category_id == ? AND id IN ?", categoryId, serviceIds).Find(&services).Error; err != nil {
 			return nil, err
 		}
 	} else {

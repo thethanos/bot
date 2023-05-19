@@ -157,16 +157,18 @@ func (s *ServiceCategorySelection) Reset() {
 }
 
 type ServiceSelectionStepMode interface {
-	NextStep() StepType
+	GetServicesList(categoryId, cityId string) ([]*entities.Service, error)
 	MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton
 	Buttons() [][]tgbotapi.KeyboardButton
+	NextStep() StepType
 }
 
 type BaseServiceSelectionMode struct {
+	dbAdapter *db_adapter.DbAdapter
 }
 
-func (b *BaseServiceSelectionMode) NextStep() StepType {
-	return EmptyStep
+func (b *BaseServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
+	return b.dbAdapter.GetServices(categoryId, cityId)
 }
 
 func (b *BaseServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
@@ -186,12 +188,16 @@ func (b *BaseServiceSelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
 	return rows
 }
 
+func (b *BaseServiceSelectionMode) NextStep() StepType {
+	return EmptyStep
+}
+
 type MainMenuServiceSelectionMode struct {
 	BaseServiceSelectionMode
 }
 
-func (m *MainMenuServiceSelectionMode) NextStep() StepType {
-	return CitySelectionStep
+func (m *MainMenuServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
+	return m.dbAdapter.GetServices(categoryId, "")
 }
 
 func (m *MainMenuServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
@@ -202,12 +208,16 @@ func (m *MainMenuServiceSelectionMode) MenuItems(cityId string, services []*enti
 	return rows
 }
 
+func (m *MainMenuServiceSelectionMode) NextStep() StepType {
+	return CitySelectionStep
+}
+
 type RegistrationServiceSelectionMode struct {
 	BaseServiceSelectionMode
 }
 
-func (b *RegistrationServiceSelectionMode) NextStep() StepType {
-	return MasterRegistrationFinalStep
+func (r *RegistrationServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
+	return r.dbAdapter.GetServices(categoryId, "")
 }
 
 func (b *RegistrationServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
@@ -216,6 +226,10 @@ func (b *RegistrationServiceSelectionMode) MenuItems(cityId string, services []*
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name}})
 	}
 	return rows
+}
+
+func (b *RegistrationServiceSelectionMode) NextStep() StepType {
+	return MasterRegistrationFinalStep
 }
 
 type ServiceSelection struct {
@@ -227,7 +241,7 @@ type ServiceSelection struct {
 func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 	s.logger.Infof("ServiceSelection step is sending request")
 	s.inProgress = true
-	services, _ := s.dbAdapter.GetServices(s.state.ServiceCategory.ID)
+	services, _ := s.mode.GetServicesList(s.state.ServiceCategory.ID, s.state.GetCityID())
 
 	if msg.Source == ma.TELEGRAM {
 		rows := s.mode.MenuItems(s.state.GetCityID(), services)
