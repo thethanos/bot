@@ -26,7 +26,7 @@ func (b *BaseServiceCategoryMode) GetServiceCategories(cityId string) ([]*entiti
 }
 
 func (b *BaseServiceCategoryMode) Text() string {
-	return "Выберите услугу"
+	return "Выберите категорию"
 }
 
 func (b *BaseServiceCategoryMode) Buttons() [][]tgbotapi.KeyboardButton {

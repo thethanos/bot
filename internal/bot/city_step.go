@@ -98,13 +98,40 @@ func (c *CityPrompt) Reset() {
 	c.state.City = nil
 }
 
+type CitySelectionStepMode interface {
+	MenuItems(serviceId string, cities []*entities.City) [][]tgbotapi.KeyboardButton
+	Buttons() [][]tgbotapi.KeyboardButton
+	NextStep() StepType
+}
+
+type BaseCitySelectionMode struct {
+}
+
+func (b *BaseCitySelectionMode) MenuItems(serviceId string, cities []*entities.City) [][]tgbotapi.KeyboardButton {
+	rows := make([][]tgbotapi.KeyboardButton, 0)
+	for _, city := range cities {
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: city.Name, WebApp: &tgbotapi.WebAppInfo{
+			Url: fmt.Sprintf("https://bot-dev-domain.com/master?city=%s&service=%s", city.ID, serviceId),
+		}}})
+	}
+	return rows
+}
+
+func (b *BaseCitySelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
+	rows := make([][]tgbotapi.KeyboardButton, 0)
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
+	return rows
+}
+
+func (b *BaseCitySelectionMode) NextStep() StepType {
+	return EmptyStep
+}
+
 type CitySelection struct {
 	StepBase
-	cities       []*entities.City
-	filter       bool
-	checkService bool
-	nextStep     StepType
-	errStep      StepType
+	cities []*entities.City
+	mode   CitySelectionStepMode
 }
 
 func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
@@ -114,12 +141,8 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 	cities, _ := c.dbAdapter.GetCities(c.state.Service.ID)
 
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 0)
-		for _, city := range cities {
-			rows = append(rows, []tgbotapi.KeyboardButton{{Text: city.Name}})
-		}
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
+		rows := c.mode.MenuItems(c.state.Service.ID, cities)
+		rows = append(rows, c.mode.Buttons()...)
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(cities) == 0 {
@@ -158,12 +181,14 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType)
 	for idx, city := range c.cities {
 		if userAnswer == strings.ToLower(city.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
 			c.state.City = city
-			return nil, EmptyStep
+			c.logger.Infof("Next step is %s", getStepTypeName(c.mode.NextStep()))
+			return nil, c.mode.NextStep()
 		}
 	}
 
 	c.inProgress = true
-	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), c.errStep
+	c.logger.Info("Next step is EmptyStep")
+	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
 }
 
 func (c *CitySelection) Reset() {
