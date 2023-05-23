@@ -1,0 +1,15 @@
+{{define "content" -}}
+<h2>Header</h2>
+{{range $index, $item :=.}}
+    <div class="column">
+        <div class="card">
+            <img src="{{$item.Img}}" alt="">
+            <div class="container">
+                <h2>{{$item.Name}}</h2>
+                <p>{{$item.Description}}</p>
+                <p><button class="button">Cвязаться</button></p>
+            </div>
+        </div>
+    </div>
+{{end}}
+{{end}}

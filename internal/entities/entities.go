@@ -49,7 +49,6 @@ type Master struct {
 	IndexStr    string `json:"index_str"`
 	Name        string `json:"name"`
 	CityID      string `json:"city_id"`
-	Stars       float64
 	Description string
 	Img         string
 }
