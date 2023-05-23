@@ -25,8 +25,10 @@ html {
     display: table;
 }
 
-.title {
-    color: grey;
+div.pics {
+    background-color: #333;
+    overflow: auto;
+    white-space: nowrap;
 }
 
 .button {

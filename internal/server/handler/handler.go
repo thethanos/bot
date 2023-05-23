@@ -1,11 +1,9 @@
 package server
 
 import (
-	"bytes"
-	"fmt"
 	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/webapp"
 	"net/http"
-	"text/template"
 
 	"go.uber.org/zap"
 )
@@ -36,17 +34,8 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	allFiles := []string{"content.tmpl", "footer.tmpl", "header.tmpl", "page.tmpl"}
-
-	var allPaths []string
-	for _, tmpl := range allFiles {
-		allPaths = append(allPaths, "./webapp/masters/templates/"+tmpl)
-	}
-
-	templates := template.Must(template.New("").ParseFiles(allPaths...))
-
-	var processed bytes.Buffer
-	if err := templates.ExecuteTemplate(&processed, "page", masters); err != nil {
+	template, err := webapp.GenerateWebPage(masters)
+	if err != nil {
 		h.logger.Error("server::Handler::GetMastersList::ExecuteTemplate", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
@@ -54,5 +43,5 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 
 	rw.WriteHeader(http.StatusOK)
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(rw, string(processed.Bytes()))
+	rw.Write(template)
 }

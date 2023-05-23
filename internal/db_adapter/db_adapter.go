@@ -272,15 +272,3 @@ func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
 	d.logger.Infof("New master added successfully, id: %s, name: %s", id, master.Name)
 	return nil
 }
-
-func (d *DbAdapter) getCityByName(name string) (*models.City, error) {
-	city := &models.City{}
-	tx := d.dbConn.Where("name == ?", name).Find(city)
-	return city, tx.Error
-}
-
-func (d *DbAdapter) getServiceByName(name string) (*models.Service, error) {
-	service := &models.Service{}
-	tx := d.dbConn.Where("name == ?", name).Find(service)
-	return service, tx.Error
-}

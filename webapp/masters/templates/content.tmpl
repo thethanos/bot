@@ -1,9 +1,13 @@
 {{define "content" -}}
-<h2>Header</h2>
-{{range $index, $item :=.}}
+<h2>{{.Header}}</h2>
+{{range $index, $item :=.Masters}}
     <div class="column">
         <div class="card">
-            <img src="{{$item.Image}}" alt="" style="width:100%">
+            <div class="pics">
+                <img src="{{$item.Image}}" alt="" style="width:100%">
+                <img src="{{$item.Image}}" alt="" style="width:100%">
+                <img src="{{$item.Image}}" alt="" style="width:100%">
+            </div>
             <div class="container">
                 <h2>{{$item.Name}}</h2>
                 <p>{{$item.Description}}</p>
