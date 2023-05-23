@@ -199,7 +199,7 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 		return nil, err
 	}
 	for _, master := range masters {
-		result = append(result, &entities.Master{ID: master.ID, Name: master.Name})
+		result = append(result, &entities.Master{ID: master.ID, Name: master.Name, Image: master.Image, Description: master.Description, CityID: master.CityID})
 	}
 	return result, nil
 }
@@ -260,6 +260,7 @@ func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
 	}
 
 	if err := d.dbConn.Where("city_id == ? AND service_category_id == ?", data.City.ID, data.ServiceCategory.ID).First(&models.JoinCityCategory{}).Error; err != nil {
+		d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.City.ID, data.ServiceCategory.ID)
 		if err := d.dbConn.Create(&models.JoinCityCategory{CityID: data.City.ID, ServiceCategoryID: data.ServiceCategory.ID}).Error; err != nil {
 			return err
 		}
@@ -268,7 +269,7 @@ func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
 	if err := d.dbConn.Create(&models.Join{CityID: data.City.ID, ServiceID: data.Service.ID, MasterID: id}).Error; err != nil {
 		return err
 	}
-	d.logger.Infof("New city added successfully, id: %s, name: %s", id, master.Name)
+	d.logger.Infof("New master added successfully, id: %s, name: %s", id, master.Name)
 	return nil
 }
 
