@@ -6,7 +6,6 @@ import (
 )
 
 func FromCityModel(model *models.City) *entities.City {
-
 	return &entities.City{
 		ID:   model.ID,
 		Name: model.Name,
@@ -14,7 +13,6 @@ func FromCityModel(model *models.City) *entities.City {
 }
 
 func FromServiceModel(model *models.Service) *entities.Service {
-
 	return &entities.Service{
 		ID:   model.ID,
 		Name: model.Name,
@@ -22,10 +20,11 @@ func FromServiceModel(model *models.Service) *entities.Service {
 }
 
 func FromMasterModel(model *models.Master) *entities.Master {
-
 	return &entities.Master{
-		ID:     model.ID,
-		Name:   model.Name,
-		CityID: model.CityID,
+		ID:          model.ID,
+		Name:        model.Name,
+		Image:       model.Image,
+		Description: model.Description,
+		CityID:      model.CityID,
 	}
 }

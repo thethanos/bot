@@ -248,9 +248,11 @@ func (d *DbAdapter) SaveNewCity(name string) error {
 func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	master := &models.Master{
-		ID:     id,
-		Name:   data.RawInput["name"],
-		CityID: data.City.ID,
+		ID:          id,
+		Name:        data.RawInput["name"],
+		Image:       "masters/images/maria_ernandes/1.png",
+		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		CityID:      data.City.ID,
 	}
 
 	if err := d.dbConn.Create(master).Error; err != nil {

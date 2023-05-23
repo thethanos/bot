@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"multimessenger_bot/internal/db_adapter"
-	"multimessenger_bot/internal/entities"
 	"net/http"
 	"text/template"
 
@@ -30,24 +29,11 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	cityId := query.Get("city")
 	serviceId := query.Get("service")
 
-	_, err := h.dbAdapter.GetMasters(cityId, serviceId)
+	masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
 	if err != nil {
 		h.logger.Error("server::Handler::GetMastersList::GetMasters", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
-	}
-
-	masters := []*entities.Master{
-		{
-			Name:        "Masha",
-			Img:         "masters/images/maria_ernandes/1.png",
-			Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		},
-		{
-			Name:        "Pasha",
-			Img:         "masters/images/maria_ernandes/1.png",
-			Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		},
 	}
 
 	allFiles := []string{"content.tmpl", "footer.tmpl", "header.tmpl", "page.tmpl"}

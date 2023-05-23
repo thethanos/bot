@@ -20,10 +20,12 @@ type Service struct {
 }
 
 type Master struct {
-	ID       string `gorm:"primarykey"`
-	IndexStr string `gorm:"index_str"`
-	Name     string `gorm:"name"`
-	CityID   string `gorm:"city_id"`
+	ID          string `gorm:"primarykey"`
+	IndexStr    string `gorm:"index_str"`
+	Name        string `gorm:"name"`
+	Image       string `gorm:"image"`
+	Description string `gorm:"description"`
+	CityID      string `gorm:"city_id"`
 }
 
 type Join struct {
