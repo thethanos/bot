@@ -58,10 +58,6 @@ func (tc *TelegramClient) SendMessage(msg *ma.Message) error {
 	}
 
 	opts := &tgbotapi.SendMessageOpts{ReplyMarkup: msg.GetTgMarkup()}
-	if msg.Type == ma.CALLBACK {
-		opts.ParseMode = "HTML"
-	}
-
 	_, err := tc.client.SendMessage(msg.GetTgID(), msg.Text, opts)
 	return err
 }

@@ -5,6 +5,13 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
+type MessageType uint
+
+const (
+	TEXT MessageType = iota
+	IMAGE
+)
+
 type MessageSource uint
 
 const (
@@ -19,24 +26,10 @@ type ClientInterface interface {
 	GetType() MessageSource
 }
 
-type MessageType uint
-
-const (
-	REGULAR MessageType = iota
-	CALLBACK
-	WEBAPP
-)
-
-type TgMarkup struct {
-	ReplyMarkup  *tgbotapi.ReplyKeyboardMarkup
-	InlineMarkup *tgbotapi.InlineKeyboardMarkup
-}
-
 type MessageData struct {
-	WaData     types.MessageInfo
-	TgData     *tgbotapi.Message
-	TgCallback *tgbotapi.CallbackQuery
-	TgMarkup   *TgMarkup
+	WaData   types.MessageInfo
+	TgData   *tgbotapi.Message
+	TgMarkup *tgbotapi.ReplyKeyboardMarkup
 }
 
 type Message struct {
@@ -51,10 +44,6 @@ func (m *Message) GetTgID() int64 {
 	if m.Data.TgData != nil {
 		return m.Data.TgData.From.Id
 	}
-	if m.Data.TgCallback != nil {
-		return m.Data.TgCallback.From.Id
-	}
-
 	return 0
 }
 
@@ -64,46 +53,32 @@ func (m *Message) GetWaID() types.JID {
 
 func (m *Message) GetTgMarkup() tgbotapi.ReplyMarkup {
 	if markup := m.Data.TgMarkup; markup != nil {
-		if reply := markup.ReplyMarkup; reply != nil {
-			return reply
-		}
-		if inline := markup.InlineMarkup; inline != nil {
-			return inline
-		}
+		return markup
 	}
-
-	if m.Type == CALLBACK {
-		return nil
-	} else {
-		return tgbotapi.ReplyKeyboardRemove{RemoveKeyboard: true}
-	}
+	return tgbotapi.ReplyKeyboardRemove{RemoveKeyboard: true}
 }
 
-func NewMessage(text string, msgType MessageType, msg *Message, replyMarkup *tgbotapi.ReplyKeyboardMarkup, inlineMarkup *tgbotapi.InlineKeyboardMarkup) *Message {
+func NewTextMessage(text string, msg *Message, replyMarkup *tgbotapi.ReplyKeyboardMarkup) *Message {
 
-	if msg.Type == CALLBACK && msg.Data.TgCallback == nil {
-		panic("Empty data")
-	}
-
-	if msg.Type == REGULAR && msg.Source == TELEGRAM && msg.Data.TgData == nil {
+	if msg.Source == TELEGRAM && msg.Data.TgData == nil {
 		panic("Empty data")
 	}
 
 	data := &MessageData{
-		WaData:     msg.Data.WaData,
-		TgData:     msg.Data.TgData,
-		TgCallback: msg.Data.TgCallback,
-		TgMarkup: &TgMarkup{
-			ReplyMarkup:  replyMarkup,
-			InlineMarkup: inlineMarkup,
-		},
+		WaData:   msg.Data.WaData,
+		TgData:   msg.Data.TgData,
+		TgMarkup: replyMarkup,
 	}
 
 	return &Message{
 		Text:   text,
+		Type:   TEXT,
 		UserID: msg.UserID,
-		Type:   msgType,
 		Source: msg.Source,
 		Data:   data,
 	}
+}
+
+func NewImageMessage() *Message {
+	return nil
 }

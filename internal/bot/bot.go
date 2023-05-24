@@ -11,11 +11,9 @@ import (
 )
 
 type UserSession struct {
-	CurrentStep         Step
-	СurrentCallbackStep Step
-	PrevSteps           StepStack
-	PrevCallBackSteps   StepStack
-	State               *entities.UserState
+	CurrentStep Step
+	PrevSteps   StepStack
+	State       *entities.UserState
 }
 
 type Bot struct {
@@ -232,71 +230,12 @@ func (b *Bot) processMessage(msg *ma.Message) {
 			fallthrough
 		default:
 			b.send(step.Request(msg))
-
-			if step.IsCallBackStep() {
-				curStep.SetInProgress(true)
-				b.userSessions[msg.UserID].СurrentCallbackStep = step
-			} else {
-				b.userSessions[msg.UserID].CurrentStep = step
-			}
-
-			if curStep.IsCallBackStep() {
-				b.userSessions[msg.UserID].PrevCallBackSteps.Push(curStep)
-			} else {
-				b.userSessions[msg.UserID].PrevSteps.Push(curStep)
-			}
-		}
-	}
-}
-
-func (b *Bot) processCallback(msg *ma.Message) {
-	curStep := b.userSessions[msg.UserID].СurrentCallbackStep
-	state := b.userSessions[msg.UserID].State
-	if !curStep.IsInProgress() {
-		b.send(curStep.Request(msg))
-	} else {
-		res, next := curStep.ProcessResponse(msg)
-		b.send(res)
-
-		switch step := b.createStep(next, state); next {
-		case PreviousStep:
-			if b.userSessions[msg.UserID].PrevCallBackSteps.Empty() {
-				return
-			}
-
-			prevStep := b.userSessions[msg.UserID].PrevCallBackSteps.Top()
-			b.userSessions[msg.UserID].PrevCallBackSteps.Pop()
-			prevStep.Reset()
-
-			b.send(prevStep.Request(msg))
-			b.userSessions[msg.UserID].СurrentCallbackStep = prevStep
-		case EmptyStep:
-		case MainMenuRequestStep:
-			time.Sleep(1 * time.Second)
-			fallthrough
-		default:
-			b.send(step.Request(msg))
-
-			if step.IsCallBackStep() {
-				b.userSessions[msg.UserID].СurrentCallbackStep = step
-			} else {
-				b.userSessions[msg.UserID].CurrentStep = step
-			}
-
-			if curStep.IsCallBackStep() {
-				b.userSessions[msg.UserID].PrevCallBackSteps.Push(curStep)
-			} else {
-				b.userSessions[msg.UserID].PrevSteps.Push(curStep)
-			}
+			b.userSessions[msg.UserID].CurrentStep = step
+			b.userSessions[msg.UserID].PrevSteps.Push(curStep)
 		}
 	}
 }
 
 func (b *Bot) processUserSession(msg *ma.Message) {
-
-	if msg.Type == ma.CALLBACK {
-		b.processCallback(msg)
-	} else {
-		b.processMessage(msg)
-	}
+	b.processMessage(msg)
 }

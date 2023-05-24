@@ -17,7 +17,6 @@ func (h *Handler) EventHandler(event interface{}) {
 		userId := fmt.Sprintf("wa%s", v.Info.Chat.User)
 		msg := &ma.Message{
 			Text:   v.Message.GetConversation(),
-			Type:   ma.REGULAR,
 			Source: ma.WHATSAPP,
 			UserID: userId,
 			Data: &ma.MessageData{

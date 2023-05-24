@@ -120,7 +120,6 @@ type Step interface {
 	ProcessResponse(*ma.Message) (*ma.Message, StepType)
 	Request(*ma.Message) *ma.Message
 	IsInProgress() bool
-	IsCallBackStep() bool
 	Reset()
 	SetInProgress(bool)
 }
@@ -134,10 +133,6 @@ type StepBase struct {
 
 func (s *StepBase) IsInProgress() bool {
 	return s.inProgress
-}
-
-func (s *StepBase) IsCallBackStep() bool {
-	return false
 }
 
 func (s *StepBase) Reset() {
@@ -162,17 +157,13 @@ func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Да"}}
 		rows[1] = []tgbotapi.KeyboardButton{{Text: "Нет"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
-		return ma.NewMessage(y.question.Text, ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage(y.question.Text, msg, keyboard)
 	}
-	return ma.NewMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), msg, nil)
 }
 
 func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	y.logger.Infof("YesNo step is processing response")
-	if msg.Type == ma.CALLBACK {
-		return nil, EmptyStep
-	}
-
 	y.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "да" || userAnswer == "1" {
@@ -197,67 +188,21 @@ func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
-		return ma.NewMessage(p.question.Text, ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage(p.question.Text, msg, keyboard)
 	}
 
-	return ma.NewMessage(p.question.Text, ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(p.question.Text, msg, nil)
 }
 
 func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	p.logger.Infof("Prompt step is processing response")
-	if msg.Type == ma.CALLBACK {
-		return nil, EmptyStep
-	}
-
+	p.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "назад" {
 		p.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-
-	p.inProgress = false
 	p.state.RawInput[p.question.Field] = msg.Text
 	p.logger.Infof("Next step is %s", getStepTypeName(p.nextStep))
 	return nil, p.nextStep
-}
-
-type Test struct {
-	StepBase
-}
-
-func (t *Test) Request(msg *ma.Message) *ma.Message {
-	t.logger.Infof("Test step is sending request")
-	t.inProgress = true
-
-	row1 := []tgbotapi.KeyboardButton{
-		{Text: "WebApp1", WebApp: &tgbotapi.WebAppInfo{Url: "https://bot-dev-domain.com/webapp1.html"}},
-		{Text: "WebApp2", WebApp: &tgbotapi.WebAppInfo{Url: "https://bot-dev-domain.com/webapp2.html"}},
-		{Text: "Назад"},
-	}
-
-	var keyboard [][]tgbotapi.KeyboardButton
-
-	keyboard = append(keyboard, row1)
-
-	numericKeyboard := &tgbotapi.ReplyKeyboardMarkup{
-		Keyboard:       keyboard,
-		ResizeKeyboard: true,
-	}
-
-	return ma.NewMessage("WebApp test step", ma.REGULAR, msg, numericKeyboard, nil)
-}
-
-func (t *Test) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-	t.logger.Infof("Test step is processing response")
-	t.inProgress = false
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "назад" {
-		return nil, PreviousStep
-	}
-
-	return nil, EmptyStep
-}
-
-func (t *Test) IsCallBackStep() bool {
-	return false
 }

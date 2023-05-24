@@ -19,9 +19,9 @@ func (a *AddServiceCategory) Request(msg *ma.Message) *ma.Message {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage(text, msg, keyboard)
 	}
-	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(text, msg, nil)
 }
 
 func (a *AddServiceCategory) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -49,9 +49,9 @@ func (a *AddService) Request(msg *ma.Message) *ma.Message {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage(text, msg, keyboard)
 	}
-	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(text, msg, nil)
 }
 
 func (a *AddService) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -79,9 +79,9 @@ func (a *AddCity) Request(msg *ma.Message) *ma.Message {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage(text, msg, keyboard)
 	}
-	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(text, msg, nil)
 }
 
 func (a *AddCity) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {

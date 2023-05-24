@@ -8,6 +8,18 @@ import (
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
 
+type Greetings struct {
+	StepBase
+}
+
+func (g *Greetings) Request(msg *ma.Message) *ma.Message {
+	return nil
+}
+
+func (g *Greetings) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	return nil, EmptyStep
+}
+
 type MainMenu struct {
 	StepBase
 }
@@ -25,19 +37,16 @@ func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		m.inProgress = true
-		return ma.NewMessage("Главное меню", ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage("Главное меню", msg, keyboard)
 	}
 
 	text := "1. услуги\n2. город\n3. вопросы\n4. о нас\n5. мастер"
 	m.inProgress = true
-	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(text, msg, nil)
 }
 
 func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	m.logger.Infof("MainMenu step is processing response")
-	if msg.Type == ma.CALLBACK {
-		return nil, EmptyStep
-	}
 	m.inProgress = false
 
 	switch strings.ToLower(msg.Text) {
@@ -55,7 +64,7 @@ func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		return nil, AdminStep
 	}
 
-	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
+	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil), EmptyStep
 }
 
 type Admin struct {
@@ -74,15 +83,12 @@ func (a *Admin) Request(msg *ma.Message) *ma.Message {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить город"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewMessage(text, ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage(text, msg, keyboard)
 	}
-	return ma.NewMessage(fmt.Sprintf("%s\n1. Добавить категорию услуг\n2: Добавить услугу\n3. Добавить город\n4. Назад", text), ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Добавить категорию услуг\n2: Добавить услугу\n3. Добавить город\n4. Назад", text), msg, nil)
 }
 
 func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-	if msg.Type == ma.CALLBACK {
-		return nil, EmptyStep
-	}
 	a.logger.Infof("Admin step is processing response")
 	a.inProgress = false
 
@@ -105,6 +111,6 @@ func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	default:
 		a.inProgress = true
 		a.logger.Info("Next step is EmptyStep")
-		return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
+		return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil), EmptyStep
 	}
 }

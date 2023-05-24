@@ -65,10 +65,10 @@ func (c *CityPrompt) Request(msg *ma.Message) *ma.Message {
 	c.inProgress = true
 
 	if msg.Source == ma.TELEGRAM {
-		return ma.NewMessage(c.mode.Text(), ma.REGULAR, msg, c.mode.Buttons(), nil)
+		return ma.NewTextMessage(c.mode.Text(), msg, c.mode.Buttons())
 	}
 
-	return ma.NewMessage(fmt.Sprintf("%s\n1. Назад\n2. Главное меню", c.mode.Text()), ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Назад\n2. Главное меню", c.mode.Text()), msg, nil)
 }
 
 func (c *CityPrompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -87,7 +87,7 @@ func (c *CityPrompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	if err != nil {
 		c.inProgress = true
 		c.logger.Infof("Next step is CityPromptStep")
-		return ma.NewMessage(fmt.Sprintf("По запросу %s ничего не найдено", msg.Text), ma.REGULAR, msg, nil, nil), CityPromptStep
+		return ma.NewTextMessage(fmt.Sprintf("По запросу %s ничего не найдено", msg.Text), msg, nil), CityPromptStep
 	}
 	c.state.City = city
 	c.logger.Infof("Next step is %s", getStepTypeName(c.mode.NextStep()))
@@ -146,11 +146,11 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(cities) == 0 {
-			return ma.NewMessage("По вашему запросу ничего не найдено", ma.REGULAR, msg, keyboard, nil)
+			return ma.NewTextMessage("По вашему запросу ничего не найдено", msg, keyboard)
 		}
 
 		c.cities = cities
-		return ma.NewMessage(" Выберите город", ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage(" Выберите город", msg, keyboard)
 	}
 
 	text := ""
@@ -160,14 +160,11 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 	text += fmt.Sprintf("%d. Назад\n", len(cities)+1)
 
 	c.cities = cities
-	return ma.NewMessage(text, ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(text, msg, nil)
 }
 
 func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	c.logger.Infof("CitySelection step is processing response")
-	if msg.Type == ma.CALLBACK {
-		return nil, EmptyStep
-	}
 	c.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
@@ -188,7 +185,7 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType)
 
 	c.inProgress = true
 	c.logger.Info("Next step is EmptyStep")
-	return ma.NewMessage("Пожалуйста выберите ответ из списка.", ma.REGULAR, msg, nil, nil), EmptyStep
+	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil), EmptyStep
 }
 
 func (c *CitySelection) Reset() {

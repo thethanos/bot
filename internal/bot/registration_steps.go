@@ -26,22 +26,19 @@ func (r *RegistrationFinal) Request(msg *ma.Message) *ma.Message {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Да"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Нет"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?", data), ma.REGULAR, msg, keyboard, nil)
+		return ma.NewTextMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?", data), msg, keyboard)
 	}
-	return ma.NewMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?\n1. Да\n2. Нет", data), ma.REGULAR, msg, nil, nil)
+	return ma.NewTextMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?\n1. Да\n2. Нет", data), msg, nil)
 }
 
 func (r *RegistrationFinal) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	r.logger.Infof("RegistrationFinal step is processing response")
-	if msg.Type == ma.CALLBACK {
-		return nil, EmptyStep
-	}
 	r.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "да" || userAnswer == "1" {
 		r.dbAdapter.SaveNewMaster(r.state)
 		r.state.Reset()
-		return ma.NewMessage("Регистрация прошла успешно!", ma.REGULAR, msg, nil, nil), MainMenuRequestStep
+		return ma.NewTextMessage("Регистрация прошла успешно!", msg, nil), MainMenuRequestStep
 	}
 	r.state.Reset()
 	return nil, MainMenuRequestStep
