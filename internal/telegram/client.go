@@ -97,7 +97,7 @@ func (tc *TelegramClient) DownloadFile(msg *ma.Message) {
 	}
 	defer resp.Body.Close()
 
-	out, err := os.Create(fmt.Sprintf("./images/%s.jpeg", file.FileId))
+	out, err := os.Create(fmt.Sprintf("./webapp/masters/images/%s.jpeg", file.FileId))
 	if err != nil {
 		tc.logger.Error(err)
 		return
