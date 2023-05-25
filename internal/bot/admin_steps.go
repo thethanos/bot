@@ -196,5 +196,12 @@ func (a *AddMasterFinal) Request(msg *ma.Message) *ma.Message {
 
 func (a *AddMasterFinal) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	a.logger.Info("AddMasterFinal step is processing response")
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" {
+		return nil, PreviousStep
+	}
+	if userAnswer == "главное меню" {
+		return nil, MainMenuStep
+	}
 	return ma.NewTextMessage("Анкета сохранена", msg, nil, false), AdminStep
 }
