@@ -26,9 +26,9 @@ func (r *RegistrationFinal) Request(msg *ma.Message) *ma.Message {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Да"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Нет"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewTextMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?", data), msg, keyboard)
+		return ma.NewTextMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?", data), msg, keyboard, false)
 	}
-	return ma.NewTextMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?\n1. Да\n2. Нет", data), msg, nil)
+	return ma.NewTextMessage(fmt.Sprintf("%s\nПодтвердить регистрацию?\n1. Да\n2. Нет", data), msg, nil, true)
 }
 
 func (r *RegistrationFinal) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -38,7 +38,7 @@ func (r *RegistrationFinal) ProcessResponse(msg *ma.Message) (*ma.Message, StepT
 	if userAnswer == "да" || userAnswer == "1" {
 		r.dbAdapter.SaveNewMaster(r.state)
 		r.state.Reset()
-		return ma.NewTextMessage("Регистрация прошла успешно!", msg, nil), MainMenuRequestStep
+		return ma.NewTextMessage("Регистрация прошла успешно!", msg, nil, true), MainMenuRequestStep
 	}
 	r.state.Reset()
 	return nil, MainMenuRequestStep

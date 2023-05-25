@@ -107,11 +107,11 @@ func (s *ServiceCategorySelection) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(categories) == 0 {
-			return ma.NewTextMessage("Услуги не найдены", msg, keyboard)
+			return ma.NewTextMessage("Услуги не найдены", msg, keyboard, false)
 		}
 
 		s.categories = categories
-		return ma.NewTextMessage(s.mode.Text(), msg, keyboard)
+		return ma.NewTextMessage(s.mode.Text(), msg, keyboard, false)
 	}
 
 	text := ""
@@ -121,7 +121,7 @@ func (s *ServiceCategorySelection) Request(msg *ma.Message) *ma.Message {
 	text += fmt.Sprintf("%d. Назад\n", len(categories)+1)
 
 	s.categories = categories
-	return ma.NewTextMessage(text, msg, nil)
+	return ma.NewTextMessage(text, msg, nil, true)
 }
 
 func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -146,7 +146,7 @@ func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message
 
 	s.inProgress = true
 	s.logger.Info("Next step is EmptyStep")
-	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil), EmptyStep
+	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false), EmptyStep
 }
 
 func (s *ServiceCategorySelection) Reset() {
@@ -246,11 +246,11 @@ func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(services) == 0 {
-			return ma.NewTextMessage("По вашему запросу ничего не найдено", msg, keyboard)
+			return ma.NewTextMessage("По вашему запросу ничего не найдено", msg, keyboard, false)
 		}
 
 		s.services = services
-		return ma.NewTextMessage(s.state.ServiceCategory.Name, msg, keyboard)
+		return ma.NewTextMessage(s.state.ServiceCategory.Name, msg, keyboard, false)
 	}
 
 	text := ""
@@ -259,7 +259,7 @@ func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 	}
 
 	s.services = services
-	return ma.NewTextMessage(text, msg, nil)
+	return ma.NewTextMessage(text, msg, nil, true)
 }
 
 func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -282,7 +282,7 @@ func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepTy
 
 	s.inProgress = true
 	s.logger.Infof("Next step is EmptyStep")
-	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil), EmptyStep
+	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false), EmptyStep
 }
 
 func (s *ServiceSelection) Reset() {

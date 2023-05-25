@@ -1,9 +1,12 @@
 package telegram
 
 import (
+	"fmt"
+	"io"
 	"multimessenger_bot/internal/config"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"net/http"
+	"os"
 
 	handler "multimessenger_bot/internal/telegram/event_handler"
 
@@ -32,7 +35,7 @@ func NewTelegramClient(logger *zap.SugaredLogger, cfg *config.Config, recvMsgCha
 	if err != nil {
 		return nil, err
 	}
-	return &TelegramClient{client: client, cfg: cfg, recvMsgChan: recvMsgChan}, nil
+	return &TelegramClient{logger: logger, client: client, cfg: cfg, recvMsgChan: recvMsgChan}, nil
 }
 
 func (tc *TelegramClient) Connect() error {
@@ -57,11 +60,51 @@ func (tc *TelegramClient) SendMessage(msg *ma.Message) error {
 		return nil
 	}
 
-	opts := &tgbotapi.SendMessageOpts{ReplyMarkup: msg.GetTgMarkup()}
-	_, err := tc.client.SendMessage(msg.GetTgID(), msg.Text, opts)
-	return err
+	switch msg.Type {
+	case ma.TEXT:
+		opts := &tgbotapi.SendMessageOpts{ReplyMarkup: msg.GetTgMarkup()}
+		_, err := tc.client.SendMessage(msg.GetTgID(), msg.Text, opts)
+		return err
+	case ma.IMAGE:
+		opts := &tgbotapi.SendPhotoOpts{Caption: msg.Text}
+		_, err := tc.client.SendPhoto(msg.GetTgID(), msg.Image, opts)
+		return err
+	}
+	return nil
 }
 
 func (tc *TelegramClient) GetType() ma.MessageSource {
 	return ma.TELEGRAM
+}
+
+func (tc *TelegramClient) DownloadFile(msg *ma.Message) {
+	length := len(msg.Data.TgData.Photo)
+	if length == 0 {
+		return
+	}
+
+	photo := msg.Data.TgData.Photo[length-1]
+	file, err := tc.client.GetFile(photo.FileId, nil)
+	if err != nil {
+		return
+	}
+
+	tc.logger.Infof("Dwonloading file %s", file.GetURL(tc.client))
+	resp, err := http.Get(file.GetURL(tc.client))
+	if err != nil {
+		tc.logger.Error(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	out, err := os.Create(fmt.Sprintf("./images/%s.jpeg", file.FileId))
+	if err != nil {
+		tc.logger.Error(err)
+		return
+	}
+	defer out.Close()
+
+	if _, err = io.Copy(out, resp.Body); err != nil {
+		tc.logger.Error(err)
+	}
 }

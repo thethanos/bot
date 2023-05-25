@@ -19,9 +19,9 @@ func (a *AddServiceCategory) Request(msg *ma.Message) *ma.Message {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewTextMessage(text, msg, keyboard)
+		return ma.NewTextMessage(text, msg, keyboard, false)
 	}
-	return ma.NewTextMessage(text, msg, nil)
+	return ma.NewTextMessage(text, msg, nil, true)
 }
 
 func (a *AddServiceCategory) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -49,9 +49,9 @@ func (a *AddService) Request(msg *ma.Message) *ma.Message {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewTextMessage(text, msg, keyboard)
+		return ma.NewTextMessage(text, msg, keyboard, false)
 	}
-	return ma.NewTextMessage(text, msg, nil)
+	return ma.NewTextMessage(text, msg, nil, true)
 }
 
 func (a *AddService) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -79,9 +79,9 @@ func (a *AddCity) Request(msg *ma.Message) *ma.Message {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewTextMessage(text, msg, keyboard)
+		return ma.NewTextMessage(text, msg, keyboard, false)
 	}
-	return ma.NewTextMessage(text, msg, nil)
+	return ma.NewTextMessage(text, msg, nil, true)
 }
 
 func (a *AddCity) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -95,4 +95,41 @@ func (a *AddCity) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	a.dbAdapter.SaveNewCity(msg.Text)
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
+}
+
+type AddMaster struct {
+	StepBase
+}
+
+func (a *AddMaster) Request(msg *ma.Message) *ma.Message {
+	a.logger.Info("AddMaster step is sending request")
+	a.inProgress = true
+	return nil
+}
+
+func (a *AddMaster) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	a.logger.Info("AddMaster step is processing response")
+	a.inProgress = false
+	return nil, ImageUploadStep
+}
+
+type Downloader interface {
+	DownloadFile(msg *ma.Message)
+}
+
+type ImageUpload struct {
+	StepBase
+	downloader Downloader
+}
+
+func (i *ImageUpload) Request(msg *ma.Message) *ma.Message {
+	i.logger.Info("ImageUpload step is sending request")
+	i.inProgress = true
+	return nil
+}
+
+func (i *ImageUpload) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	i.logger.Info("ImageUpload step is processing response")
+	i.downloader.DownloadFile(msg)
+	return nil, EmptyStep
 }

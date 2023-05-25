@@ -37,12 +37,12 @@ func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		m.inProgress = true
-		return ma.NewTextMessage("Главное меню", msg, keyboard)
+		return ma.NewTextMessage("Главное меню", msg, keyboard, false)
 	}
 
 	text := "1. услуги\n2. город\n3. вопросы\n4. о нас\n5. мастер"
 	m.inProgress = true
-	return ma.NewTextMessage(text, msg, nil)
+	return ma.NewTextMessage(text, msg, nil, true)
 }
 
 func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -64,7 +64,7 @@ func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		return nil, AdminStep
 	}
 
-	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil), EmptyStep
+	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false), EmptyStep
 }
 
 type Admin struct {
@@ -81,11 +81,12 @@ func (a *Admin) Request(msg *ma.Message) *ma.Message {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить категорию услуг"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить услугу"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить город"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить мастера"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-		return ma.NewTextMessage(text, msg, keyboard)
+		return ma.NewTextMessage(text, msg, keyboard, false)
 	}
-	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Добавить категорию услуг\n2: Добавить услугу\n3. Добавить город\n4. Назад", text), msg, nil)
+	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Добавить категорию услуг\n2: Добавить услугу\n3. Добавить город\n4. Назад", text), msg, nil, true)
 }
 
 func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -108,9 +109,12 @@ func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	case "добавить город":
 		a.logger.Info("Next step is AddCityStep")
 		return nil, AddCityStep
+	case "добавить мастера":
+		a.logger.Info("Next step is AddMaster")
+		return nil, AddMasterStep
 	default:
 		a.inProgress = true
 		a.logger.Info("Next step is EmptyStep")
-		return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil), EmptyStep
+		return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false), EmptyStep
 	}
 }

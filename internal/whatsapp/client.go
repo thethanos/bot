@@ -77,3 +77,7 @@ func (wc *WhatsAppClient) SendMessage(msg *ma.Message) error {
 func (wc *WhatsAppClient) GetType() ma.MessageSource {
 	return ma.WHATSAPP
 }
+
+func (wc *WhatsAppClient) DownloadFile(msg *ma.Message) {
+
+}

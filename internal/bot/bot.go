@@ -56,6 +56,10 @@ func (b *Bot) Run() {
 	go func() {
 		for msg := range b.recvMsgChan {
 			if _, exists := b.userSessions[msg.UserID]; !exists {
+
+				b.send(ma.NewImageMessage("./images/greetings.jpeg", "test", msg, false))
+				time.Sleep(1 * time.Second)
+
 				state := &entities.UserState{Cursor: 0, RawInput: make(map[string]string)}
 				b.userSessions[msg.UserID] = &UserSession{
 					State:       state,
@@ -81,6 +85,10 @@ func (b *Bot) Shutdown() {
 	for _, client := range b.clients {
 		client.Disconnect()
 	}
+}
+
+func (b *Bot) DownloadFile(msg *ma.Message) {
+	b.clients[msg.Source].DownloadFile(msg)
 }
 
 func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
@@ -184,6 +192,13 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 		return &AddService{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	case AddCityStep:
 		return &AddCity{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
+	case AddMasterStep:
+		return &AddMaster{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
+	case ImageUploadStep:
+		return &ImageUpload{
+			StepBase:   StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			downloader: b,
+		}
 	default:
 		return &MainMenu{StepBase: StepBase{logger: b.logger, state: state}}
 	}

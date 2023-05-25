@@ -65,10 +65,10 @@ func (c *CityPrompt) Request(msg *ma.Message) *ma.Message {
 	c.inProgress = true
 
 	if msg.Source == ma.TELEGRAM {
-		return ma.NewTextMessage(c.mode.Text(), msg, c.mode.Buttons())
+		return ma.NewTextMessage(c.mode.Text(), msg, c.mode.Buttons(), false)
 	}
 
-	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Назад\n2. Главное меню", c.mode.Text()), msg, nil)
+	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Назад\n2. Главное меню", c.mode.Text()), msg, nil, true)
 }
 
 func (c *CityPrompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -87,7 +87,7 @@ func (c *CityPrompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	if err != nil {
 		c.inProgress = true
 		c.logger.Infof("Next step is CityPromptStep")
-		return ma.NewTextMessage(fmt.Sprintf("По запросу %s ничего не найдено", msg.Text), msg, nil), CityPromptStep
+		return ma.NewTextMessage(fmt.Sprintf("По запросу %s ничего не найдено", msg.Text), msg, nil, false), CityPromptStep
 	}
 	c.state.City = city
 	c.logger.Infof("Next step is %s", getStepTypeName(c.mode.NextStep()))
@@ -146,11 +146,11 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(cities) == 0 {
-			return ma.NewTextMessage("По вашему запросу ничего не найдено", msg, keyboard)
+			return ma.NewTextMessage("По вашему запросу ничего не найдено", msg, keyboard, false)
 		}
 
 		c.cities = cities
-		return ma.NewTextMessage(" Выберите город", msg, keyboard)
+		return ma.NewTextMessage(" Выберите город", msg, keyboard, false)
 	}
 
 	text := ""
@@ -160,7 +160,7 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 	text += fmt.Sprintf("%d. Назад\n", len(cities)+1)
 
 	c.cities = cities
-	return ma.NewTextMessage(text, msg, nil)
+	return ma.NewTextMessage(text, msg, nil, true)
 }
 
 func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -185,7 +185,7 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType)
 
 	c.inProgress = true
 	c.logger.Info("Next step is EmptyStep")
-	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil), EmptyStep
+	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false), EmptyStep
 }
 
 func (c *CitySelection) Reset() {

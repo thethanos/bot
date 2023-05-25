@@ -36,6 +36,8 @@ const (
 	AddServiceCategoryStep
 	AddServiceStep
 	AddCityStep
+	AddMasterStep
+	ImageUploadStep
 	EmptyStep
 )
 
@@ -157,9 +159,9 @@ func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Да"}}
 		rows[1] = []tgbotapi.KeyboardButton{{Text: "Нет"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
-		return ma.NewTextMessage(y.question.Text, msg, keyboard)
+		return ma.NewTextMessage(y.question.Text, msg, keyboard, false)
 	}
-	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), msg, nil)
+	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), msg, nil, true)
 }
 
 func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -188,10 +190,10 @@ func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 		rows := make([][]tgbotapi.KeyboardButton, 1)
 		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
-		return ma.NewTextMessage(p.question.Text, msg, keyboard)
+		return ma.NewTextMessage(p.question.Text, msg, keyboard, false)
 	}
 
-	return ma.NewTextMessage(p.question.Text, msg, nil)
+	return ma.NewTextMessage(p.question.Text, msg, nil, true)
 }
 
 func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {

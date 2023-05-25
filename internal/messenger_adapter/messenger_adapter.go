@@ -1,6 +1,8 @@
 package messenger_adapter
 
 import (
+	"os"
+
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 	"go.mau.fi/whatsmeow/types"
 )
@@ -24,16 +26,19 @@ type ClientInterface interface {
 	Disconnect()
 	SendMessage(*Message) error
 	GetType() MessageSource
+	DownloadFile(*Message)
 }
 
 type MessageData struct {
-	WaData   types.MessageInfo
-	TgData   *tgbotapi.Message
-	TgMarkup *tgbotapi.ReplyKeyboardMarkup
+	WaData       types.MessageInfo
+	TgData       *tgbotapi.Message
+	TgMarkup     *tgbotapi.ReplyKeyboardMarkup
+	removeMarkup bool
 }
 
 type Message struct {
 	Text   string
+	Image  []byte
 	Type   MessageType
 	Source MessageSource
 	UserID string
@@ -52,22 +57,23 @@ func (m *Message) GetWaID() types.JID {
 }
 
 func (m *Message) GetTgMarkup() tgbotapi.ReplyMarkup {
-	if markup := m.Data.TgMarkup; markup != nil {
-		return markup
+	if m.Data.removeMarkup {
+		return tgbotapi.ReplyKeyboardRemove{RemoveKeyboard: true}
 	}
-	return tgbotapi.ReplyKeyboardRemove{RemoveKeyboard: true}
+	return m.Data.TgMarkup
 }
 
-func NewTextMessage(text string, msg *Message, replyMarkup *tgbotapi.ReplyKeyboardMarkup) *Message {
+func NewTextMessage(text string, msg *Message, replyMarkup *tgbotapi.ReplyKeyboardMarkup, removeMarkup bool) *Message {
 
-	if msg.Source == TELEGRAM && msg.Data.TgData == nil {
+	if msg.Data == nil {
 		panic("Empty data")
 	}
 
 	data := &MessageData{
-		WaData:   msg.Data.WaData,
-		TgData:   msg.Data.TgData,
-		TgMarkup: replyMarkup,
+		WaData:       msg.Data.WaData,
+		TgData:       msg.Data.TgData,
+		TgMarkup:     replyMarkup,
+		removeMarkup: removeMarkup,
 	}
 
 	return &Message{
@@ -79,6 +85,25 @@ func NewTextMessage(text string, msg *Message, replyMarkup *tgbotapi.ReplyKeyboa
 	}
 }
 
-func NewImageMessage() *Message {
-	return nil
+func NewImageMessage(path, caption string, msg *Message, removeMarkup bool) *Message {
+
+	image, err := os.ReadFile(path)
+	if err != nil {
+		panic("Failed to load image")
+	}
+
+	data := &MessageData{
+		WaData:       msg.Data.WaData,
+		TgData:       msg.Data.TgData,
+		removeMarkup: removeMarkup,
+	}
+
+	return &Message{
+		Text:   caption,
+		Image:  image,
+		Type:   IMAGE,
+		UserID: msg.UserID,
+		Source: msg.Source,
+		Data:   data,
+	}
 }
