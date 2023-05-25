@@ -2,6 +2,7 @@ package server
 
 import (
 	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/webapp"
 	"net/http"
 
@@ -34,7 +35,20 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	template, err := webapp.GenerateWebPage(masters)
+	template, err := webapp.GenerateWebPage("Выбор мастера", masters)
+	if err != nil {
+		h.logger.Error("server::Handler::GetMastersList::ExecuteTemplate", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+	rw.Write(template)
+}
+
+func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
+	template, err := webapp.GenerateWebPage("Предпросмотр", []*entities.Master{{Name: "Test", Image: "masters/images/maria_ernandes/1.png"}})
 	if err != nil {
 		h.logger.Error("server::Handler::GetMastersList::ExecuteTemplate", err)
 		rw.WriteHeader(http.StatusInternalServerError)

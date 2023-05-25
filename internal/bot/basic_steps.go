@@ -37,6 +37,7 @@ const (
 	AddServiceStep
 	AddCityStep
 	AddMasterStep
+	AddMasterFinalStep
 	ImageUploadStep
 	EmptyStep
 )
@@ -83,6 +84,12 @@ func getStepTypeName(step StepType) string {
 		return "AddServiceStep"
 	case AddCityStep:
 		return "AddCityStep"
+	case AddMasterStep:
+		return "AddMasterStep"
+	case AddMasterFinalStep:
+		return "AddMasterFinalStep"
+	case ImageUploadStep:
+		return "ImageUploadStep"
 	default:
 		return "Unknown type"
 	}

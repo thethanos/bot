@@ -199,6 +199,10 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 			StepBase:   StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
 			downloader: b,
 		}
+	case AddMasterFinalStep:
+		return &AddMasterFinal{
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+		}
 	default:
 		return &MainMenu{StepBase: StepBase{logger: b.logger, state: state}}
 	}

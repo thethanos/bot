@@ -2,6 +2,7 @@ package bot
 
 import (
 	ma "multimessenger_bot/internal/messenger_adapter"
+	"multimessenger_bot/internal/parsers"
 	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
@@ -46,8 +47,8 @@ func (a *AddService) Request(msg *ma.Message) *ma.Message {
 	a.inProgress = true
 	text := "Введите название услуги"
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 1)
-		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
+		rows := make([][]tgbotapi.KeyboardButton, 0)
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewTextMessage(text, msg, keyboard, false)
 	}
@@ -76,8 +77,8 @@ func (a *AddCity) Request(msg *ma.Message) *ma.Message {
 	a.inProgress = true
 	text := "Введите название города"
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 1)
-		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
+		rows := make([][]tgbotapi.KeyboardButton, 0)
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewTextMessage(text, msg, keyboard, false)
 	}
@@ -104,11 +105,31 @@ type AddMaster struct {
 func (a *AddMaster) Request(msg *ma.Message) *ma.Message {
 	a.logger.Info("AddMaster step is sending request")
 	a.inProgress = true
-	return nil
+	text := "Введите данные мастера"
+	if msg.Source == ma.TELEGRAM {
+		rows := make([][]tgbotapi.KeyboardButton, 0)
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
+		return ma.NewTextMessage(text, msg, keyboard, false)
+	}
+	return ma.NewTextMessage(text, msg, nil, true)
 }
 
 func (a *AddMaster) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	a.logger.Info("AddMaster step is processing response")
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "назад" {
+		return nil, PreviousStep
+	}
+	if userAnswer == "главное меню" {
+		return nil, MainMenuStep
+	}
+	master, err := parsers.ParseMasterData(msg.Text)
+	if err != nil {
+		return ma.NewTextMessage("Не удалось распарсить данные мастера, проверьте правильность ввода и попробуйте еще раз", msg, nil, false), EmptyStep
+	}
+	a.state.Master = master
 	a.inProgress = false
 	return nil, ImageUploadStep
 }
@@ -125,11 +146,55 @@ type ImageUpload struct {
 func (i *ImageUpload) Request(msg *ma.Message) *ma.Message {
 	i.logger.Info("ImageUpload step is sending request")
 	i.inProgress = true
-	return nil
+	text := "Добавить фото"
+	if msg.Source == ma.TELEGRAM {
+		rows := make([][]tgbotapi.KeyboardButton, 0)
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Далее"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
+		return ma.NewTextMessage(text, msg, keyboard, false)
+	}
+	return ma.NewTextMessage(text, msg, nil, false)
 }
 
 func (i *ImageUpload) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	i.logger.Info("ImageUpload step is processing response")
+	userAnswer := strings.ToLower(msg.Text)
+	if userAnswer == "далее" {
+		return nil, AddMasterFinalStep
+	}
+	if userAnswer == "назад" {
+		return nil, PreviousStep
+	}
+	if userAnswer == "главное меню" {
+		return nil, MainMenuStep
+	}
 	i.downloader.DownloadFile(msg)
 	return nil, EmptyStep
+}
+
+type AddMasterFinal struct {
+	StepBase
+}
+
+func (a *AddMasterFinal) Request(msg *ma.Message) *ma.Message {
+	a.logger.Info("AddMasterFinal step is sending request")
+	a.inProgress = true
+	text := "Завершающий этап"
+	if msg.Source == ma.TELEGRAM {
+		rows := make([][]tgbotapi.KeyboardButton, 0)
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Предпросмотр"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Сохранить анкету"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
+		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
+		return ma.NewTextMessage(text, msg, keyboard, false)
+	}
+	return ma.NewTextMessage(text, msg, nil, false)
+}
+
+func (a *AddMasterFinal) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
+	a.logger.Info("AddMasterFinal step is processing response")
+	return ma.NewTextMessage("Анкета сохранена", msg, nil, false), AdminStep
 }

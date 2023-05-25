@@ -6,15 +6,15 @@ import (
 	"multimessenger_bot/internal/entities"
 )
 
-type webapp struct{
-	Header string
+type webapp struct {
+	Header  string
 	Masters []*entities.Master
 }
 
-func GenerateWebPage(masters []*entities.Master) ([]byte, error) {
+func GenerateWebPage(header string, masters []*entities.Master) ([]byte, error) {
 
 	webapp := webapp{
-		Header: "Выбор мастера",
+		Header:  header,
 		Masters: masters,
 	}
 
