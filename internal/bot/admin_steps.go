@@ -184,7 +184,7 @@ func (a *AddMasterFinal) Request(msg *ma.Message) *ma.Message {
 	text := "Завершающий этап"
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Предпросмотр"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Предпросмотр", WebApp: &tgbotapi.WebAppInfo{Url: "https://bot-dev-domain.com/master/preview"}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Сохранить анкету"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
