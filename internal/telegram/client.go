@@ -77,34 +77,41 @@ func (tc *TelegramClient) GetType() ma.MessageSource {
 	return ma.TELEGRAM
 }
 
-func (tc *TelegramClient) DownloadFile(msg *ma.Message) {
+func (tc *TelegramClient) DownloadFile(id string, msg *ma.Message) string {
 	length := len(msg.Data.TgData.Photo)
 	if length == 0 {
-		return
+		return ""
 	}
 
 	photo := msg.Data.TgData.Photo[length-1]
 	file, err := tc.client.GetFile(photo.FileId, nil)
 	if err != nil {
-		return
+		return ""
 	}
 
 	tc.logger.Infof("Dwonloading file %s", file.GetURL(tc.client))
 	resp, err := http.Get(file.GetURL(tc.client))
 	if err != nil {
 		tc.logger.Error(err)
-		return
+		return ""
 	}
 	defer resp.Body.Close()
 
-	out, err := os.Create(fmt.Sprintf("./webapp/masters/images/%s.jpeg", file.FileId))
+	if err := os.MkdirAll(fmt.Sprintf("./webapp/masters/images/%s/", id), os.ModePerm); err != nil {
+		tc.logger.Error(err)
+		return ""
+	}
+
+	path := fmt.Sprintf("./webapp/masters/images/%s/%s.jpeg", id, file.FileId)
+	out, err := os.Create(path)
 	if err != nil {
 		tc.logger.Error(err)
-		return
+		return ""
 	}
 	defer out.Close()
 
 	if _, err = io.Copy(out, resp.Body); err != nil {
 		tc.logger.Error(err)
 	}
+	return path
 }

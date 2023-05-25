@@ -26,7 +26,7 @@ type ClientInterface interface {
 	Disconnect()
 	SendMessage(*Message) error
 	GetType() MessageSource
-	DownloadFile(*Message)
+	DownloadFile(string, *Message) string
 }
 
 type MessageData struct {

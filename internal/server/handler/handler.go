@@ -48,7 +48,19 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
-	template, err := webapp.GenerateWebPage("Предпросмотр", []*entities.Master{{Name: "Test", Image: "https://bot-dev-domain.com/masters/images/maria_ernandes/1.png", Description: "lorem ipsum"}})
+	h.logger.Infof("Request received: %s", req.URL)
+
+	query := req.URL.Query()
+	master_id := query.Get("master")
+
+	master, err := h.dbAdapter.GetMasterPreview(master_id)
+	if err != nil {
+		h.logger.Error("server::Handler::GetMasterPreview::GetMasterPreview", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	template, err := webapp.GenerateWebPage("Предпросмотр", []*entities.Master{master})
 	if err != nil {
 		h.logger.Error("server::Handler::GetMastersList::ExecuteTemplate", err)
 		rw.WriteHeader(http.StatusInternalServerError)

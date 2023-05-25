@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"multimessenger_bot/internal/parsers"
 	"strings"
@@ -33,7 +34,7 @@ func (a *AddServiceCategory) ProcessResponse(msg *ma.Message) (*ma.Message, Step
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.dbAdapter.SaveNewServiceCategory(msg.Text)
+	a.dbAdapter.SaveServiceCategory(msg.Text)
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
 }
@@ -63,7 +64,7 @@ func (a *AddService) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.dbAdapter.SaveNewService(msg.Text, a.state.ServiceCategory.ID)
+	a.dbAdapter.SaveService(msg.Text, a.state.ServiceCategory.ID)
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
 }
@@ -93,7 +94,7 @@ func (a *AddCity) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.dbAdapter.SaveNewCity(msg.Text)
+	a.dbAdapter.SaveCity(msg.Text)
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
 }
@@ -129,13 +130,16 @@ func (a *AddMaster) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	if err != nil {
 		return ma.NewTextMessage("Не удалось распарсить данные мастера, проверьте правильность ввода и попробуйте еще раз", msg, nil, false), EmptyStep
 	}
+	if err := a.dbAdapter.SaveMasterPreview(master); err != nil {
+		return ma.NewTextMessage("Не удалось сохранить данные для предпросмотра", msg, nil, false), EmptyStep
+	}
 	a.state.Master = master
 	a.inProgress = false
 	return nil, ImageUploadStep
 }
 
 type Downloader interface {
-	DownloadFile(msg *ma.Message)
+	DownloadFile(id string, msg *ma.Message) string
 }
 
 type ImageUpload struct {
@@ -170,7 +174,7 @@ func (i *ImageUpload) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	if userAnswer == "главное меню" {
 		return nil, MainMenuStep
 	}
-	i.downloader.DownloadFile(msg)
+	i.state.Master.Images = append(i.state.Master.Images, i.downloader.DownloadFile(i.state.Master.ID, msg))
 	return nil, EmptyStep
 }
 
@@ -184,7 +188,7 @@ func (a *AddMasterFinal) Request(msg *ma.Message) *ma.Message {
 	text := "Завершающий этап"
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Предпросмотр", WebApp: &tgbotapi.WebAppInfo{Url: "https://bot-dev-domain.com/master/preview"}}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Предпросмотр", WebApp: &tgbotapi.WebAppInfo{Url: fmt.Sprintf("https://bot-dev-domain.com/master/preview?master=%s", a.state.Master.ID)}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Сохранить анкету"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})

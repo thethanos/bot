@@ -87,8 +87,8 @@ func (b *Bot) Shutdown() {
 	}
 }
 
-func (b *Bot) DownloadFile(msg *ma.Message) {
-	b.clients[msg.Source].DownloadFile(msg)
+func (b *Bot) DownloadFile(id string, msg *ma.Message) string {
+	return b.clients[msg.Source].DownloadFile(id, msg)
 }
 
 func (b *Bot) createStep(step StepType, state *entities.UserState) Step {

@@ -23,7 +23,7 @@ func FromMasterModel(model *models.Master) *entities.Master {
 	return &entities.Master{
 		ID:          model.ID,
 		Name:        model.Name,
-		Image:       model.Image,
+		Images:      model.Images,
 		Description: model.Description,
 		CityID:      model.CityID,
 	}

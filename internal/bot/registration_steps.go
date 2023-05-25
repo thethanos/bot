@@ -36,7 +36,7 @@ func (r *RegistrationFinal) ProcessResponse(msg *ma.Message) (*ma.Message, StepT
 	r.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "да" || userAnswer == "1" {
-		r.dbAdapter.SaveNewMaster(r.state)
+		r.dbAdapter.SaveMaster(r.state)
 		r.state.Reset()
 		return ma.NewTextMessage("Регистрация прошла успешно!", msg, nil, true), MainMenuRequestStep
 	}

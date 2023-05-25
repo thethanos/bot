@@ -1,5 +1,28 @@
 package models
 
+import (
+	"database/sql/driver"
+	"errors"
+	"strings"
+)
+
+type images []string
+
+func (i *images) Scan(src any) error {
+	bytes, ok := src.([]byte)
+	if !ok {
+		return errors.New("src value cannot cast to []byte")
+	}
+	*i = strings.Split(string(bytes), ",")
+	return nil
+}
+func (i images) Value() (driver.Value, error) {
+	if len(i) == 0 {
+		return nil, nil
+	}
+	return strings.Join(i, ","), nil
+}
+
 type City struct {
 	ID       string `gorm:"primarykey"`
 	IndexStr string `gorm:"index_str"`
@@ -23,7 +46,16 @@ type Master struct {
 	ID          string `gorm:"primarykey"`
 	IndexStr    string `gorm:"index_str"`
 	Name        string `gorm:"name"`
-	Image       string `gorm:"image"`
+	Images      images `gorm:"type:text"`
+	Description string `gorm:"description"`
+	CityID      string `gorm:"city_id"`
+}
+
+type MasterPreview struct {
+	ID          string `gorm:"primarykey"`
+	IndexStr    string `gorm:"index_str"`
+	Name        string `gorm:"name"`
+	Images      images `gorm:"type:text"`
 	Description string `gorm:"description"`
 	CityID      string `gorm:"city_id"`
 }

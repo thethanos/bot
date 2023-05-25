@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"multimessenger_bot/internal/entities"
+	"multimessenger_bot/internal/mapper"
 	"multimessenger_bot/internal/models"
 	"time"
 
@@ -51,6 +52,9 @@ func (d *DbAdapter) AutoMigrate() error {
 	if err := d.dbConn.AutoMigrate(&models.Master{}); err != nil {
 		return err
 	}
+	if err := d.dbConn.AutoMigrate(&models.MasterPreview{}); err != nil {
+		return err
+	}
 	if err := d.dbConn.AutoMigrate(&models.Join{}); err != nil {
 		return err
 	}
@@ -67,14 +71,7 @@ func (d *DbAdapter) GetCity(name string) (*entities.City, error) {
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-
-	result := &entities.City{
-		ID:       city.ID,
-		IndexStr: city.IndexStr,
-		Name:     city.Name,
-	}
-
-	return result, nil
+	return mapper.FromCityModel(city), nil
 }
 
 func (d *DbAdapter) GetCities(serviceId string) ([]*entities.City, error) {
@@ -182,6 +179,19 @@ func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service,
 	return result, nil
 }
 
+func (d *DbAdapter) GetMasterPreview(id string) (*entities.Master, error) {
+	master := &models.MasterPreview{}
+	tx := d.dbConn.Where("id == ?", id).First(master)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	return &entities.Master{
+		Name:        master.Name,
+		Images:      master.Images,
+		Description: master.Description,
+	}, nil
+}
+
 func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, error) {
 	result := make([]*entities.Master, 0)
 	masters := make([]*models.Master, 0)
@@ -199,12 +209,12 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 		return nil, err
 	}
 	for _, master := range masters {
-		result = append(result, &entities.Master{ID: master.ID, Name: master.Name, Image: master.Image, Description: master.Description, CityID: master.CityID})
+		result = append(result, &entities.Master{ID: master.ID, Name: master.Name, Images: master.Images, Description: master.Description, CityID: master.CityID})
 	}
 	return result, nil
 }
 
-func (d *DbAdapter) SaveNewServiceCategory(name string) error {
+func (d *DbAdapter) SaveServiceCategory(name string) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	service := &models.ServiceCategory{
 		ID:   id,
@@ -217,7 +227,7 @@ func (d *DbAdapter) SaveNewServiceCategory(name string) error {
 	return nil
 }
 
-func (d *DbAdapter) SaveNewService(name, categoryId string) error {
+func (d *DbAdapter) SaveService(name, categoryId string) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	service := &models.Service{
 		ID:         id,
@@ -231,7 +241,7 @@ func (d *DbAdapter) SaveNewService(name, categoryId string) error {
 	return nil
 }
 
-func (d *DbAdapter) SaveNewCity(name string) error {
+func (d *DbAdapter) SaveCity(name string) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	city := &models.City{
 		ID:       id,
@@ -245,12 +255,12 @@ func (d *DbAdapter) SaveNewCity(name string) error {
 	return nil
 }
 
-func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
+func (d *DbAdapter) SaveMaster(data *entities.UserState) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	master := &models.Master{
 		ID:          id,
 		Name:        data.RawInput["name"],
-		Image:       "https://bot-dev-domain.com/masters/images/maria_ernandes/1.png",
+		Images:      []string{"https://bot-dev-domain.com/masters/images/maria_ernandes/1.png"},
 		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		CityID:      data.City.ID,
 	}
@@ -270,5 +280,20 @@ func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
 		return err
 	}
 	d.logger.Infof("New master added successfully, id: %s, name: %s", id, master.Name)
+	return nil
+}
+
+func (d *DbAdapter) SaveMasterPreview(master *entities.Master) error {
+
+	preview := &models.MasterPreview{
+		ID:          master.ID,
+		Name:        master.Name,
+		Description: master.Description,
+		Images:      master.Images,
+	}
+	if err := d.dbConn.Create(preview).Error; err != nil {
+		return err
+	}
+	d.logger.Infof("Preview saved successfully, id: %s, name: %s", master.ID, master.Name)
 	return nil
 }

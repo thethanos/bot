@@ -78,6 +78,6 @@ func (wc *WhatsAppClient) GetType() ma.MessageSource {
 	return ma.WHATSAPP
 }
 
-func (wc *WhatsAppClient) DownloadFile(msg *ma.Message) {
-
+func (wc *WhatsAppClient) DownloadFile(id string, msg *ma.Message) string {
+	return ""
 }
