@@ -250,7 +250,7 @@ func (d *DbAdapter) SaveNewMaster(data *entities.UserState) error {
 	master := &models.Master{
 		ID:          id,
 		Name:        data.RawInput["name"],
-		Image:       "masters/images/maria_ernandes/1.png",
+		Image:       "https://bot-dev-domain.com/masters/images/maria_ernandes/1.png",
 		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		CityID:      data.City.ID,
 	}
