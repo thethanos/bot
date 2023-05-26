@@ -9,7 +9,7 @@ import (
 type images []string
 
 func (i *images) Scan(src any) error {
-	bytes, ok := src.([]byte)
+	bytes, ok := src.(string)
 	if !ok {
 		return errors.New("src value cannot cast to []byte")
 	}
