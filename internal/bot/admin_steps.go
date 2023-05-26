@@ -130,9 +130,6 @@ func (a *AddMaster) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	if err != nil {
 		return ma.NewTextMessage("Не удалось распарсить данные мастера, проверьте правильность ввода и попробуйте еще раз", msg, nil, false), EmptyStep
 	}
-	if err := a.dbAdapter.SaveMasterPreview(master); err != nil {
-		return ma.NewTextMessage("Не удалось сохранить данные для предпросмотра", msg, nil, false), EmptyStep
-	}
 	a.state.Master = master
 	a.inProgress = false
 	return nil, ImageUploadStep
@@ -166,6 +163,9 @@ func (i *ImageUpload) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	i.logger.Info("ImageUpload step is processing response")
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "далее" {
+		if err := i.dbAdapter.SaveMasterPreview(i.state.Master); err != nil {
+			return ma.NewTextMessage("Не удалось сохранить данные для предпросмотра", msg, nil, false), EmptyStep
+		}
 		return nil, AddMasterFinalStep
 	}
 	if userAnswer == "назад" {
