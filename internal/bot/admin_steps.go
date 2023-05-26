@@ -174,7 +174,11 @@ func (i *ImageUpload) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	if userAnswer == "главное меню" {
 		return nil, MainMenuStep
 	}
-	i.state.Master.Images = append(i.state.Master.Images, i.downloader.DownloadFile(i.state.Master.ID, msg))
+	image := i.downloader.DownloadFile(i.state.Master.ID, msg)
+	if len(image) == 0 {
+		return ma.NewTextMessage("Не удалось загрузить изображение", msg, nil, false), EmptyStep
+	}
+	i.state.Master.Images = append(i.state.Master.Images, fmt.Sprintf("https://bot-dev-domain.com/masters/images/%s/%s", i.state.Master.ID, image))
 	return nil, EmptyStep
 }
 
