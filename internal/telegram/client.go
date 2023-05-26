@@ -102,8 +102,7 @@ func (tc *TelegramClient) DownloadFile(id string, msg *ma.Message) string {
 		return ""
 	}
 
-	path := fmt.Sprintf("./webapp/masters/images/%s/%s.jpeg", id, file.FileId)
-	out, err := os.Create(path)
+	out, err := os.Create(fmt.Sprintf("./webapp/masters/images/%s/%s.jpeg", id, file.FileId))
 	if err != nil {
 		tc.logger.Error(err)
 		return ""
@@ -113,5 +112,5 @@ func (tc *TelegramClient) DownloadFile(id string, msg *ma.Message) string {
 	if _, err = io.Copy(out, resp.Body); err != nil {
 		tc.logger.Error(err)
 	}
-	return path
+	return fmt.Sprintf("%s.jpeg", file.FileId)
 }
