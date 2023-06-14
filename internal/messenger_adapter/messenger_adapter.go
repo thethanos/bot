@@ -7,6 +7,13 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
+type FileType uint
+
+const (
+	DOCUMENT FileType = iota
+	PHOTO
+)
+
 type MessageType uint
 
 const (
@@ -26,7 +33,7 @@ type ClientInterface interface {
 	Disconnect()
 	SendMessage(*Message) error
 	GetType() MessageSource
-	DownloadFile(string, *Message) string
+	DownloadFile(FileType, *Message) []byte
 }
 
 type MessageData struct {
@@ -58,7 +65,10 @@ func (m *Message) GetWaID() types.JID {
 
 func (m *Message) GetTgMarkup() tgbotapi.ReplyMarkup {
 	if m.Data.removeMarkup {
-		return tgbotapi.ReplyKeyboardRemove{RemoveKeyboard: true}
+		return &tgbotapi.ReplyKeyboardRemove{RemoveKeyboard: true}
+	}
+	if m.Data.TgMarkup == nil {
+		return nil
 	}
 	return m.Data.TgMarkup
 }

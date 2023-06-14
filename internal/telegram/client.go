@@ -1,12 +1,10 @@
 package telegram
 
 import (
-	"fmt"
-	"io"
+	"io/ioutil"
 	"multimessenger_bot/internal/config"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"net/http"
-	"os"
 
 	handler "multimessenger_bot/internal/telegram/event_handler"
 
@@ -77,40 +75,41 @@ func (tc *TelegramClient) GetType() ma.MessageSource {
 	return ma.TELEGRAM
 }
 
-func (tc *TelegramClient) DownloadFile(id string, msg *ma.Message) string {
-	length := len(msg.Data.TgData.Photo)
-	if length == 0 {
-		return ""
+func (tc *TelegramClient) DownloadFile(fileType ma.FileType, msg *ma.Message) []byte {
+
+	var fileId string
+	switch fileType {
+	case ma.DOCUMENT:
+		if msg.Data.TgData.Document == nil {
+			tc.logger.Error("empty document")
+			return nil
+		}
+		fileId = msg.Data.TgData.Document.FileId
+	case ma.PHOTO:
+		if msg.Data.TgData.Photo == nil {
+			tc.logger.Error("empty picture")
+			return nil
+		}
+		length := len(msg.Data.TgData.Photo)
+		fileId = msg.Data.TgData.Photo[length-1].FileId
+	default:
+		tc.logger.Error("file type is not supported")
+		return nil
 	}
 
-	photo := msg.Data.TgData.Photo[length-1]
-	file, err := tc.client.GetFile(photo.FileId, nil)
+	file, err := tc.client.GetFile(fileId, nil)
 	if err != nil {
-		return ""
+		return nil
 	}
 
 	tc.logger.Infof("Dwonloading file %s", file.GetURL(tc.client))
 	resp, err := http.Get(file.GetURL(tc.client))
 	if err != nil {
 		tc.logger.Error(err)
-		return ""
+		return nil
 	}
 	defer resp.Body.Close()
 
-	if err := os.MkdirAll(fmt.Sprintf("./webapp/masters/images/%s/", id), os.ModePerm); err != nil {
-		tc.logger.Error(err)
-		return ""
-	}
-
-	out, err := os.Create(fmt.Sprintf("./webapp/masters/images/%s/%s.jpeg", id, file.FileId))
-	if err != nil {
-		tc.logger.Error(err)
-		return ""
-	}
-	defer out.Close()
-
-	if _, err = io.Copy(out, resp.Body); err != nil {
-		tc.logger.Error(err)
-	}
-	return fmt.Sprintf("%s.jpeg", file.FileId)
+	data, _ := ioutil.ReadAll(resp.Body)
+	return data
 }

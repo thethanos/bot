@@ -8,6 +8,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mdp/qrterminal v1.0.1
 	github.com/pelletier/go-toml v1.9.5
+	github.com/tealeg/xlsx v1.0.5
 	go.mau.fi/whatsmeow v0.0.0-20230427180258-7f679583b39b
 	go.uber.org/zap v1.24.0
 	golang.org/x/oauth2 v0.7.0

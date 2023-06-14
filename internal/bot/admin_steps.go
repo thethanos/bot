@@ -99,14 +99,19 @@ func (a *AddCity) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	return nil, PreviousStep
 }
 
+type Downloader interface {
+	DownloadFile(ma.FileType, *ma.Message) []byte
+}
+
 type AddMaster struct {
 	StepBase
+	downloader Downloader
 }
 
 func (a *AddMaster) Request(msg *ma.Message) *ma.Message {
 	a.logger.Info("AddMaster step is sending request")
 	a.inProgress = true
-	text := "Введите данные мастера"
+	text := "Загрузите данные мастера в формате xlsx"
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
@@ -126,17 +131,16 @@ func (a *AddMaster) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	if userAnswer == "главное меню" {
 		return nil, MainMenuStep
 	}
-	master, err := parsers.ParseMasterData(msg.Text)
+
+	file := a.downloader.DownloadFile(ma.DOCUMENT, msg)
+
+	master, err := parsers.ParseMasterData(file)
 	if err != nil {
 		return ma.NewTextMessage("Не удалось распарсить данные мастера, проверьте правильность ввода и попробуйте еще раз", msg, nil, false), EmptyStep
 	}
 	a.state.Master = master
 	a.inProgress = false
 	return nil, ImageUploadStep
-}
-
-type Downloader interface {
-	DownloadFile(id string, msg *ma.Message) string
 }
 
 type ImageUpload struct {
@@ -174,10 +178,12 @@ func (i *ImageUpload) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	if userAnswer == "главное меню" {
 		return nil, MainMenuStep
 	}
-	image := i.downloader.DownloadFile(i.state.Master.ID, msg)
-	if len(image) == 0 {
+	file := i.downloader.DownloadFile(ma.PHOTO, msg)
+	if len(file) == 0 {
 		return ma.NewTextMessage("Не удалось загрузить изображение", msg, nil, false), EmptyStep
 	}
+
+	image := parsers.SaveFile(i.state.Master.ID, "./webapp/masters/images", "jpeg", file)
 	i.state.Master.Images = append(i.state.Master.Images, fmt.Sprintf("https://bot-dev-domain.com/masters/images/%s/%s", i.state.Master.ID, image))
 	return nil, EmptyStep
 }
