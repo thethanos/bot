@@ -29,11 +29,14 @@ services:
       start_period: 80s 
     volumes:
       - pgdata:/var/lib/postgresql/data
-  adminer:
-    container_name: adminer
-    image: adminer
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
     restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
     ports:
-      - 8080:8080
+      - 8080:80
 volumes:
   pgdata:
