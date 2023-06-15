@@ -32,7 +32,7 @@ func main() {
 		return
 	}
 
-	dbAdapter, _, err := db_adapter.NewDbAdapter(logger)
+	dbAdapter, err := db_adapter.NewDbAdapter(logger, cfg)
 	if err != nil {
 		logger.Error("main::db_adapter::NewDbAdapter", err)
 		return

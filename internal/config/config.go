@@ -5,7 +5,12 @@ import (
 )
 
 type Config struct {
-	TgToken string
+	TgToken  string
+	PsqlHost string
+	PsqlPort int64
+	PsqlUser string
+	PsqlPass string
+	PsqlDb   string
 }
 
 func Load(path string) (*Config, error) {
@@ -16,6 +21,11 @@ func Load(path string) (*Config, error) {
 	}
 
 	return &Config{
-		TgToken: cfg.Get("bot.tg_token").(string),
+		TgToken:  cfg.Get("bot.tg_token").(string),
+		PsqlHost: cfg.Get("postgres.host").(string),
+		PsqlPort: cfg.Get("postgres.port").(int64),
+		PsqlUser: cfg.Get("postgres.user").(string),
+		PsqlPass: cfg.Get("postgres.password").(string),
+		PsqlDb:   cfg.Get("postgres.dbname").(string),
 	}, nil
 }

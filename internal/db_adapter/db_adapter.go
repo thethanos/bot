@@ -1,16 +1,16 @@
 package db_adapter
 
 import (
-	"database/sql"
 	"fmt"
+	"multimessenger_bot/internal/config"
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/mapper"
 	"multimessenger_bot/internal/models"
 	"time"
 
-	"go.mau.fi/whatsmeow/store/sqlstore"
+	_ "github.com/lib/pq"
 	"go.uber.org/zap"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -19,24 +19,22 @@ type DbAdapter struct {
 	dbConn *gorm.DB
 }
 
-func NewDbAdapter(logger *zap.SugaredLogger) (*DbAdapter, *sqlstore.Container, error) {
+func NewDbAdapter(logger *zap.SugaredLogger, cfg *config.Config) (*DbAdapter, error) {
 
-	rawDbConn, err := sql.Open("sqlite3", "file:sqlite.db?_foreign_keys=on")
+	psqlconf := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		cfg.PsqlHost,
+		cfg.PsqlPort,
+		cfg.PsqlUser,
+		cfg.PsqlPass,
+		cfg.PsqlDb,
+	)
+
+	dbConn, err := gorm.Open(postgres.Open(psqlconf), &gorm.Config{})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	dbConn, err := gorm.Open(sqlite.Open("sqlite.db"), &gorm.Config{})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	container := sqlstore.NewWithDB(rawDbConn, "sqlite3", nil)
-	if err := container.Upgrade(); err != nil {
-		return nil, nil, err
-	}
-
-	return &DbAdapter{logger: logger, dbConn: dbConn}, container, nil
+	return &DbAdapter{logger: logger, dbConn: dbConn}, nil
 }
 
 func (d *DbAdapter) AutoMigrate() error {
