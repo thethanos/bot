@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"fmt"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"strings"
 
@@ -29,20 +28,17 @@ func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 	m.state.Reset()
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Список услуг"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "По городу"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Город"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Услуги"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Поиск моделей"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "По вопросам сотрудничества"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "О нас"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Для мастеров"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Модель"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		m.inProgress = true
 		return ma.NewTextMessage("Главное меню", msg, keyboard, false)
 	}
-
-	text := "1. услуги\n2. город\n3. вопросы\n4. о нас\n5. мастер"
-	m.inProgress = true
-	return ma.NewTextMessage(text, msg, nil, true)
+	return ma.NewTextMessage("this messenger is unsupported yet", msg, nil, true)
 }
 
 func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -50,16 +46,16 @@ func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	m.inProgress = false
 
 	switch strings.ToLower(msg.Text) {
-	case "список услуг":
+	case "город":
+		return nil, MainMenuCitySelectionStep
+	case "услуги":
 		return nil, MainMenuServiceCategorySelectionStep
-	case "по городу":
-		return nil, CityPromptStep
+	case "поиск моделей":
+		return nil, EmptyStep
+	case "по вопросам сотрудничества":
+		return nil, MasterStep
 	case "о нас":
 		return nil, AboutStep
-	case "для мастеров":
-		return nil, MasterStep
-	case "модель":
-		return nil, EmptyStep
 	case "админ":
 		return nil, AdminStep
 	}
@@ -82,11 +78,11 @@ func (a *Admin) Request(msg *ma.Message) *ma.Message {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить услугу"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить город"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить мастера"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewTextMessage(text, msg, keyboard, false)
 	}
-	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Добавить категорию услуг\n2: Добавить услугу\n3. Добавить город\n4. Назад", text), msg, nil, true)
+	return ma.NewTextMessage("this messenger is unsupported yet", msg, nil, true)
 }
 
 func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -94,7 +90,7 @@ func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	a.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "назад" || userAnswer == "3" {
+	if userAnswer == "вернуться на главную" {
 		a.logger.Infof("Next step is PreviousStep")
 		return nil, PreviousStep
 	}

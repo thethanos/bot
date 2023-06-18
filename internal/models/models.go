@@ -48,6 +48,7 @@ type Master struct {
 	Name        string `gorm:"name"`
 	Images      images `gorm:"type:text"`
 	Description string `gorm:"description"`
+	Contact     string `gorm:"contact"`
 	CityID      string `gorm:"city_id"`
 }
 

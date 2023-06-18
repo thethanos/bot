@@ -20,8 +20,8 @@ const (
 	MainMenuServiceSelectionStep
 	ServiceCategorySelectionStep
 	ServiceSelectionStep
-	CityPromptStep
 	CitySelectionStep
+	MainMenuCitySelectionStep
 	MasterSelectionStep
 	AboutStep
 	MasterStep

@@ -18,9 +18,16 @@ func (u *UserState) Reset() {
 	u.RawInput = make(map[string]string)
 }
 
-func (u *UserState) GetCityID() string {
+func (u UserState) GetCityID() string {
 	if u.City != nil {
 		return u.City.ID
+	}
+	return ""
+}
+
+func (u UserState) GetServiceID() string {
+	if u.Service != nil {
+		return u.Service.ID
 	}
 	return ""
 }
@@ -50,5 +57,6 @@ type Master struct {
 	Name        string   `json:"name"`
 	Images      []string `json:"images"`
 	Description string   `json:"description"`
+	Contact     string   `json:"contact"`
 	CityID      string   `json:"city_id"`
 }
