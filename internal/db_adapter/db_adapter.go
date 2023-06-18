@@ -65,7 +65,7 @@ func (d *DbAdapter) AutoMigrate() error {
 
 func (d *DbAdapter) GetCity(name string) (*entities.City, error) {
 	city := &models.City{}
-	tx := d.dbConn.Where("index_str == ?", clearText(name)).First(city)
+	tx := d.dbConn.Where("index_str = ?", clearText(name)).First(city)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -89,7 +89,7 @@ func (d *DbAdapter) GetCities(serviceId string) ([]*entities.City, error) {
 	}
 
 	joins := make([]*models.Join, 0)
-	if err := d.dbConn.Where("service_id == ?", serviceId).Find(&joins).Error; err != nil {
+	if err := d.dbConn.Where("service_id = ?", serviceId).Find(&joins).Error; err != nil {
 		d.logger.Error(err)
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (d *DbAdapter) GetCategories(cityId string) ([]*entities.ServiceCategory, e
 	}
 
 	joins := make([]*models.JoinCityCategory, 0)
-	if err := d.dbConn.Where("city_id == ?", cityId).Find(&joins).Error; err != nil {
+	if err := d.dbConn.Where("city_id = ?", cityId).Find(&joins).Error; err != nil {
 		return nil, err
 	}
 
@@ -153,7 +153,7 @@ func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service,
 		}
 	} else if len(cityId) != 0 {
 		joins := make([]*models.Join, 0)
-		if err := d.dbConn.Select("service_id").Distinct().Where("city_id == ?", cityId).Find(&joins).Error; err != nil {
+		if err := d.dbConn.Select("service_id").Distinct().Where("city_id = ?", cityId).Find(&joins).Error; err != nil {
 			return nil, err
 		}
 
@@ -162,11 +162,11 @@ func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service,
 			serviceIds = append(serviceIds, join.ServiceID)
 		}
 
-		if err := d.dbConn.Where("category_id == ? AND id IN ?", categoryId, serviceIds).Find(&services).Error; err != nil {
+		if err := d.dbConn.Where("category_id = ? AND id IN ?", categoryId, serviceIds).Find(&services).Error; err != nil {
 			return nil, err
 		}
 	} else {
-		if err := d.dbConn.Where("category_id == ?", categoryId).Find(&services).Error; err != nil {
+		if err := d.dbConn.Where("category_id = ?", categoryId).Find(&services).Error; err != nil {
 			return nil, err
 		}
 	}
@@ -179,7 +179,7 @@ func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service,
 
 func (d *DbAdapter) GetMasterPreview(id string) (*entities.Master, error) {
 	master := &models.MasterPreview{}
-	tx := d.dbConn.Where("id == ?", id).First(master)
+	tx := d.dbConn.Where("id = ?", id).First(master)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -194,7 +194,7 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 	result := make([]*entities.Master, 0)
 	masters := make([]*models.Master, 0)
 	joins := make([]*models.Join, 0)
-	if err := d.dbConn.Where("city_id == ? AND service_id == ?", cityId, serviceId).Find(&joins).Error; err != nil {
+	if err := d.dbConn.Where("city_id = ? AND service_id = ?", cityId, serviceId).Find(&joins).Error; err != nil {
 		return nil, err
 	}
 
@@ -267,7 +267,7 @@ func (d *DbAdapter) SaveMaster(data *entities.UserState) error {
 		return err
 	}
 
-	if err := d.dbConn.Where("city_id == ? AND service_category_id == ?", data.City.ID, data.ServiceCategory.ID).First(&models.JoinCityCategory{}).Error; err != nil {
+	if err := d.dbConn.Where("city_id = ? AND service_category_id = ?", data.City.ID, data.ServiceCategory.ID).First(&models.JoinCityCategory{}).Error; err != nil {
 		d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.City.ID, data.ServiceCategory.ID)
 		if err := d.dbConn.Create(&models.JoinCityCategory{CityID: data.City.ID, ServiceCategoryID: data.ServiceCategory.ID}).Error; err != nil {
 			return err
