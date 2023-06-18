@@ -95,6 +95,11 @@ func getStepTypeName(step StepType) string {
 	}
 }
 
+type Question struct {
+	Text  string
+	Field string
+}
+
 type StepStack struct {
 	steps []Step
 }

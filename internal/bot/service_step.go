@@ -31,8 +31,8 @@ func (b *BaseServiceCategoryMode) Text() string {
 
 func (b *BaseServiceCategoryMode) Buttons() [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
 	return rows
 }
 
@@ -54,24 +54,12 @@ func (m *MainMenuServiceCategoryMode) Text() string {
 
 func (m *MainMenuServiceCategoryMode) Buttons() [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
 	return rows
 }
 
 func (m *MainMenuServiceCategoryMode) NextStep() StepType {
 	return MainMenuServiceSelectionStep
-}
-
-type MasterServiceCategoryMode struct {
-	BaseServiceCategoryMode
-}
-
-func (m *MasterServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
-	return m.dbAdapter.GetCategories("")
-}
-
-func (m *MasterServiceCategoryMode) NextStep() StepType {
-	return MasterServiceSelectionStep
 }
 
 type AdminServiceCategoryMode struct {
@@ -113,15 +101,7 @@ func (s *ServiceCategorySelection) Request(msg *ma.Message) *ma.Message {
 		s.categories = categories
 		return ma.NewTextMessage(s.mode.Text(), msg, keyboard, false)
 	}
-
-	text := ""
-	for idx, category := range categories {
-		text += fmt.Sprintf("%d. %s\n", idx+1, category.Name)
-	}
-	text += fmt.Sprintf("%d. Назад\n", len(categories)+1)
-
-	s.categories = categories
-	return ma.NewTextMessage(text, msg, nil, true)
+	return ma.NewTextMessage("this messenger is unsupported yet", msg, nil, true)
 }
 
 func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -129,10 +109,10 @@ func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message
 	s.inProgress = false
 
 	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "назад" || userAnswer == fmt.Sprintf("%d", len(s.categories)+1) {
+	if userAnswer == "вернуться назад" {
 		return nil, PreviousStep
 	}
-	if userAnswer == "главное меню" {
+	if userAnswer == "вернуться на главную" {
 		return nil, MainMenuStep
 	}
 
@@ -155,7 +135,7 @@ func (s *ServiceCategorySelection) Reset() {
 
 type ServiceSelectionStepMode interface {
 	GetServicesList(categoryId, cityId string) ([]*entities.Service, error)
-	MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton
+	MenuItems([]*entities.Service) [][]tgbotapi.KeyboardButton
 	Buttons() [][]tgbotapi.KeyboardButton
 	NextStep() StepType
 }
@@ -168,20 +148,18 @@ func (b *BaseServiceSelectionMode) GetServicesList(categoryId, cityId string) ([
 	return b.dbAdapter.GetServices(categoryId, cityId)
 }
 
-func (b *BaseServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
+func (b *BaseServiceSelectionMode) MenuItems(services []*entities.Service) [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
 	for _, service := range services {
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name, WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("https://bot-dev-domain.com/master?city=%s&service=%s", cityId, service.ID),
-		}}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name}})
 	}
 	return rows
 }
 
 func (b *BaseServiceSelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
 	return rows
 }
 
@@ -195,14 +173,6 @@ type MainMenuServiceSelectionMode struct {
 
 func (m *MainMenuServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
 	return m.dbAdapter.GetServices(categoryId, "")
-}
-
-func (m *MainMenuServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
-	rows := make([][]tgbotapi.KeyboardButton, 0)
-	for _, service := range services {
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name}})
-	}
-	return rows
 }
 
 func (m *MainMenuServiceSelectionMode) NextStep() StepType {
@@ -241,7 +211,7 @@ func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 	services, _ := s.mode.GetServicesList(s.state.ServiceCategory.ID, s.state.GetCityID())
 
 	if msg.Source == ma.TELEGRAM {
-		rows := s.mode.MenuItems(s.state.GetCityID(), services)
+		rows := s.mode.MenuItems(services)
 		rows = append(rows, s.mode.Buttons()...)
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
@@ -252,24 +222,17 @@ func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 		s.services = services
 		return ma.NewTextMessage(s.state.ServiceCategory.Name, msg, keyboard, false)
 	}
-
-	text := ""
-	for idx, service := range services {
-		text += fmt.Sprintf("%d. %s", idx+1, service.Name)
-	}
-
-	s.services = services
-	return ma.NewTextMessage(text, msg, nil, true)
+	return ma.NewTextMessage("this messenger is unsupported yet", msg, nil, true)
 }
 
 func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	s.logger.Info("ServiceSelection step is processing response")
 	s.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "назад" || userAnswer == fmt.Sprintf("%d", len(s.services)+1) {
+	if userAnswer == "вернуться назад" {
 		return nil, PreviousStep
 	}
-	if userAnswer == "главное меню" {
+	if userAnswer == "вернуться на главную" {
 		return nil, MainMenuStep
 	}
 	for idx, service := range s.services {

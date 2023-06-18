@@ -56,10 +56,6 @@ func (b *Bot) Run() {
 	go func() {
 		for msg := range b.recvMsgChan {
 			if _, exists := b.userSessions[msg.UserID]; !exists {
-
-				b.send(ma.NewImageMessage("./images/greetings.jpeg", "test", msg, false))
-				time.Sleep(1 * time.Second)
-
 				state := &entities.UserState{Cursor: 0, RawInput: make(map[string]string)}
 				b.userSessions[msg.UserID] = &UserSession{
 					State:       state,
@@ -142,34 +138,6 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
 			mode:     &BaseServiceSelectionMode{dbAdapter: b.dbAdapter},
 		}
-	case MasterStep:
-		return &YesNo{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			question: Question{Text: "Хотите зарегистрироваться как мастер?"},
-			yesStep:  MasterRegistrationStep,
-			noStep:   MainMenuStep,
-		}
-	case MasterRegistrationStep:
-		return &Prompt{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			question: Question{Text: "Как вас называть?", Field: "name"},
-			nextStep: MasterCityPromptStep,
-			errStep:  MasterRegistrationStep,
-		}
-	case MasterServiceCategorySecletionStep:
-		return &ServiceCategorySelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode: &MasterServiceCategoryMode{
-				BaseServiceCategoryMode: BaseServiceCategoryMode{dbAdapter: b.dbAdapter},
-			},
-		}
-	case MasterServiceSelectionStep:
-		return &ServiceSelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode:     &RegistrationServiceSelectionMode{BaseServiceSelectionMode{dbAdapter: b.dbAdapter}},
-		}
-	case MasterRegistrationFinalStep:
-		return &RegistrationFinal{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	case EmptyStep:
 		return nil
 	case AdminStep:

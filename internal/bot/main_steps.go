@@ -7,18 +7,6 @@ import (
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
 
-type Greetings struct {
-	StepBase
-}
-
-func (g *Greetings) Request(msg *ma.Message) *ma.Message {
-	return nil
-}
-
-func (g *Greetings) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
-	return nil, EmptyStep
-}
-
 type MainMenu struct {
 	StepBase
 }
