@@ -164,7 +164,7 @@ func (b *BaseServiceSelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
 }
 
 func (b *BaseServiceSelectionMode) NextStep() StepType {
-	return EmptyStep
+	return MasterSelectionStep
 }
 
 type MainMenuServiceSelectionMode struct {

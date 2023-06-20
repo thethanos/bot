@@ -25,8 +25,8 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
-	cityId := query.Get("city")
-	serviceId := query.Get("service")
+	cityId := query.Get("city_id")
+	serviceId := query.Get("service_id")
 
 	masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
 	if err != nil {

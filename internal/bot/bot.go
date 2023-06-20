@@ -5,7 +5,7 @@ import (
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
 	ma "multimessenger_bot/internal/messenger_adapter"
-	"time"
+	"strings"
 
 	"go.uber.org/zap"
 )
@@ -55,7 +55,7 @@ func (b *Bot) Run() {
 
 	go func() {
 		for msg := range b.recvMsgChan {
-			if _, exists := b.userSessions[msg.UserID]; !exists {
+			if _, exists := b.userSessions[msg.UserID]; !exists || strings.ToLower(msg.Text) == "/start" {
 				state := &entities.UserState{Cursor: 0, RawInput: make(map[string]string)}
 				b.userSessions[msg.UserID] = &UserSession{
 					State:       state,
@@ -92,11 +92,6 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	case MainMenuStep:
 		return &MainMenu{
 			StepBase: StepBase{logger: b.logger, state: state},
-		}
-	case MainMenuRequestStep:
-		return &YesNo{
-			StepBase: StepBase{logger: b.logger},
-			question: Question{Text: "Вурнуться в главное меню?"}, yesStep: MainMenuStep, noStep: EmptyStep,
 		}
 	case CitySelectionStep:
 		return &CitySelection{
@@ -137,6 +132,18 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 		return &ServiceSelection{
 			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
 			mode:     &BaseServiceSelectionMode{dbAdapter: b.dbAdapter},
+		}
+	case MasterSelectionStep:
+		return &MasterSelection{
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+		}
+	case FindModelStep:
+		return &FindModel{
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+		}
+	case CollaborationStep:
+		return &Collaboration{
+			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
 		}
 	case EmptyStep:
 		return nil
@@ -210,9 +217,6 @@ func (b *Bot) processMessage(msg *ma.Message) {
 			b.send(step.Request(msg))
 			b.userSessions[msg.UserID].CurrentStep = step
 			b.userSessions[msg.UserID].PrevSteps.Clear()
-		case MainMenuRequestStep:
-			time.Sleep(1 * time.Second)
-			fallthrough
 		default:
 			b.send(step.Request(msg))
 			b.userSessions[msg.UserID].CurrentStep = step

@@ -36,7 +36,7 @@ func (b *BaseCitySelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
 }
 
 func (b *BaseCitySelectionMode) NextStep() StepType {
-	return EmptyStep
+	return MasterSelectionStep
 }
 
 type MainMenuCitySelectionMode struct {
