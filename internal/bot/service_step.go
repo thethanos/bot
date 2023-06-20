@@ -110,9 +110,11 @@ func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message
 
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "вернуться назад" {
+		s.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
 	if userAnswer == "вернуться на главную" {
+		s.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
 
@@ -230,9 +232,11 @@ func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepTy
 	s.inProgress = false
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "вернуться назад" {
+		s.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
 	if userAnswer == "вернуться на главную" {
+		s.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
 	for idx, service := range s.services {

@@ -86,9 +86,11 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType)
 
 	userAnswer := strings.ToLower(msg.Text)
 	if userAnswer == "вернуться назад" {
+		c.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
 	if userAnswer == "вернуться на главную" {
+		c.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
 

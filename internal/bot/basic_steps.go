@@ -234,7 +234,6 @@ func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Услуги"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Поиск моделей"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "По вопросам сотрудничества"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "О нас"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		m.inProgress = true
