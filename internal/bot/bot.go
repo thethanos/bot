@@ -6,14 +6,16 @@ import (
 	"multimessenger_bot/internal/entities"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 )
 
 type UserSession struct {
-	CurrentStep Step
-	PrevSteps   StepStack
-	State       *entities.UserState
+	CurrentStep  Step
+	PrevSteps    StepStack
+	State        *entities.UserState
+	LastActivity time.Time
 }
 
 type Bot struct {
@@ -63,7 +65,7 @@ func (b *Bot) Run() {
 					PrevSteps:   StepStack{},
 				}
 			}
-
+			b.userSessions[msg.UserID].LastActivity = time.Now()
 			b.processUserSession(msg)
 		}
 	}()
@@ -72,6 +74,18 @@ func (b *Bot) Run() {
 		for msg := range b.sendMsgChan {
 			if err := b.clients[msg.Source].SendMessage(msg); err != nil {
 				fmt.Println(err)
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			time.Sleep(time.Hour)
+			for id, user := range b.userSessions {
+				if time.Now().Sub(user.LastActivity) >= (time.Hour * 24) {
+					b.logger.Infof("User session %s has been deleted due to inactivity for the last 24 hours", id)
+					delete(b.userSessions, id)
+				}
 			}
 		}
 	}()
