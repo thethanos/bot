@@ -40,15 +40,15 @@ type City struct {
 
 type ServiceCategory struct {
 	ID       string `json:"id"`
-	IndexStr string `json:"index_str"`
+	IndexStr string `json:"-"`
 	Name     string `json:"name"`
 }
 
 type Service struct {
 	ID         string `json:"id"`
-	IndexStr   string `json:"index_str"`
+	IndexStr   string `json:"-"`
 	Name       string `json:"name"`
-	CategoryID string `json:"category_id"`
+	CategoryID string `json:"-"`
 }
 
 type Master struct {

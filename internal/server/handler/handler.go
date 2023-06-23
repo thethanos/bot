@@ -29,6 +29,7 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetCities::GetCities", err)
 		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -36,23 +37,67 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetCities::Marshal", err)
 		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Write(cityList)
+	h.logger.Info("Response sent")
 }
 
 func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
+	categories, err := h.dbAdapter.GetCategories("")
+	if err != nil {
+		h.logger.Error("server::GetCategories::GetCategories", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
+	}
+
+	categoryList, err := json.Marshal(&categories)
+	if err != nil {
+		h.logger.Error("server::GetCategories::Marshal")
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
+	}
+
 	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	rw.Write(categoryList)
+	h.logger.Info("Response sent")
 }
 
 func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
-	h.logger.Infof("Request received: %s", req.URL)
+	h.logger.Info("Request received: %s", req.URL)
+
+	query := req.URL.Query()
+	categoryId := query.Get("category_id")
+
+	services, err := h.dbAdapter.GetServices(categoryId, "")
+	if err != nil {
+		h.logger.Error("server::GetServices::GetServices")
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
+	}
+
+	serviceList, err := json.Marshal(&services)
+	if err != nil {
+		h.logger.Error("server::GetServices::Marshal", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
+	}
 
 	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	rw.Write(serviceList)
+	h.logger.Info("Response sent")
 }
 
 func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
@@ -64,8 +109,9 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 
 	masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
 	if err != nil {
-		h.logger.Error("server::Handler::GetMastersList::GetMasters", err)
+		h.logger.Error("server::GetMastersList::GetMasters", err)
 		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -73,12 +119,15 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetMastersList::GenerateWebPage", err)
 		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
 	rw.Write(template)
+	h.logger.Info("Response sent")
 }
 
 func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
@@ -91,6 +140,7 @@ func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetMasterPreview::GetMasterPreview", err)
 		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -98,10 +148,13 @@ func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetMastersList::GenerateWebPage", err)
 		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
 	rw.Write(template)
+	h.logger.Info("Response sent")
 }

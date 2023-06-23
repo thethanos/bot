@@ -58,35 +58,46 @@
     }
   </style>
   <script>
-    var subjectObject = {
-      "Категория 1": [
-        "Услуга 1.1",
-        "Услуга 1.2",
-        "Услуга 1.3"
-      ],
-      "Категория 2": [
-        "Услуга 2.1",
-        "Услуга 2.2"
-      ]
-    }
-    var cities = ["Тель-Авив", "Нетания", "Иерусалим"]
     window.onload = function () {
+
       var cityList = document.getElementById("city")
+      const cityReq = new XMLHttpRequest();
+      cityReq.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          for (var city of cityReq.response) {
+            cityList.options[cityList.options.length] = new Option(city.name, city.id)
+          }
+        }
+      };
+      cityReq.responseType = "json"
+      cityReq.open("GET", "https://bot-dev-domain.com/cities", true);
+      cityReq.send();
+
       var categoryList = document.getElementById("category");
+      const categoryReq = new XMLHttpRequest();
+      categoryReq.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          for (var category of categoryReq.response) {
+            categoryList.options[categoryList.options.length] = new Option(category.name, category.id);
+          }
+        }
+      };
+      categoryReq.responseType = "json"
+      categoryReq.open("GET", "https://bot-dev-domain.com/categories", true);
+      categoryReq.send();
+
       var serviceList = document.getElementById("service");
-
-      for (var city in cities) {
-        cityList.options[cityList.options.length] = new Option(cities[city], city)
-      }
-      for (var x in subjectObject) {
-        categoryList.options[categoryList.options.length] = new Option(x, x);
-      }
-
       categoryList.onchange = function () {
         serviceList.length = 1;
-        for (var y in subjectObject[categoryList.value]) {
-          serviceList.options[serviceList.options.length] = new Option(subjectObject[categoryList.value][y], y);
+        const serviceReq = new XMLHttpRequest();
+        serviceReq.onreadystatechange = function () {
+          for (var service of serviceReq.response) {
+            serviceList.options[serviceList.options.length] = new Option(service.name, service.id);
+          }
         }
+        serviceReq.responseType = "json"
+        serviceReq.open("GET", "https://bot-dev-domain.com/services?category_id=" + categoryList.value, true);
+        serviceReq.send();
       }
     }
   </script>
