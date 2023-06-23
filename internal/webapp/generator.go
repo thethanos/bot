@@ -22,7 +22,7 @@ func GenerateWebPage(header string, masters []*entities.Master) ([]byte, error) 
 
 	var allPaths []string
 	for _, tmpl := range allFiles {
-		allPaths = append(allPaths, "./webapp/masters/templates/"+tmpl)
+		allPaths = append(allPaths, "./webapp/pages/templates/"+tmpl)
 	}
 
 	templates := template.Must(template.New("").ParseFiles(allPaths...))

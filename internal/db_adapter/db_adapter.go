@@ -50,7 +50,7 @@ func (d *DbAdapter) AutoMigrate() error {
 	if err := d.dbConn.AutoMigrate(&models.Master{}); err != nil {
 		return err
 	}
-	if err := d.dbConn.AutoMigrate(&models.MasterPreview{}); err != nil {
+	if err := d.dbConn.AutoMigrate(&models.MasterRegForm{}); err != nil {
 		return err
 	}
 	if err := d.dbConn.AutoMigrate(&models.Join{}); err != nil {
@@ -177,19 +177,20 @@ func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service,
 	return result, nil
 }
 
-func (d *DbAdapter) GetMasterPreview(id string) (*entities.Master, error) {
-	master := &models.MasterPreview{}
-	tx := d.dbConn.Where("id = ?", id).First(master)
-	if tx.Error != nil {
-		return nil, tx.Error
+/*
+	func (d *DbAdapter) GetMasterPreview(id string) (*entities.Master, error) {
+		master := &models.MasterPreview{}
+		tx := d.dbConn.Where("id = ?", id).First(master)
+		if tx.Error != nil {
+			return nil, tx.Error
+		}
+		return &entities.Master{
+			Name:        master.Name,
+			Images:      master.Images,
+			Description: master.Description,
+		}, nil
 	}
-	return &entities.Master{
-		Name:        master.Name,
-		Images:      master.Images,
-		Description: master.Description,
-	}, nil
-}
-
+*/
 func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, error) {
 	result := make([]*entities.Master, 0)
 	masters := make([]*models.Master, 0)
@@ -258,7 +259,7 @@ func (d *DbAdapter) SaveMaster(data *entities.UserState) error {
 	master := &models.Master{
 		ID:          id,
 		Name:        data.RawInput["name"],
-		Images:      []string{"https://bot-dev-domain.com/masters/images/maria_ernandes/1.png"},
+		Images:      []string{"https://bot-dev-domain.com/pages/images/maria_ernandes/1.png"},
 		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		CityID:      data.City.ID,
 	}
@@ -281,17 +282,19 @@ func (d *DbAdapter) SaveMaster(data *entities.UserState) error {
 	return nil
 }
 
-func (d *DbAdapter) SaveMasterPreview(master *entities.Master) error {
-
-	preview := &models.MasterPreview{
-		ID:          master.ID,
-		Name:        master.Name,
-		Description: master.Description,
-		Images:      master.Images,
+func (d *DbAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, error) {
+	id := fmt.Sprintf("%d", time.Now().Unix())
+	regForm := &models.MasterRegForm{
+		ID:         id,
+		Name:       master.Name,
+		CityID:     master.CityID,
+		CategoryID: master.CategoryID,
+		ServiceID:  master.ServiceID,
+		Contact:    master.Contact,
 	}
-	if err := d.dbConn.Create(preview).Error; err != nil {
-		return err
+	if err := d.dbConn.Create(regForm).Error; err != nil {
+		return "", err
 	}
-	d.logger.Infof("Preview saved successfully, id: %s, name: %s", master.ID, master.Name)
-	return nil
+	d.logger.Infof("Form saved successfully, id: %s, name: %s", id, master.Name)
+	return id, nil
 }

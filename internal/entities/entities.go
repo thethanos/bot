@@ -60,3 +60,11 @@ type Master struct {
 	Contact     string   `json:"contact"`
 	CityID      string   `json:"city_id"`
 }
+
+type MasterRegForm struct {
+	Name       string `json:"name"`
+	CityID     string `json:"city_id"`
+	CategoryID string `json:"category_id"`
+	ServiceID  string `json:"service_id"`
+	Contact    string `json:"contact"`
+}

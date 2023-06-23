@@ -288,8 +288,8 @@ func (i *ImageUpload) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		return ma.NewTextMessage("Не удалось загрузить изображение", msg, nil, false), EmptyStep
 	}
 
-	image := parsers.SaveFile(i.state.Master.ID, "./webapp/masters/images", "jpeg", file)
-	i.state.Master.Images = append(i.state.Master.Images, fmt.Sprintf("https://bot-dev-domain.com/masters/images/%s/%s", i.state.Master.ID, image))
+	image := parsers.SaveFile(i.state.Master.ID, "./webapp/pages/images", "jpeg", file)
+	i.state.Master.Images = append(i.state.Master.Images, fmt.Sprintf("https://bot-dev-domain.com/pages/images/%s/%s", i.state.Master.ID, image))
 	return nil, EmptyStep
 }
 
@@ -303,7 +303,7 @@ func (a *AddMasterFinal) Request(msg *ma.Message) *ma.Message {
 	text := "Завершающий этап"
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Предпросмотр", WebApp: &tgbotapi.WebAppInfo{Url: fmt.Sprintf("https://bot-dev-domain.com/master/preview?master=%s", a.state.Master.ID)}}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Предпросмотр", WebApp: &tgbotapi.WebAppInfo{Url: fmt.Sprintf("https://bot-dev-domain.com/masters/preview?master=%s", a.state.Master.ID)}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Сохранить анкету"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Назад"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Главное меню"}})

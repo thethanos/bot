@@ -52,13 +52,13 @@ type Master struct {
 	CityID      string `gorm:"city_id"`
 }
 
-type MasterPreview struct {
-	ID          string `gorm:"primarykey"`
-	IndexStr    string `gorm:"index_str"`
-	Name        string `gorm:"name"`
-	Images      images `gorm:"type:text"`
-	Description string `gorm:"description"`
-	CityID      string `gorm:"city_id"`
+type MasterRegForm struct {
+	ID         string `gorm:"primarykey"`
+	Name       string `gorm:"name"`
+	CityID     string `gorm:"city_id"`
+	CategoryID string `gorm:"category_id"`
+	ServiceID  string `gorm:"service_id"`
+	Contact    string `gorm:"contact"`
 }
 
 type Join struct {

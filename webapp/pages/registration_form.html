@@ -21,6 +21,7 @@
 
     /* Full-width input fields */
     input[type=text],
+    input[type=file],
     select {
       width: 100%;
       padding: 15px;
@@ -100,6 +101,27 @@
         serviceReq.send();
       }
     }
+    function registration() {
+
+      const name = document.getElementById("name").value;
+      const city = cityList.value;
+      const category = categoryList.value;
+      const service = serviceList.value;
+      const contact = document.getElementById("contact").value;
+
+      const object = { name: name, city_id: city, category_id: category, service_id: service, contact: contact };
+      const body = JSON.stringify(object);
+
+      const regFormReq = new XMLHttpRequest();
+      regFormReq.setRequestHeader("Content-Type", "application/json");
+      regFormReq.onreadystatechange = function () {
+        if (regFormReq.readyState == XMLHttpRequest.DONE && regFormReq.status == 200) {
+          console.log("Success");
+        }
+      }
+      regFormReq.open("POST", "https://bot-dev-domain.com/masters");
+      regFormReq.send(body);
+    }
   </script>
 </head>
 
@@ -129,9 +151,16 @@
         <option value="" disabled selected hidden>Выберите услугу</option>
       </select>
 
+      <label for="images"><b>Фотографии</b></label>
+      <input type="file" name="images" id="images" multiple>
+
+      <label for="contact"><b>Контактные данные</b></label>
+      <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
+        required>
+
       <hr>
 
-      <button type="submit" class="registerbtn">Зарегистрироваться</button>
+      <button onclick="registration()" class="registerbtn">Зарегистрироваться</button>
     </div>
   </form>
 

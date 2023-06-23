@@ -2,6 +2,8 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/webapp"
@@ -130,23 +132,57 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
-func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
+/*
+	func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
+		h.logger.Infof("Request received: %s", req.URL)
+
+		query := req.URL.Query()
+		master_id := query.Get("master")
+
+		master, err := h.dbAdapter.GetMasterPreview(master_id)
+		if err != nil {
+			h.logger.Error("server::GetMasterPreview::GetMasterPreview", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Header().Set("Access-Control-Allow-Origin", "*")
+			return
+		}
+
+		template, err := webapp.GenerateWebPage("Предпросмотр", []*entities.Master{master})
+		if err != nil {
+			h.logger.Error("server::GetMastersList::GenerateWebPage", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Header().Set("Access-Control-Allow-Origin", "*")
+			return
+		}
+
+		rw.WriteHeader(http.StatusOK)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+		rw.Write(template)
+		h.logger.Info("Response sent")
+	}
+*/
+func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
-	query := req.URL.Query()
-	master_id := query.Get("master")
-
-	master, err := h.dbAdapter.GetMasterPreview(master_id)
+	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		h.logger.Error("server::GetMasterPreview::GetMasterPreview", err)
+		h.logger.Error("server::SaveMasterRegForm::ReadAll", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
-	template, err := webapp.GenerateWebPage("Предпросмотр", []*entities.Master{master})
+	regForm := &entities.MasterRegForm{}
+	if err := json.Unmarshal(body, regForm); err != nil {
+		h.logger.Error("server::SaveMasterRegForm::Unmarshal", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+	}
+
+	id, err := h.dbAdapter.SaveMasterRegForm(regForm)
 	if err != nil {
-		h.logger.Error("server::GetMastersList::GenerateWebPage", err)
+		h.logger.Error("server::SaveMasterRegForm::SaveMasterRegForm", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
@@ -154,7 +190,14 @@ func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
 
 	rw.WriteHeader(http.StatusOK)
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
-	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-	rw.Write(template)
+	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s"}`, id)))
+	h.logger.Info("Response sent")
+}
+
+func (h *Handler) CommitMaster(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	h.logger.Info("Response sent")
 }
