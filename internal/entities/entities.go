@@ -34,7 +34,7 @@ func (u UserState) GetServiceID() string {
 
 type City struct {
 	ID       string `json:"id"`
-	IndexStr string `json:"index_str"`
+	IndexStr string `json:"-"`
 	Name     string `json:"name"`
 }
 

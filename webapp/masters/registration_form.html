@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: black;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    /* Add padding to containers */
+    .container {
+      padding: 16px;
+      background-color: white;
+    }
+
+    /* Full-width input fields */
+    input[type=text],
+    select {
+      width: 100%;
+      padding: 15px;
+      margin: 5px 0 22px 0;
+      display: inline-block;
+      border: none;
+      background: #f1f1f1;
+    }
+
+    input[type=text]:focus {
+      background-color: #ddd;
+      outline: none;
+    }
+
+    /* Overwrite default styles of hr */
+    hr {
+      border: 1px solid #f1f1f1;
+      margin-bottom: 25px;
+    }
+
+    /* Set a style for the submit button */
+    .registerbtn {
+      background-color: #04AA6D;
+      color: white;
+      padding: 16px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      opacity: 0.9;
+    }
+
+    .registerbtn:hover {
+      opacity: 1;
+    }
+  </style>
+  <script>
+    var subjectObject = {
+      "Категория 1": [
+        "Услуга 1.1",
+        "Услуга 1.2",
+        "Услуга 1.3"
+      ],
+      "Категория 2": [
+        "Услуга 2.1",
+        "Услуга 2.2"
+      ]
+    }
+    var cities = ["Тель-Авив", "Нетания", "Иерусалим"]
+    window.onload = function () {
+      var cityList = document.getElementById("city")
+      var categoryList = document.getElementById("category");
+      var serviceList = document.getElementById("service");
+
+      for (var city in cities) {
+        cityList.options[cityList.options.length] = new Option(cities[city], city)
+      }
+      for (var x in subjectObject) {
+        categoryList.options[categoryList.options.length] = new Option(x, x);
+      }
+
+      categoryList.onchange = function () {
+        serviceList.length = 1;
+        for (var y in subjectObject[categoryList.value]) {
+          serviceList.options[serviceList.options.length] = new Option(subjectObject[categoryList.value][y], y);
+        }
+      }
+    }
+  </script>
+</head>
+
+<body>
+
+  <form action="">
+    <div class="container">
+      <h1>Регистрация</h1>
+      <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в качестве мастера.</p>
+      <hr>
+
+      <label for="name"><b>Имя</b></label>
+      <input type="text" placeholder="Введите свое имя" name="name" id="name" required>
+
+      <label for="city"><b>Город</b></label>
+      <select name="city" id="city">
+        <option value="">Выберите город</option>
+      </select>
+
+      <label for="category"><b>Категория услуг</b></label>
+      <select name="category" id="category">
+        <option value="">Выберите категорию</option>
+      </select>
+
+      <label for="service"><b>Услуга</b></label>
+      <select name="service" id="service">
+        <option value="" selected="selected">Выберите услугу</option>
+      </select>
+
+      <hr>
+
+      <button type="submit" class="registerbtn">Зарегистрироваться</button>
+    </div>
+  </form>
+
+</body>
+
+</html>

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/webapp"
@@ -21,6 +22,39 @@ func NewHandler(logger *zap.SugaredLogger, dbAdapter *db_adapter.DbAdapter) *Han
 	}
 }
 
+func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	cities, err := h.dbAdapter.GetCities("")
+	if err != nil {
+		h.logger.Error("server::GetCities::GetCities", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	cityList, err := json.Marshal(&cities)
+	if err != nil {
+		h.logger.Error("server::GetCities::Marshal", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	rw.Write(cityList)
+}
+
+func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	rw.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	rw.WriteHeader(http.StatusOK)
+}
+
 func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
@@ -37,7 +71,7 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 
 	template, err := webapp.GenerateWebPage("Выбор мастера", masters)
 	if err != nil {
-		h.logger.Error("server::Handler::GetMastersList::ExecuteTemplate", err)
+		h.logger.Error("server::GetMastersList::GenerateWebPage", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -55,14 +89,14 @@ func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
 
 	master, err := h.dbAdapter.GetMasterPreview(master_id)
 	if err != nil {
-		h.logger.Error("server::Handler::GetMasterPreview::GetMasterPreview", err)
+		h.logger.Error("server::GetMasterPreview::GetMasterPreview", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	template, err := webapp.GenerateWebPage("Предпросмотр", []*entities.Master{master})
 	if err != nil {
-		h.logger.Error("server::Handler::GetMastersList::ExecuteTemplate", err)
+		h.logger.Error("server::GetMastersList::GenerateWebPage", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
