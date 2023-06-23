@@ -127,42 +127,40 @@
 
 <body>
 
-  <form action="">
-    <div class="container">
-      <h1>Регистрация</h1>
-      <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в качестве мастера.</p>
-      <hr>
+  <div class="container">
+    <h1>Регистрация</h1>
+    <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в качестве мастера.</p>
+    <hr>
 
-      <label for="name"><b>Имя</b></label>
-      <input type="text" placeholder="Введите свое имя" name="name" id="name" required>
+    <label for="name"><b>Имя</b></label>
+    <input type="text" placeholder="Введите свое имя" name="name" id="name" required>
 
-      <label for="city"><b>Город</b></label>
-      <select name="city" id="city">
-        <option value="">Выберите город</option>
-      </select>
+    <label for="city"><b>Город</b></label>
+    <select name="city" id="city">
+      <option value="">Выберите город</option>
+    </select>
 
-      <label for="category"><b>Категория услуг</b></label>
-      <select name="category" id="category">
-        <option value="" disabled selected hidden>Выберите категорию</option>
-      </select>
+    <label for="category"><b>Категория услуг</b></label>
+    <select name="category" id="category">
+      <option value="" disabled selected hidden>Выберите категорию</option>
+    </select>
 
-      <label for="service"><b>Услуга</b></label>
-      <select name="service" id="service" multiple>
-        <option value="" disabled selected hidden>Выберите услугу</option>
-      </select>
+    <label for="service"><b>Услуга</b></label>
+    <select name="service" id="service" multiple>
+      <option value="" disabled selected hidden>Выберите услугу</option>
+    </select>
 
-      <label for="images"><b>Фотографии</b></label>
-      <input type="file" name="images" id="images" multiple>
+    <label for="images"><b>Фотографии</b></label>
+    <input type="file" name="images" id="images" multiple>
 
-      <label for="contact"><b>Контактные данные</b></label>
-      <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
-        required>
+    <label for="contact"><b>Контактные данные</b></label>
+    <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
+      required>
 
-      <hr>
+    <hr>
 
-      <button onclick="registration()" class="registerbtn">Зарегистрироваться</button>
-    </div>
-  </form>
+    <button onclick="registration()" class="registerbtn">Зарегистрироваться</button>
+  </div>
 
 </body>
 
