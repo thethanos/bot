@@ -181,26 +181,6 @@ func (m *MainMenuServiceSelectionMode) NextStep() StepType {
 	return CitySelectionStep
 }
 
-type RegistrationServiceSelectionMode struct {
-	BaseServiceSelectionMode
-}
-
-func (r *RegistrationServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
-	return r.dbAdapter.GetServices(categoryId, "")
-}
-
-func (b *RegistrationServiceSelectionMode) MenuItems(cityId string, services []*entities.Service) [][]tgbotapi.KeyboardButton {
-	rows := make([][]tgbotapi.KeyboardButton, 0)
-	for _, service := range services {
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: service.Name}})
-	}
-	return rows
-}
-
-func (b *RegistrationServiceSelectionMode) NextStep() StepType {
-	return MasterRegistrationFinalStep
-}
-
 type ServiceSelection struct {
 	StepBase
 	services []*entities.Service

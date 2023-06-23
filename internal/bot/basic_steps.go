@@ -24,21 +24,12 @@ const (
 	MasterSelectionStep
 	FindModelStep
 	CollaborationStep
-	MasterStep
-	MasterRegistrationStep
-	MasterCityPromptStep
-	MasterServiceCategorySecletionStep
-	MasterServiceSelectionStep
-	MasterRegistrationFinalStep
 	PreviousStep
 	AdminStep
 	AdminServiceCategorySelectionStep
 	AddServiceCategoryStep
 	AddServiceStep
 	AddCityStep
-	AddMasterStep
-	AddMasterFinalStep
-	ImageUploadStep
 	EmptyStep
 )
 
@@ -62,18 +53,8 @@ func getStepTypeName(step StepType) string {
 		return "FindModelStep"
 	case CollaborationStep:
 		return "CollaborationStep"
-	case MasterStep:
-		return "MasterStep"
 	case EmptyStep:
 		return "EmptyStep"
-	case MasterRegistrationStep:
-		return "MasterRegistrationStep"
-	case MasterServiceCategorySecletionStep:
-		return "MasterServiceCategorySecletionStep"
-	case MasterServiceSelectionStep:
-		return "MasterServiceSelectionStep"
-	case MasterRegistrationFinalStep:
-		return "RegistrationFinalStep"
 	case PreviousStep:
 		return "PreviousStep"
 	case AdminStep:
@@ -84,12 +65,6 @@ func getStepTypeName(step StepType) string {
 		return "AddServiceStep"
 	case AddCityStep:
 		return "AddCityStep"
-	case AddMasterStep:
-		return "AddMasterStep"
-	case AddMasterFinalStep:
-		return "AddMasterFinalStep"
-	case ImageUploadStep:
-		return "ImageUploadStep"
 	default:
 		return "Unknown type"
 	}
@@ -372,7 +347,9 @@ func (a *Admin) Request(msg *ma.Message) *ma.Message {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить категорию услуг"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить услугу"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить город"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить мастера"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Предпросмотр", WebApp: &tgbotapi.WebAppInfo{
+			Url: "https://bot-dev-domain.com/master/registration_form.html"},
+		}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewTextMessage("Панель управления", msg, keyboard, false)
@@ -400,9 +377,6 @@ func (a *Admin) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	case "добавить город":
 		a.logger.Info("Next step is AddCityStep")
 		return nil, AddCityStep
-	case "добавить мастера":
-		a.logger.Info("Next step is AddMaster")
-		return nil, AddMasterStep
 	default:
 		a.inProgress = true
 		a.logger.Info("Next step is EmptyStep")

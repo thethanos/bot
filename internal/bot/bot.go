@@ -97,10 +97,6 @@ func (b *Bot) Shutdown() {
 	}
 }
 
-func (b *Bot) DownloadFile(fileType ma.FileType, msg *ma.Message) []byte {
-	return b.clients[msg.Source].DownloadFile(fileType, msg)
-}
-
 func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 	switch step {
 	case MainMenuStep:
@@ -176,20 +172,6 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 		return &AddService{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	case AddCityStep:
 		return &AddCity{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
-	case AddMasterStep:
-		return &AddMaster{
-			StepBase:   StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			downloader: b,
-		}
-	case ImageUploadStep:
-		return &ImageUpload{
-			StepBase:   StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			downloader: b,
-		}
-	case AddMasterFinalStep:
-		return &AddMasterFinal{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-		}
 	default:
 		return &MainMenu{StepBase: StepBase{logger: b.logger, state: state}}
 	}
