@@ -289,7 +289,7 @@ func (d *DbAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, e
 		Name:       master.Name,
 		CityID:     master.CityID,
 		CategoryID: master.CategoryID,
-		ServiceID:  master.ServiceID,
+		ServiceIDs: master.ServiceIDs,
 		Contact:    master.Contact,
 	}
 	if err := d.dbConn.Create(regForm).Error; err != nil {
