@@ -88,7 +88,7 @@
 
       var serviceList = document.getElementById("service");
       categoryList.onchange = function () {
-        serviceList.length = 1;
+        serviceList.selectedIndex = 0;
         const serviceReq = new XMLHttpRequest();
         serviceReq.onreadystatechange = function () {
           for (var service of serviceReq.response) {
@@ -121,12 +121,12 @@
 
       <label for="category"><b>Категория услуг</b></label>
       <select name="category" id="category">
-        <option value="">Выберите категорию</option>
+        <option value="" disabled selected hidden>Выберите категорию</option>
       </select>
 
       <label for="service"><b>Услуга</b></label>
       <select name="service" id="service" multiple>
-        <option value="" selected="selected">Выберите услугу</option>
+        <option value="" disabled selected hidden>Выберите услугу</option>
       </select>
 
       <hr>
