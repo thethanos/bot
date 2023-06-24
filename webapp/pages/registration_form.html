@@ -105,19 +105,27 @@
     }
     function registration() {
 
-      const name = document.getElementById("name").value;
-      const city = document.getElementById("city").value;
-      const category = document.getElementById("category").value;
-      const contact = document.getElementById("contact").value;
+      var nameElement = document.getElementById("name");
+      var cityElement = document.getElementById("city");
+      var categoryElement = document.getElementById("category");
+      var serviceElement = document.getElementById("service");
+      var imagesElement = document.getElementById("images");
+      var contactElement = document.getElementById("contact");
 
       const services = [];
-      for (var option of document.getElementById("service").options) {
+      for (var option of serviceElement.options) {
         if (option.selected) {
           services.push(option.value);
         }
       }
 
-      const object = { name: name, city_id: city, category_id: category, service_ids: services, contact: contact };
+      const object = {
+        name: nameElement.value,
+        city_id: cityElement.value,
+        category_id: categoryElement.value,
+        service_ids: services,
+        contact: contactElement.value
+      };
       const body = JSON.stringify(object);
 
       const regFormReq = new XMLHttpRequest();
@@ -125,7 +133,13 @@
       regFormReq.setRequestHeader("Content-Type", "application/json");
       regFormReq.onreadystatechange = function () {
         if (regFormReq.readyState === XMLHttpRequest.DONE && regFormReq.status === 200) {
-          console.log("Success");
+          nameElement.value = '';
+          cityElement.selectedIndex = 0;
+          categoryElement.selectedIndex = 0;
+          serviceElement.selectedIndex = 0;
+          imagesElement.value = '';
+          contactElement.value = '';
+          window.alert("Регистрация прошла успешно!");
         }
       }
       regFormReq.send(body);
