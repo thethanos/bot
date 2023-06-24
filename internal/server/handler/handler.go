@@ -211,6 +211,13 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	}
 	defer formFile.Close()
 
+	if err := os.MkdirAll(fmt.Sprintf("./webapp/pages/images/%s", masterID), os.ModePerm); err != nil {
+		h.logger.Error("server::SaveMasterImage::MkdirAll", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
+	}
+
 	image, err := os.Create(fmt.Sprintf("./webapp/pages/images/%s/%s", masterID, meta.Filename))
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::Create", err)
