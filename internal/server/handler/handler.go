@@ -192,7 +192,7 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 
 	rw.WriteHeader(http.StatusOK)
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
-	rw.Write([]byte(fmt.Sprintf(`"id" : "%s"`, id)))
+	rw.Write([]byte(fmt.Sprintf(`"{ id" : "%s" }`, id)))
 	h.logger.Info("Response sent")
 }
 
