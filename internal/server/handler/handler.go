@@ -8,7 +8,9 @@ import (
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/webapp"
 	"net/http"
+	"os"
 
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
@@ -191,6 +193,49 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s"}`, id)))
+	h.logger.Info("Response sent")
+}
+
+func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	params := mux.Vars(req)
+	masterID := params["master_id"]
+
+	req.ParseMultipartForm(10 << 20)
+	formFile, meta, err := req.FormFile("image")
+	if err != nil {
+		h.logger.Error("server::SaveMasterImage::FormFile", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+	}
+	defer formFile.Close()
+
+	image, err := os.Create(fmt.Sprintf("./webapp/pages/images/%s/%s", masterID, meta.Filename))
+	if err != nil {
+		h.logger.Error("server::SaveMasterImage::Create", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
+	}
+
+	imageBytes, err := ioutil.ReadAll(formFile)
+	if err != nil {
+		h.logger.Error("server::SaveMasterImage::ReadAll", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
+	}
+
+	if _, err := image.Write(imageBytes); err != nil {
+		h.logger.Error("server::SaveMasterImage::Write", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	h.logger.Info("Response sent")
 }
 

@@ -23,6 +23,7 @@ func NewServer(logger *zap.SugaredLogger, dbAdapter *db_adapter.DbAdapter) (*htt
 
 	postRouter := router.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/masters", handler.SaveMasterRegForm)
+	postRouter.HandleFunc("/masters/image/{master_id}", handler.SaveMasterImage)
 
 	server := &http.Server{
 		Handler: router,
