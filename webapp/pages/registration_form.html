@@ -61,16 +61,16 @@
   <script>
     window.onload = function () {
 
-      var cityElement = document.getElementById("city")
+      var cityElement = document.getElementById("city");
       const cityReq = new XMLHttpRequest();
       cityReq.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           for (var city of cityReq.response) {
-            cityElement.options[cityElement.options.length] = new Option(city.name, city.id)
+            cityElement.options[cityElement.options.length] = new Option(city.name, city.id);
           }
         }
       };
-      cityReq.responseType = "json"
+      cityReq.responseType = "json";
       cityReq.open("GET", "https://bot-dev-domain.com/cities", true);
       cityReq.send();
 
@@ -83,7 +83,7 @@
           }
         }
       };
-      categoryReq.responseType = "json"
+      categoryReq.responseType = "json";
       categoryReq.open("GET", "https://bot-dev-domain.com/categories", true);
       categoryReq.send();
 
@@ -99,7 +99,7 @@
             }
           }
         }
-        serviceReq.responseType = "json"
+        serviceReq.responseType = "json";
         serviceReq.open("GET", "https://bot-dev-domain.com/services?category_id=" + categoryElement.value, true);
         serviceReq.send();
       }
@@ -130,6 +130,7 @@
       const body = JSON.stringify(object);
 
       const regFormReq = new XMLHttpRequest();
+      regFormReq.responseType = "json";
       regFormReq.open("POST", "https://bot-dev-domain.com/masters");
       regFormReq.setRequestHeader("Content-Type", "application/json");
       regFormReq.onreadystatechange = function () {
