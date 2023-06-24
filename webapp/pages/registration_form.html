@@ -61,12 +61,12 @@
   <script>
     window.onload = function () {
 
-      var cityList = document.getElementById("city")
+      var cityElement = document.getElementById("city")
       const cityReq = new XMLHttpRequest();
       cityReq.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           for (var city of cityReq.response) {
-            cityList.options[cityList.options.length] = new Option(city.name, city.id)
+            cityElement.options[cityElement.options.length] = new Option(city.name, city.id)
           }
         }
       };
@@ -74,12 +74,12 @@
       cityReq.open("GET", "https://bot-dev-domain.com/cities", true);
       cityReq.send();
 
-      var categoryList = document.getElementById("category");
+      var categoryElement = document.getElementById("category");
       const categoryReq = new XMLHttpRequest();
       categoryReq.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
           for (var category of categoryReq.response) {
-            categoryList.options[categoryList.options.length] = new Option(category.name, category.id);
+            categoryElement.options[categoryElement.options.length] = new Option(category.name, category.id);
           }
         }
       };
@@ -87,19 +87,20 @@
       categoryReq.open("GET", "https://bot-dev-domain.com/categories", true);
       categoryReq.send();
 
-      var serviceList = document.getElementById("service");
-      categoryList.onchange = function () {
-        serviceList.selectedIndex = 0;
+      var serviceElement = document.getElementById("service");
+      categoryElement.onchange = function () {
+        serviceElement.length = 1;
+        serviceElement.selectedIndex = 0;
         const serviceReq = new XMLHttpRequest();
         serviceReq.onreadystatechange = function () {
           if (this.readyState === 4 && this.status === 200) {
             for (var service of serviceReq.response) {
-              serviceList.options[serviceList.options.length] = new Option(service.name, service.id);
+              serviceElement.options[serviceElement.options.length] = new Option(service.name, service.id);
             }
           }
         }
         serviceReq.responseType = "json"
-        serviceReq.open("GET", "https://bot-dev-domain.com/services?category_id=" + categoryList.value, true);
+        serviceReq.open("GET", "https://bot-dev-domain.com/services?category_id=" + categoryElement.value, true);
         serviceReq.send();
       }
     }
@@ -136,6 +137,7 @@
           nameElement.value = '';
           cityElement.selectedIndex = 0;
           categoryElement.selectedIndex = 0;
+          serviceElement.length = 1;
           serviceElement.selectedIndex = 0;
           imagesElement.value = '';
           contactElement.value = '';
@@ -159,7 +161,7 @@
 
     <label for="city"><b>Город</b></label>
     <select name="city" id="city">
-      <option value="">Выберите город</option>
+      <option value="" disabled selected hidden>Выберите город</option>
     </select>
 
     <label for="category"><b>Категория услуг</b></label>
