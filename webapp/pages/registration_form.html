@@ -134,6 +134,16 @@
       regFormReq.setRequestHeader("Content-Type", "application/json");
       regFormReq.onreadystatechange = function () {
         if (regFormReq.readyState === XMLHttpRequest.DONE && regFormReq.status === 200) {
+          const master_id = regFormReq.response.id;
+          const files = document.getElementById("images").files;
+          for (file of files) {
+            const uploadReq = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append("image", file);
+            uploadReq.open("POST", "https://bot-dev-domain.com/masters/images/" + master_id);
+            uploadReq.send(formData);
+          }
+
           nameElement.value = '';
           cityElement.selectedIndex = 0;
           categoryElement.selectedIndex = 0;
