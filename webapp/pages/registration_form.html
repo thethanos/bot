@@ -77,7 +77,7 @@
       var categoryList = document.getElementById("category");
       const categoryReq = new XMLHttpRequest();
       categoryReq.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
+        if (this.readyState === 4 && this.status === 200) {
           for (var category of categoryReq.response) {
             categoryList.options[categoryList.options.length] = new Option(category.name, category.id);
           }
@@ -92,8 +92,10 @@
         serviceList.selectedIndex = 0;
         const serviceReq = new XMLHttpRequest();
         serviceReq.onreadystatechange = function () {
-          for (var service of serviceReq.response) {
-            serviceList.options[serviceList.options.length] = new Option(service.name, service.id);
+          if (this.readyState === 4 && this.status === 200) {
+            for (var service of serviceReq.response) {
+              serviceList.options[serviceList.options.length] = new Option(service.name, service.id);
+            }
           }
         }
         serviceReq.responseType = "json"
@@ -106,17 +108,23 @@
       const name = document.getElementById("name").value;
       const city = document.getElementById("city").value;
       const category = document.getElementById("category").value;
-      const service = document.getElementById("service").value;
       const contact = document.getElementById("contact").value;
 
-      const object = { name: name, city_id: city, category_id: category, service_id: service, contact: contact };
+      const services = [];
+      for (var option of document.getElementById("service").options) {
+        if (option.selected) {
+          services.push(option.value);
+        }
+      }
+
+      const object = { name: name, city_id: city, category_id: category, service_ids: services, contact: contact };
       const body = JSON.stringify(object);
 
       const regFormReq = new XMLHttpRequest();
       regFormReq.open("POST", "https://bot-dev-domain.com/masters");
       regFormReq.setRequestHeader("Content-Type", "application/json");
       regFormReq.onreadystatechange = function () {
-        if (regFormReq.readyState == XMLHttpRequest.DONE && regFormReq.status == 200) {
+        if (regFormReq.readyState === XMLHttpRequest.DONE && regFormReq.status === 200) {
           console.log("Success");
         }
       }
