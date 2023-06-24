@@ -33,7 +33,6 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetCities::GetCities", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -41,12 +40,10 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetCities::Marshal", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Write(cityList)
 	h.logger.Info("Response sent")
 }
@@ -58,7 +55,6 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetCategories::GetCategories", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -66,12 +62,10 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetCategories::Marshal")
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Write(categoryList)
 	h.logger.Info("Response sent")
 }
@@ -86,7 +80,6 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetServices::GetServices")
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -94,12 +87,10 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetServices::Marshal", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Write(serviceList)
 	h.logger.Info("Response sent")
 }
@@ -115,7 +106,6 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetMastersList::GetMasters", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -123,12 +113,10 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::GetMastersList::GenerateWebPage", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
 	rw.Write(template)
 	h.logger.Info("Response sent")
@@ -171,7 +159,6 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::SaveMasterRegForm::ReadAll", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -179,19 +166,17 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	if err := json.Unmarshal(body, regForm); err != nil {
 		h.logger.Error("server::SaveMasterRegForm::Unmarshal", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
 	}
 
 	id, err := h.dbAdapter.SaveMasterRegForm(regForm)
 	if err != nil {
 		h.logger.Error("server::SaveMasterRegForm::SaveMasterRegForm", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id)))
 	h.logger.Info("Response sent")
 }
@@ -207,14 +192,13 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::FormFile", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		return
 	}
 	defer formFile.Close()
 
 	if err := os.MkdirAll(fmt.Sprintf("./webapp/pages/images/%s", masterID), os.ModePerm); err != nil {
 		h.logger.Error("server::SaveMasterImage::MkdirAll", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -222,7 +206,6 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::Create", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
@@ -230,19 +213,16 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::ReadAll", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	if _, err := image.Write(imageBytes); err != nil {
 		h.logger.Error("server::SaveMasterImage::Write", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	h.logger.Info("Response sent")
 }
 
@@ -250,6 +230,5 @@ func (h *Handler) CommitMaster(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	h.logger.Info("Response sent")
 }
