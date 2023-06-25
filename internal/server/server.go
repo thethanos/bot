@@ -31,9 +31,9 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 	var addr string
 	switch cfg.Mode {
 	case config.DEBUG:
-		addr = fmt.Sprintf("%d", cfg.DebugPort)
+		addr = fmt.Sprintf(":%d", cfg.DebugPort)
 	case config.RELEASE:
-		addr = fmt.Sprintf("%d", cfg.ReleasePort)
+		addr = fmt.Sprintf(":%d", cfg.ReleasePort)
 	default:
 		return nil, errors.New("Run mode is not specified")
 	}
