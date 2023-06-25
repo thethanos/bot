@@ -3,6 +3,7 @@ package logger
 import (
 	"bytes"
 	"log"
+	"multimessenger_bot/internal/config"
 	"os"
 
 	"go.uber.org/zap"
@@ -18,7 +19,26 @@ func (p Printer) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func NewLogger() *zap.SugaredLogger {
+type Logger interface {
+	Info(args ...interface{})
+	Infof(template string, args ...interface{})
+	Error(args ...interface{})
+	Errorf(template string, args ...interface{})
+	Fatal(args ...interface{})
+	Fatalf(template string, args ...interface{})
+}
+
+type ReleaseLogger struct {
+	*zap.SugaredLogger
+}
+
+func (r *ReleaseLogger) Info(args ...interface{}) {
+}
+
+func (r *ReleaseLogger) Infof(template string, args ...interface{}) {
+}
+
+func NewLogger(mode config.Mode) Logger {
 
 	cfg := zap.NewProductionEncoderConfig()
 	cfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
@@ -32,5 +52,12 @@ func NewLogger() *zap.SugaredLogger {
 	log.SetFlags(0)
 	log.SetOutput(Printer(logger.Debug))
 
-	return logger.Sugar()
+	switch mode {
+	case config.RELEASE:
+		return &ReleaseLogger{SugaredLogger: logger.Sugar()}
+	case config.DEBUG:
+		fallthrough
+	default:
+		return logger.Sugar()
+	}
 }

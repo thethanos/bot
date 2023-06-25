@@ -2,19 +2,19 @@ package telegram
 
 import (
 	"fmt"
+	"multimessenger_bot/internal/logger"
 	ma "multimessenger_bot/internal/messenger_adapter"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
-	"go.uber.org/zap"
 )
 
 type Handler struct {
-	logger      *zap.SugaredLogger
+	logger      logger.Logger
 	recvMsgChan chan *ma.Message
 }
 
-func NewHandler(logger *zap.SugaredLogger, recvMsgChan chan *ma.Message) *Handler {
+func NewHandler(logger logger.Logger, recvMsgChan chan *ma.Message) *Handler {
 	return &Handler{
 		logger:      logger,
 		recvMsgChan: recvMsgChan,

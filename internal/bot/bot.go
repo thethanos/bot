@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
+	"multimessenger_bot/internal/logger"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"strings"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 type UserSession struct {
@@ -19,7 +18,7 @@ type UserSession struct {
 }
 
 type Bot struct {
-	logger       *zap.SugaredLogger
+	logger       logger.Logger
 	clients      map[ma.MessageSource]ma.ClientInterface
 	userSessions map[string]*UserSession
 	recvMsgChan  chan *ma.Message
@@ -27,7 +26,7 @@ type Bot struct {
 	dbAdapter    *db_adapter.DbAdapter
 }
 
-func NewBot(logger *zap.SugaredLogger, clientArray []ma.ClientInterface, dbAdpter *db_adapter.DbAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
+func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, dbAdpter *db_adapter.DbAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
 
 	clients := make(map[ma.MessageSource]ma.ClientInterface)
 	for _, client := range clientArray {

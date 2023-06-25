@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"multimessenger_bot/internal/bot"
 	"multimessenger_bot/internal/config"
 	"multimessenger_bot/internal/db_adapter"
@@ -24,13 +25,13 @@ func main() {
 	//	  return
 	//}
 
-	logger := logger.NewLogger()
-
 	cfg, err := config.Load("config.toml")
 	if err != nil {
-		logger.Error("main::config::Load", err)
+		panic(fmt.Sprintf("main::config::Load::%s", err))
 		return
 	}
+
+	logger := logger.NewLogger(cfg.Mode)
 
 	dbAdapter, err := db_adapter.NewDbAdapter(logger, cfg)
 	if err != nil {
@@ -53,14 +54,14 @@ func main() {
 	}
 	bot.Run()
 
-	server, err := srv.NewServer(logger, dbAdapter)
+	server, err := srv.NewServer(logger, cfg, dbAdapter)
 	if err != nil {
 		logger.Error("main::server::NewServer", err)
 		return
 	}
 
 	go func() {
-		if err := server.ListenAndServeTLS("dev-full.crt", "dev-key.key"); err != nil {
+		if err := server.ListenAndServe("dev-full.crt", "dev-key.key"); err != nil {
 			logger.Fatal("main::server::ListenAndServeTLS", err)
 		}
 	}()

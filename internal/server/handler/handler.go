@@ -6,20 +6,20 @@ import (
 	"io/ioutil"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
+	"multimessenger_bot/internal/logger"
 	"multimessenger_bot/internal/webapp"
 	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
-	"go.uber.org/zap"
 )
 
 type Handler struct {
-	logger    *zap.SugaredLogger
+	logger    logger.Logger
 	dbAdapter *db_adapter.DbAdapter
 }
 
-func NewHandler(logger *zap.SugaredLogger, dbAdapter *db_adapter.DbAdapter) *Handler {
+func NewHandler(logger logger.Logger, dbAdapter *db_adapter.DbAdapter) *Handler {
 	return &Handler{
 		logger:    logger,
 		dbAdapter: dbAdapter,

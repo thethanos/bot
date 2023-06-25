@@ -8,18 +8,19 @@ import (
 	"multimessenger_bot/internal/models"
 	"time"
 
+	"multimessenger_bot/internal/logger"
+
 	_ "github.com/lib/pq"
-	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type DbAdapter struct {
-	logger *zap.SugaredLogger
+	logger logger.Logger
 	dbConn *gorm.DB
 }
 
-func NewDbAdapter(logger *zap.SugaredLogger, cfg *config.Config) (*DbAdapter, error) {
+func NewDbAdapter(logger logger.Logger, cfg *config.Config) (*DbAdapter, error) {
 
 	psqlconf := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.PsqlHost,

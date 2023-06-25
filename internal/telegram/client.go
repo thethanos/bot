@@ -3,6 +3,7 @@ package telegram
 import (
 	"io/ioutil"
 	"multimessenger_bot/internal/config"
+	"multimessenger_bot/internal/logger"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"net/http"
 
@@ -11,17 +12,16 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
-	"go.uber.org/zap"
 )
 
 type TelegramClient struct {
-	logger      *zap.SugaredLogger
+	logger      logger.Logger
 	cfg         *config.Config
 	recvMsgChan chan *ma.Message
 	client      *tgbotapi.Bot
 }
 
-func NewTelegramClient(logger *zap.SugaredLogger, cfg *config.Config, recvMsgChan chan *ma.Message) (*TelegramClient, error) {
+func NewTelegramClient(logger logger.Logger, cfg *config.Config, recvMsgChan chan *ma.Message) (*TelegramClient, error) {
 
 	client, err := tgbotapi.NewBot(cfg.TgToken, &gotgbot.BotOpts{
 		Client: http.Client{},

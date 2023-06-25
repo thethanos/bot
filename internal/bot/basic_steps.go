@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
+	"multimessenger_bot/internal/logger"
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
-	"go.uber.org/zap"
 )
 
 type StepType uint
@@ -114,7 +114,7 @@ type Step interface {
 }
 
 type StepBase struct {
-	logger     *zap.SugaredLogger
+	logger     logger.Logger
 	inProgress bool
 	state      *entities.UserState
 	dbAdapter  *db_adapter.DbAdapter
