@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.DbAdapter) (*Server, error) {
+func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.DbAdapter) (*http.Server, error) {
 
 	handler := handler.NewHandler(logger, dbAdapter)
 
@@ -38,30 +38,8 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 		return nil, errors.New("Run mode is not specified")
 	}
 
-	return &Server{
-		logger: logger,
-		cfg:    cfg,
-		Server: &http.Server{
-			Handler: router,
-			Addr:    addr,
-		},
+	return &http.Server{
+		Handler: router,
+		Addr:    addr,
 	}, nil
-}
-
-type Server struct {
-	logger logger.Logger
-	cfg    *config.Config
-	*http.Server
-}
-
-func (s *Server) ListenAndServe(certFile, keyFile string) error {
-
-	switch s.cfg.Mode {
-	case config.DEBUG:
-		return s.Server.ListenAndServe()
-	case config.RELEASE:
-		return s.Server.ListenAndServeTLS(certFile, keyFile)
-	}
-
-	return errors.New("Run mode is not specified")
 }

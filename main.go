@@ -61,7 +61,7 @@ func main() {
 	}
 
 	go func() {
-		if err := server.ListenAndServe("dev-full.crt", "dev-key.key"); err != nil {
+		if err := server.ListenAndServeTLS("dev-full.crt", "dev-key.key"); err != nil {
 			logger.Fatal("main::server::ListenAndServeTLS", err)
 		}
 	}()
