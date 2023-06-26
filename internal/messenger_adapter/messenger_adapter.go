@@ -40,7 +40,7 @@ type MessageData struct {
 	WaData       types.MessageInfo
 	TgData       *tgbotapi.Message
 	TgMarkup     *tgbotapi.ReplyKeyboardMarkup
-	removeMarkup bool
+	RemoveMarkup bool
 }
 
 type Message struct {
@@ -64,7 +64,7 @@ func (m *Message) GetWaID() types.JID {
 }
 
 func (m *Message) GetTgMarkup() tgbotapi.ReplyMarkup {
-	if m.Data.removeMarkup {
+	if m.Data.RemoveMarkup {
 		return &tgbotapi.ReplyKeyboardRemove{RemoveKeyboard: true}
 	}
 	if m.Data.TgMarkup == nil {
@@ -83,7 +83,7 @@ func NewTextMessage(text string, msg *Message, replyMarkup *tgbotapi.ReplyKeyboa
 		WaData:       msg.Data.WaData,
 		TgData:       msg.Data.TgData,
 		TgMarkup:     replyMarkup,
-		removeMarkup: removeMarkup,
+		RemoveMarkup: removeMarkup,
 	}
 
 	return &Message{
@@ -105,7 +105,7 @@ func NewImageMessage(path, caption string, msg *Message, removeMarkup bool) *Mes
 	data := &MessageData{
 		WaData:       msg.Data.WaData,
 		TgData:       msg.Data.TgData,
-		removeMarkup: removeMarkup,
+		RemoveMarkup: removeMarkup,
 	}
 
 	return &Message{

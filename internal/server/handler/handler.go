@@ -95,7 +95,6 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
-
 func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
@@ -122,6 +121,7 @@ func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
 	rw.Write(template)
 	h.logger.Info("Response sent")
 }
+
 /*
 	func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
 		h.logger.Infof("Request received: %s", req.URL)
@@ -176,7 +176,7 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	rw.WriteHeader(http.StatusOK)
+	rw.WriteHeader(http.StatusCreated)
 	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id)))
 	h.logger.Info("Response sent")
 }

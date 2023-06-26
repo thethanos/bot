@@ -11,108 +11,6 @@ import (
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
 
-type StepType uint
-
-const (
-	MainMenuStep StepType = iota
-	MainMenuServiceCategorySelectionStep
-	MainMenuServiceSelectionStep
-	ServiceCategorySelectionStep
-	ServiceSelectionStep
-	CitySelectionStep
-	MainMenuCitySelectionStep
-	MasterSelectionStep
-	FindModelStep
-	CollaborationStep
-	PreviousStep
-	AdminStep
-	AdminServiceCategorySelectionStep
-	AddServiceCategoryStep
-	AddServiceStep
-	AddCityStep
-	EmptyStep
-)
-
-func getStepTypeName(step StepType) string {
-	switch step {
-	case MainMenuStep:
-		return "MainMenuStep"
-	case MainMenuServiceCategorySelectionStep:
-		return "MainMenuServiceCategorySelectionStep"
-	case MainMenuServiceSelectionStep:
-		return "MainMenuServiceSelectionStep"
-	case ServiceCategorySelectionStep:
-		return "ServiceCategorySelectionStep"
-	case ServiceSelectionStep:
-		return "ServiceSelectionStep"
-	case CitySelectionStep:
-		return "CitySelectionStep"
-	case MasterSelectionStep:
-		return "MasterSelectionStep"
-	case FindModelStep:
-		return "FindModelStep"
-	case CollaborationStep:
-		return "CollaborationStep"
-	case EmptyStep:
-		return "EmptyStep"
-	case PreviousStep:
-		return "PreviousStep"
-	case AdminStep:
-		return "AdminStep"
-	case AddServiceCategoryStep:
-		return "AddServiceCategoryStep"
-	case AddServiceStep:
-		return "AddServiceStep"
-	case AddCityStep:
-		return "AddCityStep"
-	default:
-		return "Unknown type"
-	}
-}
-
-type Question struct {
-	Text  string
-	Field string
-}
-
-type StepStack struct {
-	steps []Step
-}
-
-func NewStepStack() *StepStack {
-	return &StepStack{
-		steps: make([]Step, 0),
-	}
-}
-
-func (s *StepStack) Push(step Step) {
-	s.steps = append(s.steps, step)
-}
-
-func (s *StepStack) Pop() {
-	s.steps = s.steps[:len(s.steps)-1]
-}
-
-func (s *StepStack) Top() Step {
-	return s.steps[len(s.steps)-1]
-}
-
-func (s *StepStack) Empty() bool {
-	return len(s.steps) == 0
-}
-
-func (s *StepStack) Clear() {
-	s.steps = make([]Step, 0)
-}
-
-type Step interface {
-	ProcessResponse(*ma.Message) (*ma.Message, StepType)
-	Request(*ma.Message) *ma.Message
-	IsInProgress() bool
-	Reset()
-	SetInProgress(bool)
-}
-
 type StepBase struct {
 	logger     logger.Logger
 	inProgress bool
@@ -142,13 +40,10 @@ func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 	y.logger.Infof("YesNo step is sending request")
 	y.inProgress = true
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 2)
-		rows[0] = []tgbotapi.KeyboardButton{{Text: "Да"}}
-		rows[1] = []tgbotapi.KeyboardButton{{Text: "Нет"}}
-		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
+		keyboard := makeKeyboard([]string{"Да", "Нет"})
 		return ma.NewTextMessage(y.question.Text, msg, keyboard, false)
 	}
-	return ma.NewTextMessage(fmt.Sprintf("%s\n1. Да\n2. Нет", y.question.Text), msg, nil, true)
+	return ma.NewTextMessage("this messenger is unsupported yet", msg, nil, true)
 }
 
 func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
@@ -167,20 +62,16 @@ type Prompt struct {
 	StepBase
 	question Question
 	nextStep StepType
-	errStep  StepType
 }
 
 func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 	p.logger.Infof("Prompt step is sending request")
 	p.inProgress = true
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 1)
-		rows[0] = []tgbotapi.KeyboardButton{{Text: "Назад"}}
-		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
+		keyboard := makeKeyboard([]string{"Назад"})
 		return ma.NewTextMessage(p.question.Text, msg, keyboard, false)
 	}
-
-	return ma.NewTextMessage(p.question.Text, msg, nil, true)
+	return ma.NewTextMessage("this messenger is unsupported yet", msg, nil, true)
 }
 
 func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
