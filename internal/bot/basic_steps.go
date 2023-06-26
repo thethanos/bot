@@ -93,16 +93,10 @@ type MainMenu struct {
 
 func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 	m.logger.Infof("MainMenu step is sending request")
+	m.inProgress = true
 	m.state.Reset()
 	if msg.Source == ma.TELEGRAM {
-		rows := make([][]tgbotapi.KeyboardButton, 0)
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Город"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Услуги"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Поиск моделей"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "По вопросам сотрудничества"}})
-		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
-
-		m.inProgress = true
+		keyboard := makeKeyboard([]string{"Город", "Услуги", "Поиск моделей", "По вопросам сотрудничества"})
 		return ma.NewTextMessage("Главное меню", msg, keyboard, false)
 	}
 	return ma.NewTextMessage("this messenger is unsupported yet", msg, nil, true)

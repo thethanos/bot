@@ -9,7 +9,9 @@ import (
 	"testing"
 )
 
-const unsupported = "this messenger is unsupported yet"
+const (
+	unsupported = "this messenger is unsupported yet"
+)
 
 func TestStepBase(t *testing.T) {
 
@@ -69,7 +71,6 @@ func TestYesNoStep(t *testing.T) {
 		t.Error("YesNo step is in progress after processing response")
 	}
 
-	msg.Source = ma.TELEGRAM
 	resp := ma.NewTextMessage("Да", msg, nil, true)
 	if _, nextStep := step.ProcessResponse(resp); nextStep != MainMenuCitySelectionStep {
 		t.Error("YesNo step returned wrong next step")
@@ -127,7 +128,6 @@ func TestPromptStep(t *testing.T) {
 		t.Error("Prompt step is in progress after processing response")
 	}
 
-	msg.Source = ma.TELEGRAM
 	resp := ma.NewTextMessage("Назад", msg, nil, true)
 	if _, nextStep := step.ProcessResponse(resp); nextStep != PreviousStep {
 		t.Error("Prompt step returned wrong next step")
@@ -136,5 +136,72 @@ func TestPromptStep(t *testing.T) {
 	resp = ma.NewTextMessage(text, msg, nil, true)
 	if _, nextStep := step.ProcessResponse(resp); nextStep != MainMenuCitySelectionStep {
 		t.Error("Prompt step returned wrong next step")
+	}
+}
+
+func TestMainMenuStep(t *testing.T) {
+
+	step := &MainMenu{
+		StepBase: StepBase{
+			logger: logger.NewLogger(config.RELEASE),
+			state:  &entities.UserState{},
+		},
+	}
+
+	text := "Главное меню"
+	msg := &ma.Message{
+		Text:   text,
+		Source: ma.TELEGRAM,
+		Data: &ma.MessageData{
+			TgMarkup:     makeKeyboard([]string{"Город", "Услуги", "Поиск моделей", "По вопросам сотрудничества"}),
+			RemoveMarkup: false,
+		},
+	}
+
+	if res := step.Request(msg); !reflect.DeepEqual(res, msg) {
+		t.Error("MainMenu step returned wrong message")
+	}
+
+	msg.Source = ma.WHATSAPP
+	if res := step.Request(msg); res.Text != unsupported {
+		t.Error("MainMenu step returned wrong message")
+	}
+
+	if step.IsInProgress() != true {
+		t.Error("MainMenu step is not in progress after sending request")
+	}
+
+	msg = ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false)
+	if res, nextStep := step.ProcessResponse(msg); !reflect.DeepEqual(res, msg) || nextStep != EmptyStep {
+		t.Error("MainMenu step ProcessResponse returned wrong message")
+	}
+
+	if step.IsInProgress() != false {
+		t.Error("MainMenu step is in progress after processing response")
+	}
+
+	resp := ma.NewTextMessage("Город", msg, nil, true)
+	if _, nextStep := step.ProcessResponse(resp); nextStep != MainMenuCitySelectionStep {
+		t.Error("MainMenu step returned wrong next step")
+	}
+
+	resp = ma.NewTextMessage("Услуги", msg, nil, true)
+	if _, nextStep := step.ProcessResponse(resp); nextStep != MainMenuServiceCategorySelectionStep {
+		t.Error("MainMenu step returned wrong next step")
+	}
+
+	resp = ma.NewTextMessage("Поиск моделей", msg, nil, true)
+	if _, nextStep := step.ProcessResponse(resp); nextStep != FindModelStep {
+		t.Error("MainMenu step returned wrong next step")
+	}
+
+	resp = ma.NewTextMessage("По вопросам сотрудничества", msg, nil, true)
+	if _, nextStep := step.ProcessResponse(resp); nextStep != CollaborationStep {
+		t.Error("MainMenu step returned wrong next step")
+	}
+
+	resp = ma.NewTextMessage("Админ", msg, nil, true)
+	if _, nextStep := step.ProcessResponse(resp); nextStep != AdminStep {
+		t.Error("MainMenu step returned wrong next step")
 	}
 }
