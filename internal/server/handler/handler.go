@@ -121,6 +121,7 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			h.logger.Error("server::GetMasters::GenerateMassterCard", err)
 			rw.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 		mastersTemplates = append(mastersTemplates, template)
 	}

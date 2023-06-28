@@ -13,7 +13,7 @@ func GenerateMassterCard(master *entities.Master) (string, error) {
 
 	var processed bytes.Buffer
 	template := template.Must(template.New("").ParseFiles(allPaths...))
-	if err := template.ExecuteTemplate(&processed, "card", master); err != nil {
+	if err := template.ExecuteTemplate(&processed, "master_card", master); err != nil {
 		return "", err
 	}
 
