@@ -52,21 +52,22 @@ type Service struct {
 }
 
 type Master struct {
-	ID          string `json:"id"`
-	IndexStr    string `json:"index_str"`
-	Name        string `json:"name"`
-	Image1      string `json:"image_one"`
-	Image2      string `json:"image_two"`
-	Image3      string `json:"image_three"`
-	Description string `json:"description"`
-	Contact     string `json:"contact"`
-	CityID      string `json:"city_id"`
+	ID          string   `json:"id"`
+	IndexStr    string   `json:"index_str"`
+	Name        string   `json:"name"`
+	Images      []string `json:"images"`
+	Description string   `json:"description"`
+	Contact     string   `json:"contact"`
+	CityID      string   `json:"city_id"`
 }
 
 type MasterRegForm struct {
-	Name       string   `json:"name"`
-	CityID     string   `json:"city_id"`
-	CategoryID string   `json:"category_id"`
-	ServiceIDs []string `json:"service_ids"`
-	Contact    string   `json:"contact"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	CityID      string   `json:"city_id"`
+	CategoryID  string   `json:"category_id"`
+	ServiceIDs  []string `json:"service_ids"`
+	Contact     string   `json:"contact"`
+	Description string   `json:"description"`
+	Images      []string `json:"images"`
 }

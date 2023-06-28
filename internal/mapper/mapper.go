@@ -23,9 +23,18 @@ func FromMasterModel(model *models.Master) *entities.Master {
 	return &entities.Master{
 		ID:          model.ID,
 		Name:        model.Name,
-		Image1:      model.Image1,
-		Image2:      model.Image2,
-		Image3:      model.Image3,
+		Images:      model.Images,
+		Description: model.Description,
+		Contact:     model.Contact,
+		CityID:      model.CityID,
+	}
+}
+
+func FromMasterRegFormModel(model *models.MasterRegForm) *entities.MasterRegForm {
+	return &entities.MasterRegForm{
+		ID:          model.ID,
+		Name:        model.Name,
+		Images:      model.Images,
 		Description: model.Description,
 		Contact:     model.Contact,
 		CityID:      model.CityID,

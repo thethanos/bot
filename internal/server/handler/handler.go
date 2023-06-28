@@ -102,21 +102,15 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	cityId := query.Get("city_id")
 	serviceId := query.Get("service_id")
 
-	_, err := h.dbAdapter.GetMasters(cityId, serviceId)
+	masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
 	if err != nil {
 		h.logger.Error("server::GetMasters::GetMasters", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	master := &entities.Master{
-		Name:        "Masha",
-		Image1:      "https://www.w3schools.com/w3images/team1.jpg",
-		Description: "Som random text",
-	}
-
 	mastersTemplates := make([]string, 0)
-	for i := 0; i < 6; i++ {
+	for _, master := range masters {
 		template, err := webapp.GenerateMassterCard(master)
 		if err != nil {
 			h.logger.Error("server::GetMasters::GenerateMassterCard", err)
@@ -274,8 +268,19 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	masterID := params["master_id"]
 
-	masterForm, err := db_adapter.Get
+	masterForm, err := h.dbAdapter.GetMasterRegForm(masterID)
+	if err != nil {
+		h.logger.Error("server::ApproveMaster::GetMasterRegForm", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	rw.WriteHeader(http.StatusOK)
+	if err := h.dbAdapter.SaveMaster(masterForm); err != nil {
+		h.logger.Error("server::ApproveMaster::SaveMaster", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	rw.WriteHeader(http.StatusCreated)
 	h.logger.Info("Response sent")
 }

@@ -112,6 +112,7 @@
       var serviceElement = document.getElementById("service");
       var imagesElement = document.getElementById("images");
       var contactElement = document.getElementById("contact");
+      var descriptionElement = document.getElementById("description");
 
       const services = [];
       for (var option of serviceElement.options) {
@@ -120,12 +121,21 @@
         }
       }
 
+      const files = document.getElementById("images").files;
+
+      const images = [];
+      for (var image of files) {
+        images.push(image.name);
+      }
+
       const object = {
         name: nameElement.value,
         city_id: cityElement.value,
         category_id: categoryElement.value,
         service_ids: services,
-        contact: contactElement.value
+        contact: contactElement.value,
+        description: descriptionElement.value,
+        images: images
       };
       const body = JSON.stringify(object);
 
@@ -134,9 +144,8 @@
       regFormReq.open("POST", "https://bot-dev-domain.com/masters");
       regFormReq.setRequestHeader("Content-Type", "application/json");
       regFormReq.onreadystatechange = function () {
-        if (regFormReq.readyState === XMLHttpRequest.DONE && regFormReq.status === 200) {
+        if (regFormReq.readyState === XMLHttpRequest.DONE && regFormReq.status === 201) {
           const master_id = regFormReq.response.id;
-          const files = document.getElementById("images").files;
           for (file of files) {
             const uploadReq = new XMLHttpRequest();
             const formData = new FormData();
@@ -145,14 +154,22 @@
             uploadReq.send(formData);
           }
 
-          nameElement.value = '';
-          cityElement.selectedIndex = 0;
-          categoryElement.selectedIndex = 0;
-          serviceElement.length = 1;
-          serviceElement.selectedIndex = 0;
-          imagesElement.value = '';
-          contactElement.value = '';
-          window.alert("Регистрация прошла успешно!");
+          const approveReq = new XMLHttpRequest();
+          approveReq.open("POST", "https://bot-dev-domain.com/masters/approve/" + master_id);
+          approveReq.onreadystatechange = function () {
+            if (approveReq.readyState == XMLHttpRequest.DONE && regFormReq.status == 201) {
+              nameElement.value = '';
+              cityElement.selectedIndex = 0;
+              categoryElement.selectedIndex = 0;
+              serviceElement.length = 1;
+              serviceElement.selectedIndex = 0;
+              imagesElement.value = '';
+              contactElement.value = '';
+              descriptionElement.value = ''
+              window.alert("Регистрация прошла успешно!");
+            }
+          }
+          approveReq.send();
         }
       }
       regFormReq.send(body);
@@ -191,6 +208,10 @@
     <label for="contact"><b>Контактные данные</b></label>
     <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
       required>
+
+    <label for="description"><b>Коротко о себе</b></label>
+    <input type="text" placeholder="Текст, который будет отображаться в вашем профиле" name="description"
+      id="description">
 
     <hr>
 

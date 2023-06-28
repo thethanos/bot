@@ -3,7 +3,9 @@
     <div class="master-container-layout">
         <h3 class="master-title">{{.Name}}</h3>
         <hr class="line"></hr>
-        <img class="master-images" src="{{.Image1}}" style="width:100%">
+        {{range $index, $image := .Images}}
+            <img class="master-images" src="{{$image}}" style="width:100%">
+        {{end}}
         <div class="master-description">{{.Description}}</div>
         <button class="master-contact-btn">ЗАПИСАТЬСЯ</button>
     </div>

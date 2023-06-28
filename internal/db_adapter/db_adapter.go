@@ -212,9 +212,7 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 		result = append(result, &entities.Master{
 			ID:          master.ID,
 			Name:        master.Name,
-			Image1:      master.Image1,
-			Image2:      master.Image2,
-			Image3:      master.Image3,
+			Images:      master.Images,
 			Description: master.Description,
 			CityID:      master.CityID,
 		})
@@ -223,12 +221,12 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 }
 
 func (d *DbAdapter) GetMasterRegForm(master_id string) (*entities.MasterRegForm, error) {
-	
+
 	master := &models.MasterRegForm{}
-	if err := d.dbConn.Where("master_id").First().Error {
+	if err := d.dbConn.Where("id = ?", master_id).First(&master).Error; err != nil {
 		return nil, err
 	}
-	
+
 	return nil, nil
 }
 
@@ -273,42 +271,62 @@ func (d *DbAdapter) SaveCity(name string) error {
 	return nil
 }
 
-func (d *DbAdapter) SaveMaster(data *entities.UserState) error {
+func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
+
 	master := &models.Master{
 		ID:          id,
-		Name:        data.RawInput["name"],
-		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		CityID:      data.City.ID,
+		Name:        data.Name,
+		Description: data.Description,
+		CityID:      data.CityID,
+		Images:      data.Images,
 	}
 
-	if err := d.dbConn.Create(master).Error; err != nil {
-		return err
-	}
+	if err := d.dbConn.Transaction(func(tx *gorm.DB) error {
 
-	if err := d.dbConn.Where("city_id = ? AND service_category_id = ?", data.City.ID, data.ServiceCategory.ID).First(&models.JoinCityCategory{}).Error; err != nil {
-		d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.City.ID, data.ServiceCategory.ID)
-		if err := d.dbConn.Create(&models.JoinCityCategory{CityID: data.City.ID, ServiceCategoryID: data.ServiceCategory.ID}).Error; err != nil {
+		if err := d.dbConn.Create(master).Error; err != nil {
 			return err
 		}
-	}
 
-	if err := d.dbConn.Create(&models.Join{CityID: data.City.ID, ServiceID: data.Service.ID, MasterID: id}).Error; err != nil {
+		if err := d.dbConn.Where("city_id = ? AND service_category_id = ?", data.CityID, data.CategoryID).First(&models.JoinCityCategory{}).Error; err != nil {
+			d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.CityID, data.CategoryID)
+			if err := d.dbConn.Create(&models.JoinCityCategory{CityID: data.CityID, ServiceCategoryID: data.CategoryID}).Error; err != nil {
+				return err
+			}
+		}
+
+		for _, serviceID := range data.ServiceIDs {
+			if err := d.dbConn.Create(&models.Join{CityID: data.CityID, ServiceID: serviceID, MasterID: id}).Error; err != nil {
+				return err
+			}
+		}
+
+		return tx.Commit().Error
+	}); err != nil {
 		return err
 	}
+
 	d.logger.Infof("New master added successfully, id: %s, name: %s", id, master.Name)
 	return nil
 }
 
 func (d *DbAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, error) {
 	id := fmt.Sprintf("%d", time.Now().Unix())
+
+	images := make([]string, 0)
+	for _, image := range master.Images {
+		images = append(images, fmt.Sprintf("./webapp/pages/images/%s/%s", master.ID, image))
+	}
+
 	regForm := &models.MasterRegForm{
-		ID:         id,
-		Name:       master.Name,
-		CityID:     master.CityID,
-		CategoryID: master.CategoryID,
-		ServiceIDs: master.ServiceIDs,
-		Contact:    master.Contact,
+		ID:          id,
+		Name:        master.Name,
+		CityID:      master.CityID,
+		CategoryID:  master.CategoryID,
+		ServiceIDs:  master.ServiceIDs,
+		Contact:     master.Contact,
+		Description: master.Description,
+		Images:      images,
 	}
 	if err := d.dbConn.Create(regForm).Error; err != nil {
 		return "", err

@@ -43,24 +43,24 @@ type Service struct {
 }
 
 type Master struct {
-	ID          string `gorm:"primarykey"`
-	IndexStr    string `gorm:"index_str"`
-	Name        string `gorm:"name"`
-	Image1      string `gorm:"image_one"`
-	Image2      string `gorm:"image_two"`
-	Image3      string `gorm:"image_three"`
-	Description string `gorm:"description"`
-	Contact     string `gorm:"contact"`
-	CityID      string `gorm:"city_id"`
+	ID          string       `gorm:"primarykey"`
+	IndexStr    string       `gorm:"index_str"`
+	Name        string       `gorm:"name"`
+	Images      string_array `gorm:"type:text"`
+	Description string       `gorm:"description"`
+	Contact     string       `gorm:"contact"`
+	CityID      string       `gorm:"city_id"`
 }
 
 type MasterRegForm struct {
-	ID         string       `gorm:"primarykey"`
-	Name       string       `gorm:"name"`
-	CityID     string       `gorm:"city_id"`
-	CategoryID string       `gorm:"category_id"`
-	ServiceIDs string_array `gorm:"type:text"`
-	Contact    string       `gorm:"contact"`
+	ID          string       `gorm:"primarykey"`
+	Name        string       `gorm:"name"`
+	CityID      string       `gorm:"city_id"`
+	CategoryID  string       `gorm:"category_id"`
+	ServiceIDs  string_array `gorm:"type:text"`
+	Contact     string       `gorm:"contact"`
+	Images      string_array `gorm:"type:text"`
+	Description string       `gotm:"description"`
 }
 
 type Join struct {
