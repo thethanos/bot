@@ -282,27 +282,27 @@ func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
 		Images:      data.Images,
 	}
 
-	if err := d.dbConn.Transaction(func(tx *gorm.DB) error {
+	tx := d.dbConn.Begin()
+	defer tx.Rollback()
 
-		if err := d.dbConn.Create(master).Error; err != nil {
+	if err := tx.Create(master).Error; err != nil {
+		return err
+	}
+
+	if err := tx.Where("city_id = ? AND service_category_id = ?", data.CityID, data.CategoryID).First(&models.JoinCityCategory{}).Error; err != nil {
+		d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.CityID, data.CategoryID)
+		if err := tx.Create(&models.JoinCityCategory{CityID: data.CityID, ServiceCategoryID: data.CategoryID}).Error; err != nil {
 			return err
 		}
+	}
 
-		if err := d.dbConn.Where("city_id = ? AND service_category_id = ?", data.CityID, data.CategoryID).First(&models.JoinCityCategory{}).Error; err != nil {
-			d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.CityID, data.CategoryID)
-			if err := d.dbConn.Create(&models.JoinCityCategory{CityID: data.CityID, ServiceCategoryID: data.CategoryID}).Error; err != nil {
-				return err
-			}
+	for _, serviceID := range data.ServiceIDs {
+		if err := tx.Create(&models.Join{CityID: data.CityID, ServiceID: serviceID, MasterID: id}).Error; err != nil {
+			return err
 		}
+	}
 
-		for _, serviceID := range data.ServiceIDs {
-			if err := d.dbConn.Create(&models.Join{CityID: data.CityID, ServiceID: serviceID, MasterID: id}).Error; err != nil {
-				return err
-			}
-		}
-
-		return tx.Commit().Error
-	}); err != nil {
+	if err := tx.Commit().Error; err != nil {
 		return err
 	}
 
