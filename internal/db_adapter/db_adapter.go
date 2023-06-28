@@ -222,6 +222,16 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 	return result, nil
 }
 
+func (d *DbAdapter) GetMasterRegForm(master_id string) (*entities.MasterRegForm, error) {
+	
+	master := &models.MasterRegForm{}
+	if err := d.dbConn.Where("master_id").First().Error {
+		return nil, err
+	}
+	
+	return nil, nil
+}
+
 func (d *DbAdapter) SaveServiceCategory(name string) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	service := &models.ServiceCategory{

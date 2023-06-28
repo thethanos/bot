@@ -12,12 +12,11 @@
 
         /* Master grid */
         .container {
-            padding: 5px;
             background-color: black;
         }
 
         .col {
-            margin-bottom: 10px;
+            margin-bottom: -15px;
             margin-right: -15px;
         }
 
@@ -92,9 +91,20 @@
     <script>
         function onShowMoreBtn() {
             const row = document.getElementById("master-grid-row");
-            const div = document.createElement("div");
-            div.className = "col";
-            row.appendChild(div);
+            const masterReq = new XMLHttpRequest();
+            masterReq.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+                    for (var master of masterReq.response) {
+                        const div = document.createElement("div");
+                        div.className = "col";
+                        div.innerHTML = master;
+                        row.appendChild(div);
+                    }
+                }
+            };
+            masterReq.responseType = "json";
+            masterReq.open("GET", "https://bot-dev-domain.com/masters", true);
+            masterReq.send();
         }
     </script>
 </head>
@@ -102,20 +112,6 @@
 <body>
     <div class="container">
         <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-3" id="master-grid-row">
-            <div class="col">
-                <div class="master-container">
-                    <div class="master-container-layout">
-                        <h3 class="master-title">Мастер 1</h3>
-                        <hr class="line">
-                        </hr>
-                        <img class="master-images" src="https://www.w3schools.com/w3images/team1.jpg" alt="Jane"
-                            style="width:100%">
-                        <div class="master-description">здесь будет краткое сообщение от мастера или какое то описание
-                        </div>
-                        <button class="master-contact-btn">ЗАПИСАТЬСЯ</button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     <button type="button" class="show-more-btn" onclick="onShowMoreBtn()">Test</button>

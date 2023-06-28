@@ -27,6 +27,7 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 	postRouter := router.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/masters", handler.SaveMasterRegForm)
 	postRouter.HandleFunc("/masters/images/{master_id}", handler.SaveMasterImage)
+	postRouter.HandleFunc("/masters/approve/{master_id}", handler.ApproveMaster)
 
 	var addr string
 	switch cfg.Mode {

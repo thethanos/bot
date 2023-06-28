@@ -268,8 +268,13 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
-func (h *Handler) CommitMaster(rw http.ResponseWriter, req *http.Request) {
+func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
+
+	params := mux.Vars(req)
+	masterID := params["master_id"]
+
+	masterForm, err := db_adapter.Get
 
 	rw.WriteHeader(http.StatusOK)
 	h.logger.Info("Response sent")
