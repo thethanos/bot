@@ -99,8 +99,8 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	//query := req.URL.Query()
-	cityId := "1687079793"//query.Get("city_id")
-	serviceId := "1687515658"//query.Get("service_id")
+	cityId := "1687079805"//query.Get("city_id")
+	serviceId := "1687523708"//query.Get("service_id")
 
 	masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
 	if err != nil {

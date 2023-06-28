@@ -314,7 +314,7 @@ func (d *DbAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, e
 
 	images := make([]string, 0)
 	for _, image := range master.Images {
-		images = append(images, fmt.Sprintf("./webapp/pages/images/%s%s", master.ID, image))
+		images = append(images, fmt.Sprintf("https://bot-dev-domain.com/pages/images/%s/%s", id, image))
 	}
 
 	regForm := &models.MasterRegForm{
