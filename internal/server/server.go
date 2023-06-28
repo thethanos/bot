@@ -21,7 +21,7 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 	getRouter.HandleFunc("/cities", handler.GetCities)
 	getRouter.HandleFunc("/categories", handler.GetCategories)
 	getRouter.HandleFunc("/services", handler.GetServices)
-	getRouter.HandleFunc("/masters", handler.GetMastersList)
+	getRouter.HandleFunc("/masters", handler.GetMasters)
 	getRouter.PathPrefix("/").Handler(http.FileServer(http.Dir("./webapp")))
 
 	postRouter := router.Methods(http.MethodPost).Subrouter()

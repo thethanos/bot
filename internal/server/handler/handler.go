@@ -95,34 +95,75 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
-func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
-	h.logger.Infof("Request received: %s", req.URL)
+func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Info("Request received: %s", req.URL)
 
 	query := req.URL.Query()
 	cityId := query.Get("city_id")
 	serviceId := query.Get("service_id")
 
-	masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
+	_, err := h.dbAdapter.GetMasters(cityId, serviceId)
 	if err != nil {
-		h.logger.Error("server::GetMastersList::GetMasters", err)
+		h.logger.Error("server::GetMasters::GetMasters", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	template, err := webapp.GenerateWebPage("Выбор мастера", masters)
+	master := &entities.Master{
+		Name:        "Masha",
+		Image1:      "https://www.w3schools.com/w3images/team1.jpg",
+		Description: "Som random text",
+	}
+
+	mastersTemplates := make([]string, 0)
+	for i := 0; i < 6; i++ {
+		template, err := webapp.GenerateMassterCard(master)
+		if err != nil {
+			h.logger.Error("server::GetMasters::GenerateMassterCard", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+		}
+		mastersTemplates = append(mastersTemplates, template)
+	}
+
+	mastersResp, err := json.Marshal(mastersTemplates)
 	if err != nil {
-		h.logger.Error("server::GetMastersList::GenerateWebPage", err)
+		h.logger.Error("server::GetMasters::Marshal", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-	rw.Write(template)
+	rw.Write(mastersResp)
 	h.logger.Info("Response sent")
 }
 
 /*
+	func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
+		h.logger.Infof("Request received: %s", req.URL)
+
+		query := req.URL.Query()
+		cityId := query.Get("city_id")
+		serviceId := query.Get("service_id")
+
+		masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
+		if err != nil {
+			h.logger.Error("server::GetMastersList::GetMasters", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		template, err := webapp.GenerateWebPage("Выбор мастера", masters)
+		if err != nil {
+			h.logger.Error("server::GetMastersList::GenerateWebPage", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		rw.WriteHeader(http.StatusOK)
+		rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+		rw.Write(template)
+		h.logger.Info("Response sent")
+	}
+
 	func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
 		h.logger.Infof("Request received: %s", req.URL)
 

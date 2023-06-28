@@ -43,13 +43,15 @@ type Service struct {
 }
 
 type Master struct {
-	ID          string       `gorm:"primarykey"`
-	IndexStr    string       `gorm:"index_str"`
-	Name        string       `gorm:"name"`
-	Images      string_array `gorm:"type:text"`
-	Description string       `gorm:"description"`
-	Contact     string       `gorm:"contact"`
-	CityID      string       `gorm:"city_id"`
+	ID          string `gorm:"primarykey"`
+	IndexStr    string `gorm:"index_str"`
+	Name        string `gorm:"name"`
+	Image1      string `gorm:"image_one"`
+	Image2      string `gorm:"image_two"`
+	Image3      string `gorm:"image_three"`
+	Description string `gorm:"description"`
+	Contact     string `gorm:"contact"`
+	CityID      string `gorm:"city_id"`
 }
 
 type MasterRegForm struct {

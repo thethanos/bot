@@ -209,7 +209,15 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 		return nil, err
 	}
 	for _, master := range masters {
-		result = append(result, &entities.Master{ID: master.ID, Name: master.Name, Images: master.Images, Description: master.Description, CityID: master.CityID})
+		result = append(result, &entities.Master{
+			ID:          master.ID,
+			Name:        master.Name,
+			Image1:      master.Image1,
+			Image2:      master.Image2,
+			Image3:      master.Image3,
+			Description: master.Description,
+			CityID:      master.CityID,
+		})
 	}
 	return result, nil
 }
@@ -260,7 +268,6 @@ func (d *DbAdapter) SaveMaster(data *entities.UserState) error {
 	master := &models.Master{
 		ID:          id,
 		Name:        data.RawInput["name"],
-		Images:      []string{"https://bot-dev-domain.com/pages/images/maria_ernandes/1.png"},
 		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		CityID:      data.City.ID,
 	}

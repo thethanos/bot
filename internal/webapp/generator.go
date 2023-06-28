@@ -6,31 +6,16 @@ import (
 	"multimessenger_bot/internal/entities"
 )
 
-type webapp struct {
-	Header  string
-	Masters []*entities.Master
-}
-
-func GenerateWebPage(header string, masters []*entities.Master) ([]byte, error) {
-
-	webapp := webapp{
-		Header:  header,
-		Masters: masters,
-	}
-
-	allFiles := []string{"content.tmpl", "footer.tmpl", "header.tmpl", "page.tmpl"}
+func GenerateMassterCard(master *entities.Master) (string, error) {
 
 	var allPaths []string
-	for _, tmpl := range allFiles {
-		allPaths = append(allPaths, "./webapp/pages/templates/"+tmpl)
-	}
-
-	templates := template.Must(template.New("").ParseFiles(allPaths...))
+	allPaths = append(allPaths, "./webapp/templates/master_card.tmpl")
 
 	var processed bytes.Buffer
-	if err := templates.ExecuteTemplate(&processed, "page", webapp); err != nil {
-		return nil, err
+	template := template.Must(template.New("").ParseFiles(allPaths...))
+	if err := template.ExecuteTemplate(&processed, "card", master); err != nil {
+		return "", err
 	}
 
-	return processed.Bytes(), nil
+	return processed.String(), nil
 }
