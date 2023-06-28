@@ -223,11 +223,11 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, er
 func (d *DbAdapter) GetMasterRegForm(master_id string) (*entities.MasterRegForm, error) {
 
 	master := &models.MasterRegForm{}
-	if err := d.dbConn.Where("id = ?", master_id).First(&master).Error; err != nil {
+	if err := d.dbConn.Where("id = ?", master_id).First(master).Error; err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	return mapper.FromMasterRegFormModel(master), nil
 }
 
 func (d *DbAdapter) SaveServiceCategory(name string) error {
@@ -272,10 +272,9 @@ func (d *DbAdapter) SaveCity(name string) error {
 }
 
 func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
-	id := fmt.Sprintf("%d", time.Now().Unix())
 
 	master := &models.Master{
-		ID:          id,
+		ID:          data.ID,
 		Name:        data.Name,
 		Description: data.Description,
 		CityID:      data.CityID,
@@ -297,7 +296,7 @@ func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
 	}
 
 	for _, serviceID := range data.ServiceIDs {
-		if err := tx.Create(&models.Join{CityID: data.CityID, ServiceID: serviceID, MasterID: id}).Error; err != nil {
+		if err := tx.Create(&models.Join{CityID: data.CityID, ServiceID: serviceID, MasterID: master.ID}).Error; err != nil {
 			return err
 		}
 	}
@@ -306,7 +305,7 @@ func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
 		return err
 	}
 
-	d.logger.Infof("New master added successfully, id: %s, name: %s", id, master.Name)
+	d.logger.Infof("New master added successfully, id: %s, name: %s", master.ID, master.Name)
 	return nil
 }
 
@@ -315,7 +314,7 @@ func (d *DbAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, e
 
 	images := make([]string, 0)
 	for _, image := range master.Images {
-		images = append(images, fmt.Sprintf("./webapp/pages/images/%s/%s", master.ID, image))
+		images = append(images, fmt.Sprintf("./webapp/pages/images/%s%s", master.ID, image))
 	}
 
 	regForm := &models.MasterRegForm{

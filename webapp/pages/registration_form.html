@@ -188,22 +188,22 @@
     <input type="text" placeholder="Введите свое имя" name="name" id="name" required>
 
     <label for="city"><b>Город</b></label>
-    <select name="city" id="city">
+    <select name="city" id="city" required>
       <option value="" disabled selected hidden>Выберите город</option>
     </select>
 
     <label for="category"><b>Категория услуг</b></label>
-    <select name="category" id="category">
+    <select name="category" id="category" required>
       <option value="" disabled selected hidden>Выберите категорию</option>
     </select>
 
     <label for="service"><b>Услуга</b></label>
-    <select name="service" id="service" multiple>
+    <select name="service" id="service" multiple required>
       <option value="" disabled selected hidden>Выберите услугу</option>
     </select>
 
     <label for="images"><b>Фотографии</b></label>
-    <input type="file" name="images" id="images" multiple>
+    <input type="file" name="images" id="images" multiple required>
 
     <label for="contact"><b>Контактные данные</b></label>
     <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
