@@ -7,6 +7,7 @@ import (
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/logger"
 	handler "multimessenger_bot/internal/server/handler"
+	middleware "multimessenger_bot/internal/server/middleware"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -40,7 +41,7 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 	}
 
 	return &http.Server{
-		Handler: router,
+		Handler: middleware.CorsMiddlware(router),
 		Addr:    addr,
 	}, nil
 }

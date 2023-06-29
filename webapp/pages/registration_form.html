@@ -58,32 +58,71 @@
       opacity: 1;
     }
   </style>
-  <script>
-    window.onload = function () {
+</head>
 
+<body>
+
+  <div class="container">
+    <h1>Регистрация</h1>
+    <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в качестве мастера.</p>
+    <hr>
+
+    <label for="name"><b>Имя</b></label>
+    <input type="text" placeholder="Введите свое имя" name="name" id="name" required>
+
+    <label for="city"><b>Город</b></label>
+    <select name="city" id="city" required>
+      <option value="" disabled selected hidden>Выберите город</option>
+    </select>
+
+    <label for="category"><b>Категория услуг</b></label>
+    <select name="category" id="category" required>
+      <option value="" disabled selected hidden>Выберите категорию</option>
+    </select>
+
+    <label for="service"><b>Услуга</b></label>
+    <select name="service" id="service" multiple required>
+      <option value="" disabled selected hidden>Выберите услугу</option>
+    </select>
+
+    <label for="images"><b>Фотографии</b></label>
+    <input type="file" name="images" id="images" multiple required>
+
+    <label for="contact"><b>Контактные данные</b></label>
+    <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
+      required>
+
+    <label for="description"><b>Коротко о себе</b></label>
+    <input type="text" placeholder="Текст, который будет отображаться в вашем профиле" name="description"
+      id="description">
+
+    <hr>
+
+    <button onclick="registration()" class="registerbtn">Зарегистрироваться</button>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
       var cityElement = document.getElementById("city");
       const cityReq = new XMLHttpRequest();
       cityReq.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          for (var city of cityReq.response) {
+        if (cityReq.readyState === 4 && cityReq.status === 200) {
+          for (var city of JSON.parse(cityReq.response)) {
             cityElement.options[cityElement.options.length] = new Option(city.name, city.id);
           }
         }
       };
-      cityReq.responseType = "json";
       cityReq.open("GET", "https://bot-dev-domain.com/cities", true);
       cityReq.send();
 
       var categoryElement = document.getElementById("category");
       const categoryReq = new XMLHttpRequest();
       categoryReq.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-          for (var category of categoryReq.response) {
+        if (categoryReq.readyState === 4 && categoryReq.status === 200) {
+          for (var category of JSON.parse(categoryReq.response)) {
             categoryElement.options[categoryElement.options.length] = new Option(category.name, category.id);
           }
         }
       };
-      categoryReq.responseType = "json";
       categoryReq.open("GET", "https://bot-dev-domain.com/categories", true);
       categoryReq.send();
 
@@ -93,17 +132,17 @@
         serviceElement.selectedIndex = 0;
         const serviceReq = new XMLHttpRequest();
         serviceReq.onreadystatechange = function () {
-          if (this.readyState === 4 && this.status === 200) {
-            for (var service of serviceReq.response) {
+          if (serviceReq.readyState === 4 && serviceReq.status === 200) {
+            for (var service of JSON.parse(serviceReq.response)) {
               serviceElement.options[serviceElement.options.length] = new Option(service.name, service.id);
             }
           }
         }
-        serviceReq.responseType = "json";
         serviceReq.open("GET", "https://bot-dev-domain.com/services?category_id=" + categoryElement.value, true);
         serviceReq.send();
       }
-    }
+    });
+
     function registration() {
 
       var nameElement = document.getElementById("name");
@@ -140,12 +179,11 @@
       const body = JSON.stringify(object);
 
       const regFormReq = new XMLHttpRequest();
-      regFormReq.responseType = "json";
       regFormReq.open("POST", "https://bot-dev-domain.com/masters");
       regFormReq.setRequestHeader("Content-Type", "application/json");
       regFormReq.onreadystatechange = function () {
         if (regFormReq.readyState === XMLHttpRequest.DONE && regFormReq.status === 201) {
-          const master_id = regFormReq.response.id;
+          const master_id = JSON.parse(regFormReq.response).id;
           for (file of files) {
             const uploadReq = new XMLHttpRequest();
             const formData = new FormData();
@@ -157,7 +195,7 @@
           const approveReq = new XMLHttpRequest();
           approveReq.open("POST", "https://bot-dev-domain.com/masters/approve/" + master_id);
           approveReq.onreadystatechange = function () {
-            if (approveReq.readyState == XMLHttpRequest.DONE && regFormReq.status == 201) {
+            if (approveReq.readyState == XMLHttpRequest.DONE && approveReq.status == 201) {
               nameElement.value = '';
               cityElement.selectedIndex = 0;
               categoryElement.selectedIndex = 0;
@@ -165,7 +203,7 @@
               serviceElement.selectedIndex = 0;
               imagesElement.value = '';
               contactElement.value = '';
-              descriptionElement.value = ''
+              descriptionElement.value = '';
               window.alert("Регистрация прошла успешно!");
             }
           }
@@ -175,49 +213,6 @@
       regFormReq.send(body);
     }
   </script>
-</head>
-
-<body>
-
-  <div class="container">
-    <h1>Регистрация</h1>
-    <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в качестве мастера.</p>
-    <hr>
-
-    <label for="name"><b>Имя</b></label>
-    <input type="text" placeholder="Введите свое имя" name="name" id="name" required>
-
-    <label for="city"><b>Город</b></label>
-    <select name="city" id="city">
-      <option value="" disabled selected hidden>Выберите город</option>
-    </select>
-
-    <label for="category"><b>Категория услуг</b></label>
-    <select name="category" id="category">
-      <option value="" disabled selected hidden>Выберите категорию</option>
-    </select>
-
-    <label for="service"><b>Услуга</b></label>
-    <select name="service" id="service" multiple>
-      <option value="" disabled selected hidden>Выберите услугу</option>
-    </select>
-
-    <label for="images"><b>Фотографии</b></label>
-    <input type="file" name="images" id="images" multiple>
-
-    <label for="contact"><b>Контактные данные</b></label>
-    <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
-      required>
-
-    <label for="description"><b>Коротко о себе</b></label>
-    <input type="text" placeholder="Текст, который будет отображаться в вашем профиле" name="description"
-      id="description">
-
-    <hr>
-
-    <button onclick="registration()" class="registerbtn">Зарегистрироваться</button>
-  </div>
-
 </body>
 
 </html>
