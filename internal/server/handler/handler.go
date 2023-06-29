@@ -96,7 +96,7 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
-	h.logger.Info("Request received: %s", req.URL)
+	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
 	cityId := query.Get("city_id")
