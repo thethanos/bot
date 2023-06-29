@@ -103,43 +103,43 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var cityElement = document.getElementById("city");
-      const cityReq = new XMLHttpRequest();
-      cityReq.onreadystatechange = function () {
-        if (cityReq.readyState === 4 && cityReq.status === 200) {
-          for (var city of JSON.parse(cityReq.response)) {
+      fetch("https://bot-dev-domain.com/cities")
+        .then(response => response.json())
+        .then(cities => {
+          for (var city of cities) {
             cityElement.options[cityElement.options.length] = new Option(city.name, city.id);
           }
-        }
-      };
-      cityReq.open("GET", "https://bot-dev-domain.com/cities", true);
-      cityReq.send();
+        })
+        .catch(error => {
+          console.error("Error:", error);
+        });
 
       var categoryElement = document.getElementById("category");
-      const categoryReq = new XMLHttpRequest();
-      categoryReq.onreadystatechange = function () {
-        if (categoryReq.readyState === 4 && categoryReq.status === 200) {
-          for (var category of JSON.parse(categoryReq.response)) {
+      fetch("https://bot-dev-domain.com/categories")
+        .then(response => response.json())
+        .then(categories => {
+          for (var category of categories) {
             categoryElement.options[categoryElement.options.length] = new Option(category.name, category.id);
           }
-        }
-      };
-      categoryReq.open("GET", "https://bot-dev-domain.com/categories", true);
-      categoryReq.send();
+        })
+        .catch(error => {
+          console.error("Error:", error)
+        });
 
       var serviceElement = document.getElementById("service");
       categoryElement.onchange = function () {
         serviceElement.length = 1;
         serviceElement.selectedIndex = 0;
-        const serviceReq = new XMLHttpRequest();
-        serviceReq.onreadystatechange = function () {
-          if (serviceReq.readyState === 4 && serviceReq.status === 200) {
-            for (var service of JSON.parse(serviceReq.response)) {
+        fetch("https://bot-dev-domain.com/services?category_id=" + categoryElement.value)
+          .then(response => response.json())
+          .then(services => {
+            for (var service of services) {
               serviceElement.options[serviceElement.options.length] = new Option(service.name, service.id);
             }
-          }
-        }
-        serviceReq.open("GET", "https://bot-dev-domain.com/services?category_id=" + categoryElement.value, true);
-        serviceReq.send();
+          })
+          .catch(error => {
+            console.error("Error:", error)
+          });
       }
     });
 
@@ -178,24 +178,26 @@
       };
       const body = JSON.stringify(object);
 
-      const regFormReq = new XMLHttpRequest();
-      regFormReq.open("POST", "https://bot-dev-domain.com/masters");
-      regFormReq.setRequestHeader("Content-Type", "application/json");
-      regFormReq.onreadystatechange = function () {
-        if (regFormReq.readyState === XMLHttpRequest.DONE && regFormReq.status === 201) {
-          const master_id = JSON.parse(regFormReq.response).id;
+      fetch("https://bot-dev-domain.com/masters", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: body
+      })
+        .then(response => response.json())
+        .then(data => {
+          const master_id = data.id;
           for (file of files) {
             const uploadReq = new XMLHttpRequest();
             const formData = new FormData();
             formData.append("image", file);
-            uploadReq.open("POST", "https://bot-dev-domain.com/masters/images/" + master_id);
+            uploadReq.open("POST", "https://bot-dev-domain.com/masters/images/" + master_id, false);
             uploadReq.send(formData);
           }
 
-          const approveReq = new XMLHttpRequest();
-          approveReq.open("POST", "https://bot-dev-domain.com/masters/approve/" + master_id);
-          approveReq.onreadystatechange = function () {
-            if (approveReq.readyState == XMLHttpRequest.DONE && approveReq.status == 201) {
+          fetch("https://bot-dev-domain.com/masters/approve/" + master_id, { method: 'POST' })
+            .then(() => {
               nameElement.value = '';
               cityElement.selectedIndex = 0;
               categoryElement.selectedIndex = 0;
@@ -205,12 +207,14 @@
               contactElement.value = '';
               descriptionElement.value = '';
               window.alert("Регистрация прошла успешно!");
-            }
-          }
-          approveReq.send();
-        }
-      }
-      regFormReq.send(body);
+            })
+            .catch(error => {
+              console.error("Error:", error);
+            })
+        })
+        .catch(error => {
+          console.error("Error", error)
+        });
     }
   </script>
 </body>

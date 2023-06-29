@@ -301,6 +301,10 @@ func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
 		}
 	}
 
+	if err := tx.Delete(&models.MasterRegForm{ID: data.ID}).Error; err != nil {
+		return err
+	}
+
 	if err := tx.Commit().Error; err != nil {
 		return err
 	}
