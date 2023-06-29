@@ -130,7 +130,7 @@
       categoryElement.onchange = function () {
         serviceElement.length = 1;
         serviceElement.selectedIndex = 0;
-        fetch("https://bot-dev-domain.com/services?category_id=" + categoryElement.value)
+        fetch(`https://bot-dev-domain.com/services?category_id=${categoryElement.value}`)
           .then(response => response.json())
           .then(services => {
             for (var service of services) {
@@ -192,11 +192,11 @@
             const uploadReq = new XMLHttpRequest();
             const formData = new FormData();
             formData.append("image", file);
-            uploadReq.open("POST", "https://bot-dev-domain.com/masters/images/" + masterId, false);
+            uploadReq.open("POST", `https://bot-dev-domain.com/masters/images/${masterId}`, false);
             uploadReq.send(formData);
           }
 
-          fetch("https://bot-dev-domain.com/masters/approve/" + masterId, { method: 'POST' })
+          fetch(`https://bot-dev-domain.com/masters/approve/${masterId}`, { method: 'POST' })
             .then(() => {
               nameElement.value = '';
               cityElement.selectedIndex = 0;
