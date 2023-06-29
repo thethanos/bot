@@ -89,7 +89,7 @@
         integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
         crossorigin="anonymous"></script>
     <script>
-        const currentPage = 0;
+        var currentPage = 0;
         const url = new URL(window.location.href);
         const params = new URLSearchParams(url.search);
         const cityId = params.get("city_id");
@@ -114,8 +114,9 @@
                         div.innerHTML = master;
                         row.appendChild(div);
                     }
+
                     if (masters.length === 0) {
-                        return
+                        return;
                     }
                     currentPage++;
                 })
