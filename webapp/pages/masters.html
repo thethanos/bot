@@ -105,7 +105,7 @@
 
         function loadMasters(page, limit) {
             const row = document.getElementById("master-grid-row");
-            fetch(`https://bot-dev-domain.com/masters?page=${page}&limit=${limit}&citi_id=${cityId}&service_id=${serviceId}`)
+            fetch(`https://bot-dev-domain.com/masters?page=${page}&limit=${limit}&city_id=${cityId}&service_id=${serviceId}`)
                 .then(response => response.json())
                 .then(masters => {
                     for (var master of masters) {
@@ -114,7 +114,7 @@
                         div.innerHTML = master;
                         row.appendChild(div);
                     }
-                    if (masters.length < 6) {
+                    if (masters.length === 0) {
                         return
                     }
                     currentPage++;
