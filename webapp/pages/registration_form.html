@@ -187,16 +187,16 @@
       })
         .then(response => response.json())
         .then(data => {
-          const master_id = data.id;
+          const masterId = data.id;
           for (file of files) {
             const uploadReq = new XMLHttpRequest();
             const formData = new FormData();
             formData.append("image", file);
-            uploadReq.open("POST", "https://bot-dev-domain.com/masters/images/" + master_id, false);
+            uploadReq.open("POST", "https://bot-dev-domain.com/masters/images/" + masterId, false);
             uploadReq.send(formData);
           }
 
-          fetch("https://bot-dev-domain.com/masters/approve/" + master_id, { method: 'POST' })
+          fetch("https://bot-dev-domain.com/masters/approve/" + masterId, { method: 'POST' })
             .then(() => {
               nameElement.value = '';
               cityElement.selectedIndex = 0;

@@ -192,11 +192,11 @@ func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service,
 		}, nil
 	}
 */
-func (d *DbAdapter) GetMasters(cityId, serviceId string) ([]*entities.Master, error) {
+func (d *DbAdapter) GetMasters(cityId, serviceId string, page, limit int) ([]*entities.Master, error) {
 	result := make([]*entities.Master, 0)
 	masters := make([]*models.Master, 0)
 	joins := make([]*models.Join, 0)
-	if err := d.dbConn.Where("city_id = ? AND service_id = ?", cityId, serviceId).Find(&joins).Error; err != nil {
+	if err := d.dbConn.Offset(page*limit).Limit(limit).Where("city_id = ? AND service_id = ?", cityId, serviceId).Find(&joins).Error; err != nil {
 		return nil, err
 	}
 

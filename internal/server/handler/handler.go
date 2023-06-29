@@ -10,6 +10,7 @@ import (
 	"multimessenger_bot/internal/webapp"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -32,14 +33,14 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	cities, err := h.dbAdapter.GetCities("")
 	if err != nil {
 		h.logger.Error("server::GetCities::GetCities", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	cityList, err := json.Marshal(&cities)
 	if err != nil {
 		h.logger.Error("server::GetCities::Marshal", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -54,14 +55,14 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 	categories, err := h.dbAdapter.GetCategories("")
 	if err != nil {
 		h.logger.Error("server::GetCategories::GetCategories", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	categoryList, err := json.Marshal(&categories)
 	if err != nil {
 		h.logger.Error("server::GetCategories::Marshal")
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -79,14 +80,14 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	services, err := h.dbAdapter.GetServices(categoryId, "")
 	if err != nil {
 		h.logger.Error("server::GetServices::GetServices")
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	serviceList, err := json.Marshal(&services)
 	if err != nil {
 		h.logger.Error("server::GetServices::Marshal", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -99,13 +100,28 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
+	pageParam := query.Get("page")
+	page, err := strconv.Atoi(pageParam)
+	if err != nil {
+		h.logger.Error("server::GetMasters::Atoi", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+	limitParam := query.Get("limit")
+	limit, err := strconv.Atoi(limitParam)
+	if err != nil {
+		h.logger.Error("server::GetMasters::Atoi", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	cityId := query.Get("city_id")
 	serviceId := query.Get("service_id")
 
-	masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
+	masters, err := h.dbAdapter.GetMasters(cityId, serviceId, page, limit)
 	if err != nil {
 		h.logger.Error("server::GetMasters::GetMasters", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -114,7 +130,7 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 		template, err := webapp.GenerateMassterCard(master)
 		if err != nil {
 			h.logger.Error("server::GetMasters::GenerateMassterCard", err)
-			rw.WriteHeader(http.StatusInternalServerError)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		mastersTemplates = append(mastersTemplates, template)
@@ -123,7 +139,8 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	mastersResp, err := json.Marshal(mastersTemplates)
 	if err != nil {
 		h.logger.Error("server::GetMasters::Marshal", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
@@ -194,21 +211,21 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		h.logger.Error("server::SaveMasterRegForm::ReadAll", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	regForm := &entities.MasterRegForm{}
 	if err := json.Unmarshal(body, regForm); err != nil {
 		h.logger.Error("server::SaveMasterRegForm::Unmarshal", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	id, err := h.dbAdapter.SaveMasterRegForm(regForm)
 	if err != nil {
 		h.logger.Error("server::SaveMasterRegForm::SaveMasterRegForm", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -227,34 +244,34 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	formFile, meta, err := req.FormFile("image")
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::FormFile", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer formFile.Close()
 
 	if err := os.MkdirAll(fmt.Sprintf("./webapp/pages/images/%s", masterID), os.ModePerm); err != nil {
 		h.logger.Error("server::SaveMasterImage::MkdirAll", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	image, err := os.Create(fmt.Sprintf("./webapp/pages/images/%s/%s", masterID, meta.Filename))
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::Create", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	imageBytes, err := ioutil.ReadAll(formFile)
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::ReadAll", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if _, err := image.Write(imageBytes); err != nil {
 		h.logger.Error("server::SaveMasterImage::Write", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -271,13 +288,13 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 	masterForm, err := h.dbAdapter.GetMasterRegForm(masterID)
 	if err != nil {
 		h.logger.Error("server::ApproveMaster::GetMasterRegForm", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := h.dbAdapter.SaveMaster(masterForm); err != nil {
 		h.logger.Error("server::ApproveMaster::SaveMaster", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

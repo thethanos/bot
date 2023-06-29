@@ -89,9 +89,24 @@
         integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
         crossorigin="anonymous"></script>
     <script>
+
+        const currentPage = 0;
+        const url = new URl(window.location.href);
+        const params = new URLSearchParams(url.search);
+        const cityId = params.get("city_id");
+        const serviceId = params.get("service_id");
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadMasters(currentPage, 6);
+        });
+
         function onShowMoreBtn() {
+            loadMasters(currentPage, 6);
+        }
+
+        function loadMasters(page, limit) {
             const row = document.getElementById("master-grid-row");
-            fetch("https://bot-dev-domain.com/masters")
+            fetch("https://bot-dev-domain.com/masters?page=${page}&limit=${limit}&citi_id={cityId}&service_id=${serviceId}")
                 .then(response => response.json())
                 .then(masters => {
                     for (var master of masters) {
@@ -100,6 +115,10 @@
                         div.innerHTML = master;
                         row.appendChild(div);
                     }
+                    if (masters.length < 6) {
+                        return
+                    }
+                    currentPage++;
                 })
                 .catch(error => {
                     console.error("Error:", error)
