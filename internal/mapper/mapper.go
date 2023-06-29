@@ -38,5 +38,7 @@ func FromMasterRegFormModel(model *models.MasterRegForm) *entities.MasterRegForm
 		Description: model.Description,
 		Contact:     model.Contact,
 		CityID:      model.CityID,
+		CategoryID:  model.CategoryID,
+		ServiceIDs:  model.ServiceIDs,
 	}
 }
