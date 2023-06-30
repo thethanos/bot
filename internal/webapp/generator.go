@@ -6,7 +6,7 @@ import (
 	"multimessenger_bot/internal/entities"
 )
 
-func GenerateMassterCard(master *entities.Master) (string, error) {
+func GenerateMasterCard(master *entities.Master) (string, error) {
 
 	var allPaths []string
 	allPaths = append(allPaths, "./webapp/templates/master_card.tmpl")

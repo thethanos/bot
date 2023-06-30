@@ -61,7 +61,7 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 
 	categoryList, err := json.Marshal(&categories)
 	if err != nil {
-		h.logger.Error("server::GetCategories::Marshal")
+		h.logger.Error("server::GetCategories::Marshal", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -79,7 +79,7 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 
 	services, err := h.dbAdapter.GetServices(categoryId, "")
 	if err != nil {
-		h.logger.Error("server::GetServices::GetServices")
+		h.logger.Error("server::GetServices::GetServices", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -127,7 +127,7 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 
 	mastersTemplates := make([]string, 0)
 	for _, master := range masters {
-		template, err := webapp.GenerateMassterCard(master)
+		template, err := webapp.GenerateMasterCard(master)
 		if err != nil {
 			h.logger.Error("server::GetMasters::GenerateMassterCard", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -148,63 +148,6 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
-/*
-	func (h *Handler) GetMastersList(rw http.ResponseWriter, req *http.Request) {
-		h.logger.Infof("Request received: %s", req.URL)
-
-		query := req.URL.Query()
-		cityId := query.Get("city_id")
-		serviceId := query.Get("service_id")
-
-		masters, err := h.dbAdapter.GetMasters(cityId, serviceId)
-		if err != nil {
-			h.logger.Error("server::GetMastersList::GetMasters", err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		template, err := webapp.GenerateWebPage("Выбор мастера", masters)
-		if err != nil {
-			h.logger.Error("server::GetMastersList::GenerateWebPage", err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		rw.WriteHeader(http.StatusOK)
-		rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-		rw.Write(template)
-		h.logger.Info("Response sent")
-	}
-
-	func (h *Handler) GetMasterPreview(rw http.ResponseWriter, req *http.Request) {
-		h.logger.Infof("Request received: %s", req.URL)
-
-		query := req.URL.Query()
-		master_id := query.Get("master")
-
-		master, err := h.dbAdapter.GetMasterPreview(master_id)
-		if err != nil {
-			h.logger.Error("server::GetMasterPreview::GetMasterPreview", err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			rw.Header().Set("Access-Control-Allow-Origin", "*")
-			return
-		}
-
-		template, err := webapp.GenerateWebPage("Предпросмотр", []*entities.Master{master})
-		if err != nil {
-			h.logger.Error("server::GetMastersList::GenerateWebPage", err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			rw.Header().Set("Access-Control-Allow-Origin", "*")
-			return
-		}
-
-		rw.WriteHeader(http.StatusOK)
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
-		rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-		rw.Write(template)
-		h.logger.Info("Response sent")
-	}
-*/
 func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 

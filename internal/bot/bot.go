@@ -26,7 +26,7 @@ type Bot struct {
 	dbAdapter    *db_adapter.DbAdapter
 }
 
-func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, dbAdpter *db_adapter.DbAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
+func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, dbAdapter *db_adapter.DbAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
 
 	clients := make(map[ma.MessageSource]ma.ClientInterface)
 	for _, client := range clientArray {
@@ -41,7 +41,7 @@ func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, dbAdpter *db
 		clients:      clients,
 		userSessions: userSessions,
 		recvMsgChan:  recvMsgChan,
-		dbAdapter:    dbAdpter,
+		dbAdapter:    dbAdapter,
 		sendMsgChan:  sendMsgChan,
 	}
 

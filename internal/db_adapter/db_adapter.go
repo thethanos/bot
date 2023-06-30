@@ -178,20 +178,6 @@ func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service,
 	return result, nil
 }
 
-/*
-	func (d *DbAdapter) GetMasterPreview(id string) (*entities.Master, error) {
-		master := &models.MasterPreview{}
-		tx := d.dbConn.Where("id = ?", id).First(master)
-		if tx.Error != nil {
-			return nil, tx.Error
-		}
-		return &entities.Master{
-			Name:        master.Name,
-			Images:      master.Images,
-			Description: master.Description,
-		}, nil
-	}
-*/
 func (d *DbAdapter) GetMasters(cityId, serviceId string, page, limit int) ([]*entities.Master, error) {
 	result := make([]*entities.Master, 0)
 	masters := make([]*models.Master, 0)

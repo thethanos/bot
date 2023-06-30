@@ -28,7 +28,6 @@ func main() {
 	cfg, err := config.Load("config.toml")
 	if err != nil {
 		panic(fmt.Sprintf("main::config::Load::%s", err))
-		return
 	}
 
 	logger := logger.NewLogger(cfg.Mode)
