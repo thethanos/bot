@@ -7,17 +7,13 @@
         integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <style>
         body {
-            background-color: black;
+            background-color: grey;
         }
 
         /* Master grid */
         .container {
-            background-color: black;
-        }
-
-        .col {
-            margin-bottom: -15px;
-            margin-right: -15px;
+            background-color: grey;
+            margin-top: 10px;
         }
 
         /* Master card */
@@ -36,8 +32,8 @@
         .master-container-layout {
             display: block;
             position: relative;
-            margin-top: 15px;
-            margin-bottom: 20px;
+            margin-top: 10px;
+            margin-bottom: 15px;
             margin-left: 10px;
             margin-right: 10px;
             background-color: white;
@@ -46,8 +42,8 @@
         }
 
         .master-title {
-            height: 10%;
-            font-size: 4vw;
+            height: 2vh;
+            font-size: 4vh;
         }
 
         .line {
@@ -57,23 +53,22 @@
         }
 
         .master-images {
-            height: 30vw;
-            width: 100%;
+            height: 25vh;
+            width: auto;
         }
 
         .master-description {
-            font-size: 2vw;
+            font-size: 2vh;
             word-wrap: break-word;
             height: 30%;
         }
 
         .master-contact-btn {
             display: block;
-            background-color: grey;
-            height: 4vw;
-            width: 20vw;
+            height: 4vh;
+            width: 25vw;
             background-color: rgb(231, 195, 11);
-            font-size: 2.5vw;
+            font-size: 2.5vh;
             border-style: hidden;
             margin-top: 10px;
         }
@@ -81,8 +76,11 @@
         /* Show more button */
         .show-more-btn {
             position: absolute;
-            left: 45%;
-            width: 10%;
+            left: 35%;
+            width: 30%;
+            height: 6vh;
+            margin-top: 15px;
+            background-color: rgb(231, 195, 11);
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
@@ -129,10 +127,10 @@
 
 <body>
     <div class="container">
-        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-3" id="master-grid-row">
+        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 justify-content-center gx-2 gy-2" id="master-grid-row">
         </div>
     </div>
-    <button type="button" class="show-more-btn" onclick="onShowMoreBtn()">Test</button>
+    <button type="button" class="show-more-btn" onclick="onShowMoreBtn()">Еще</button>
 </body>
 
 </html>
