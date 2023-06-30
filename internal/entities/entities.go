@@ -4,8 +4,6 @@ type UserState struct {
 	City            *City
 	ServiceCategory *ServiceCategory
 	Service         *Service
-	Master          *Master
-	Cursor          int
 	RawInput        map[string]string
 }
 
@@ -13,8 +11,6 @@ func (u *UserState) Reset() {
 	u.City = nil
 	u.ServiceCategory = nil
 	u.Service = nil
-	u.Master = nil
-	u.Cursor = 0
 	u.RawInput = make(map[string]string)
 }
 

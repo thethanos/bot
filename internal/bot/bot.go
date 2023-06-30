@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"fmt"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/logger"
@@ -57,7 +56,7 @@ func (b *Bot) Run() {
 	go func() {
 		for msg := range b.recvMsgChan {
 			if _, exists := b.userSessions[msg.UserID]; !exists || strings.ToLower(msg.Text) == "/start" {
-				state := &entities.UserState{Cursor: 0, RawInput: make(map[string]string)}
+				state := &entities.UserState{RawInput: make(map[string]string)}
 				b.userSessions[msg.UserID] = &UserSession{
 					State:       state,
 					CurrentStep: b.createStep(MainMenuStep, state),
@@ -72,7 +71,7 @@ func (b *Bot) Run() {
 	go func() {
 		for msg := range b.sendMsgChan {
 			if err := b.clients[msg.Source].SendMessage(msg); err != nil {
-				fmt.Println(err)
+				b.logger.Error("bot::Run::SendMessage", err)
 			}
 		}
 	}()
