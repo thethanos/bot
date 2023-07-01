@@ -24,11 +24,19 @@
     input[type=file],
     select {
       width: 100%;
-      padding: 15px;
       margin: 5px 0 22px 0;
       display: inline-block;
       border: none;
       background: #f1f1f1;
+    }
+
+    input[type=text],
+    input[type=file] {
+      padding: 15px;
+    }
+
+    select {
+      padding: 15px 11px;
     }
 
     input[type=text]:focus {
@@ -85,7 +93,7 @@
     </select>
 
     <label for="images"><b>Фотографии</b></label>
-    <input type="file" name="images" id="images" multiple required>
+    <input type="file" multiple name="images" id="images" accept="image/*">
 
     <label for="contact"><b>Контактные данные</b></label>
     <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
