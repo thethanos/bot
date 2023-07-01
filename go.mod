@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/PaulSonOfLars/gotgbot/v2 v2.0.0-rc.20
+	github.com/go-playground/validator/v10 v10.14.1
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.17
@@ -22,6 +23,9 @@ require (
 	cloud.google.com/go/compute v1.19.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/s2a-go v0.1.2 // indirect
@@ -34,6 +38,7 @@ require (
 	github.com/jackc/pgx/v5 v5.3.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	go.mau.fi/libsignal v0.1.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -47,6 +52,5 @@ require (
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
-	gorm.io/driver/sqlite v1.5.2 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )

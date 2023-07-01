@@ -29,27 +29,23 @@ func (u UserState) GetServiceID() string {
 }
 
 type City struct {
-	ID       string `json:"id"`
-	IndexStr string `json:"-"`
-	Name     string `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type ServiceCategory struct {
-	ID       string `json:"id"`
-	IndexStr string `json:"-"`
-	Name     string `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type Service struct {
 	ID         string `json:"id"`
-	IndexStr   string `json:"-"`
 	Name       string `json:"name"`
 	CategoryID string `json:"-"`
 }
 
 type Master struct {
 	ID          string   `json:"id"`
-	IndexStr    string   `json:"index_str"`
 	Name        string   `json:"name"`
 	Images      []string `json:"images"`
 	Description string   `json:"description"`
@@ -58,12 +54,12 @@ type Master struct {
 }
 
 type MasterRegForm struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	CityID      string   `json:"city_id"`
-	CategoryID  string   `json:"category_id"`
-	ServiceIDs  []string `json:"service_ids"`
-	Contact     string   `json:"contact"`
-	Description string   `json:"description"`
-	Images      []string `json:"images"`
+	ID          string   `json:"id,omitempty"`
+	Name        string   `json:"name" validate:"required"`
+	Images      []string `json:"images" validate:"required"`
+	Description string   `json:"description,omitempty"`
+	Contact     string   `json:"contact" validate:"required"`
+	CityID      string   `json:"city_id" validate:"required"`
+	CategoryID  string   `json:"category_id" validate:"required"`
+	ServiceIDs  []string `json:"service_ids" validate:"required"`
 }

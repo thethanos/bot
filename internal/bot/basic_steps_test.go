@@ -7,6 +7,8 @@ import (
 	ma "multimessenger_bot/internal/messenger_adapter"
 	"reflect"
 	"testing"
+
+	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
 
 const (
@@ -203,5 +205,67 @@ func TestMainMenuStep(t *testing.T) {
 	resp = ma.NewTextMessage("Админ", msg, nil, true)
 	if _, nextStep := step.ProcessResponse(resp); nextStep != AdminStep {
 		t.Error("MainMenu step returned wrong next step")
+	}
+}
+
+func TestMasterSelectionStep(t *testing.T) {
+
+	step := MasterSelection{
+		StepBase: StepBase{
+			logger: logger.NewLogger(config.RELEASE),
+			state: &entities.UserState{
+				City: &entities.City{
+					ID: "123",
+				},
+				Service: &entities.Service{
+					ID: "123",
+				},
+			},
+		},
+	}
+
+	rows := make([][]tgbotapi.KeyboardButton, 0)
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог мастеров", WebApp: &tgbotapi.WebAppInfo{
+		Url: "https://bot-dev-domain.com/pages/masters.html?city_id=123&service_id=123",
+	}}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+	keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
+
+	text := "Выбор мастера"
+	msg := &ma.Message{
+		Text:   text,
+		Source: ma.TELEGRAM,
+		Data: &ma.MessageData{
+			TgMarkup:     keyboard,
+			RemoveMarkup: false,
+		},
+	}
+
+	if res := step.Request(msg); !reflect.DeepEqual(res, msg) {
+		t.Error("MasterSelection step returned wrong message")
+	}
+
+	msg.Source = ma.WHATSAPP
+	if res := step.Request(msg); res.Text != unsupported {
+		t.Error("MasterSelection step returned wrong message")
+	}
+
+	if step.IsInProgress() != true {
+		t.Error("MasterSelection step is not in progress after sending request")
+	}
+
+	resp := ma.NewTextMessage("Вернуться назад", msg, nil, true)
+	if _, nextStep := step.ProcessResponse(resp); nextStep != PreviousStep {
+		t.Error("MasterSelection step returned wrong next step")
+	}
+
+	if step.IsInProgress() != false {
+		t.Error("MasterSelection step is in progress after processing response")
+	}
+
+	resp = ma.NewTextMessage("Вернуться на главную", msg, nil, true)
+	if _, nextStep := step.ProcessResponse(resp); nextStep != MainMenuStep {
+		t.Error("MasterSelection step returned wrong next step")
 	}
 }

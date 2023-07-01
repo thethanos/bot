@@ -84,7 +84,7 @@ func (d *DbAdapter) GetCities(serviceId string) ([]*entities.City, error) {
 			return nil, err
 		}
 		for _, city := range cities {
-			result = append(result, &entities.City{ID: city.ID, IndexStr: city.IndexStr, Name: city.Name})
+			result = append(result, &entities.City{ID: city.ID, Name: city.Name})
 		}
 		return result, nil
 	}

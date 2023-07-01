@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
@@ -162,6 +163,13 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	if err := json.Unmarshal(body, regForm); err != nil {
 		h.logger.Error("server::SaveMasterRegForm::Unmarshal", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	validator := validator.New()
+	if err := validator.Struct(regForm); err != nil {
+		h.logger.Error("server::SaveMasterRegForm::Struct", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
