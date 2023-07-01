@@ -119,7 +119,7 @@
           }
         })
         .catch(error => {
-          console.error("Error:", error);
+          window.alert("GET /cities returned error");
         });
 
       const categorySelect = document.getElementById("category");
@@ -131,7 +131,7 @@
           }
         })
         .catch(error => {
-          console.error("Error:", error)
+          window.alert("GET /categories returned error");
         });
 
       const servicesSelect = document.getElementById("services");
@@ -146,7 +146,7 @@
             }
           })
           .catch(error => {
-            console.error("Error:", error)
+            window.alert("GET /services returned error");
           });
       }
     });
@@ -160,10 +160,10 @@
       const imagesInput = document.getElementById("images");
       const contactInput = document.getElementById("contact");
       const descriptionInput = document.getElementById("description");
-/*
+
       if (!validation(nameInput, citySelect, categorySelect, servicesSelect, imagesInput, contactInput)) {
         return
-      }*/
+      }
 
       const services = [];
       for (var option of servicesSelect.options) {
@@ -198,7 +198,8 @@
         .then(response => response.json())
         .then(data => {
           const masterId = data.id;
-          for (file of files) {
+          window.alert("TEST2");
+          for (file of imagesInput.files) {
             const uploadReq = new XMLHttpRequest();
             const formData = new FormData();
             formData.append("image", file);
@@ -207,6 +208,7 @@
           }
           fetch(`https://bot-dev-domain.com/masters/approve/${masterId}`, { method: 'POST' })
             .then(() => {
+              window.alert("TEST3");
               nameInput.value = '';
               citySelect.selectedIndex = 0;
               categorySelect.selectedIndex = 0;
