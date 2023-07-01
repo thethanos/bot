@@ -71,7 +71,8 @@
 
   <div class="container">
     <h1>Регистрация</h1>
-    <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в качестве мастера.</p>
+    <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в
+      качестве мастера.</p>
     <hr>
 
     <label for="name"><b>Имя</b></label>
@@ -87,13 +88,13 @@
       <option value="" disabled selected hidden>Выберите категорию</option>
     </select>
 
-    <label for="service"><b>Услуга</b></label>
-    <select name="service" id="service" multiple required>
-      <option value="" disabled selected hidden>Выберите услугу</option>
+    <label for="services"><b>Услуга</b></label>
+    <select name="services" id="services" multiple required>
+      <option value="default" disabled selected hidden>Выберите услугу</option>
     </select>
 
     <label for="images"><b>Фотографии</b></label>
-    <input type="file" multiple name="images" id="images" accept="image/*">
+    <input type="file" multiple name="images" id="images" accept="image/*" required>
 
     <label for="contact"><b>Контактные данные</b></label>
     <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
@@ -109,39 +110,39 @@
   </div>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      var cityElement = document.getElementById("city");
+      const citySelect = document.getElementById("city");
       fetch("https://bot-dev-domain.com/cities")
         .then(response => response.json())
         .then(cities => {
           for (var city of cities) {
-            cityElement.options[cityElement.options.length] = new Option(city.name, city.id);
+            citySelect.options[citySelect.options.length] = new Option(city.name, city.id);
           }
         })
         .catch(error => {
           console.error("Error:", error);
         });
 
-      var categoryElement = document.getElementById("category");
+      const categorySelect = document.getElementById("category");
       fetch("https://bot-dev-domain.com/categories")
         .then(response => response.json())
         .then(categories => {
           for (var category of categories) {
-            categoryElement.options[categoryElement.options.length] = new Option(category.name, category.id);
+            categorySelect.options[categorySelect.options.length] = new Option(category.name, category.id);
           }
         })
         .catch(error => {
           console.error("Error:", error)
         });
 
-      var serviceElement = document.getElementById("service");
-      categoryElement.onchange = function () {
-        serviceElement.length = 1;
-        serviceElement.selectedIndex = 0;
-        fetch(`https://bot-dev-domain.com/services?category_id=${categoryElement.value}`)
+      const servicesSelect = document.getElementById("services");
+      categorySelect.onchange = function () {
+        servicesSelect.length = 1;
+        servicesSelect.selectedIndex = 0;
+        fetch(`https://bot-dev-domain.com/services?category_id=${categorySelect.value}`)
           .then(response => response.json())
           .then(services => {
             for (var service of services) {
-              serviceElement.options[serviceElement.options.length] = new Option(service.name, service.id);
+              servicesSelect.options[servicesSelect.options.length] = new Option(service.name, service.id);
             }
           })
           .catch(error => {
@@ -152,35 +153,37 @@
 
     function registration() {
 
-      var nameElement = document.getElementById("name");
-      var cityElement = document.getElementById("city");
-      var categoryElement = document.getElementById("category");
-      var serviceElement = document.getElementById("service");
-      var imagesElement = document.getElementById("images");
-      var contactElement = document.getElementById("contact");
-      var descriptionElement = document.getElementById("description");
+      const nameInput = document.getElementById("name");
+      const citySelect = document.getElementById("city");
+      const categorySelect = document.getElementById("category");
+      const servicesSelect = document.getElementById("services");
+      const imagesInput = document.getElementById("images");
+      const contactInput = document.getElementById("contact");
+      const descriptionInput = document.getElementById("description");
+/*
+      if (!validation(nameInput, citySelect, categorySelect, servicesSelect, imagesInput, contactInput)) {
+        return
+      }*/
 
       const services = [];
-      for (var option of serviceElement.options) {
-        if (option.selected) {
+      for (var option of servicesSelect.options) {
+        if (option.selected && option.value != "default") {
           services.push(option.value);
         }
       }
 
-      const files = document.getElementById("images").files;
-
       const images = [];
-      for (var image of files) {
+      for (var image of imagesInput.files) {
         images.push(image.name);
       }
 
       const object = {
-        name: nameElement.value,
-        city_id: cityElement.value,
-        category_id: categoryElement.value,
+        name: nameInput.value,
+        city_id: citySelect.value,
+        category_id: categorySelect.value,
         service_ids: services,
-        contact: contactElement.value,
-        description: descriptionElement.value,
+        contact: contactInput.value,
+        description: descriptionInput.value,
         images: images
       };
       const body = JSON.stringify(object);
@@ -202,26 +205,53 @@
             uploadReq.open("POST", `https://bot-dev-domain.com/masters/images/${masterId}`, false);
             uploadReq.send(formData);
           }
-
           fetch(`https://bot-dev-domain.com/masters/approve/${masterId}`, { method: 'POST' })
             .then(() => {
-              nameElement.value = '';
-              cityElement.selectedIndex = 0;
-              categoryElement.selectedIndex = 0;
-              serviceElement.length = 1;
-              serviceElement.selectedIndex = 0;
-              imagesElement.value = '';
-              contactElement.value = '';
-              descriptionElement.value = '';
+              nameInput.value = '';
+              citySelect.selectedIndex = 0;
+              categorySelect.selectedIndex = 0;
+              servicesSelect.length = 1;
+              servicesSelect.selectedIndex = 0;
+              imagesInput.value = '';
+              contactInput.value = '';
+              descriptionInput.value = '';
               window.alert("Регистрация прошла успешно!");
             })
             .catch(error => {
-              console.error("Error:", error);
+              window.alert("Server returned error");
             })
         })
         .catch(error => {
-          console.error("Error", error)
+          window.alert("Server returned error");
         });
+    }
+
+    function validation(nameInput, citySelect, categorySelect, servicesSelect, imagesInput, contactInput) {
+      if (nameInput.value === "") {
+        nameInput.focus();
+        return false;
+      }
+      if (citySelect.value === "") {
+        citySelect.focus();
+        return false;
+      }
+      if (categorySelect.value === "") {
+        categorySelect.focus();
+        return false;
+      }
+      if (servicesSelect.selectedOptions[0].value === "default") {
+        servicesSelect.focus();
+        return false;
+      }
+      if (imagesInput.value === "") {
+        imagesInput.focus();
+        return false;
+      }
+      if (contactInput.value === "") {
+        contactInput.focus();
+        return false;
+      }
+      return true;
     }
   </script>
 </body>

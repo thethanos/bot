@@ -52,5 +52,6 @@ require (
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
+	gorm.io/driver/sqlite v1.5.2 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
