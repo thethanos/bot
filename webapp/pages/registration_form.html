@@ -218,11 +218,11 @@
               window.alert("Регистрация прошла успешно!");
             })
             .catch(error => {
-              window.alert("Server returned error");
+              window.alert("POST /masters/approve returned error");
             })
         })
         .catch(error => {
-          window.alert("Server returned error");
+          window.alert("POST /masters returned error");
         });
     }
 
