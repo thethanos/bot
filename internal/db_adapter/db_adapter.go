@@ -17,6 +17,7 @@ import (
 
 type DbAdapter struct {
 	logger logger.Logger
+	cfg    *config.Config
 	dbConn *gorm.DB
 }
 
@@ -35,7 +36,7 @@ func NewDbAdapter(logger logger.Logger, cfg *config.Config) (*DbAdapter, error) 
 		return nil, err
 	}
 
-	return &DbAdapter{logger: logger, dbConn: dbConn}, nil
+	return &DbAdapter{logger: logger, cfg: cfg, dbConn: dbConn}, nil
 }
 
 func (d *DbAdapter) AutoMigrate() error {
@@ -304,7 +305,7 @@ func (d *DbAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, e
 
 	images := make([]string, 0)
 	for _, image := range master.Images {
-		images = append(images, fmt.Sprintf("https://bot-dev-domain.com/pages/images/%s/%s", id, image))
+		images = append(images, fmt.Sprintf("%s/%s/%s", d.cfg.ImagePrefix, id, image))
 	}
 
 	regForm := &models.MasterRegForm{
