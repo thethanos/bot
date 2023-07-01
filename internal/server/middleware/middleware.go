@@ -8,6 +8,7 @@ func CorsMiddlware(next http.Handler) http.Handler {
 		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		rw.Header().Set("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type, Accept")
+		rw.Header().Set("Content-Type", "application/json")
 
 		if req.Method == http.MethodOptions {
 			return

@@ -46,7 +46,6 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(cityList)
 	h.logger.Info("Response sent")
 }
@@ -69,7 +68,6 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(categoryList)
 	h.logger.Info("Response sent")
 }
@@ -95,7 +93,6 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(serviceList)
 	h.logger.Info("Response sent")
 }
@@ -148,7 +145,6 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(mastersResp)
 	h.logger.Info("Response sent")
 }
@@ -185,7 +181,6 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusCreated)
-	rw.Header().Set("Content-Type", "application/json")
 	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id)))
 	h.logger.Info("Response sent")
 }
