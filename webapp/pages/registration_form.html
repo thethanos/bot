@@ -198,7 +198,6 @@
         .then(response => response.json())
         .then(data => {
           const masterId = data.id;
-          window.alert("TEST2");
           for (file of imagesInput.files) {
             const uploadReq = new XMLHttpRequest();
             const formData = new FormData();
@@ -208,7 +207,6 @@
           }
           fetch(`https://bot-dev-domain.com/masters/approve/${masterId}`, { method: 'POST' })
             .then(() => {
-              window.alert("TEST3");
               nameInput.value = '';
               citySelect.selectedIndex = 0;
               categorySelect.selectedIndex = 0;
