@@ -31,6 +31,8 @@ func NewHandler(logger logger.Logger, dbAdapter *db_adapter.DbAdapter) *Handler 
 // @Summary Get cities
 // @Description Get all available cities
 // @Tags City
+// @Param page query string false "Page number for pagination"
+// @Param limit query string false "Limit of items for pagination"
 // @Accept json
 // @Produce json
 // @Success 200 {array} entities.City
@@ -39,7 +41,21 @@ func NewHandler(logger logger.Logger, dbAdapter *db_adapter.DbAdapter) *Handler 
 func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
-	cities, err := h.dbAdapter.GetCities("")
+	query := req.URL.Query()
+	page, err := getParamInt(query.Get("page"), 0)
+	if err != nil {
+		h.logger.Error("server::GetCities::getParamInt", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+	limit, err := getParamInt(query.Get("limit"), -1)
+	if err != nil {
+		h.logger.Error("server::GetCities::getParamInt", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	cities, err := h.dbAdapter.GetCities("", page, limit)
 	if err != nil {
 		h.logger.Error("server::GetCities::GetCities", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -62,6 +78,8 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 // @Summary Get categories
 // @Description Get all available service categories
 // @Tags Service
+// @Param page query string false "Page number for pagination"
+// @Param limit query string false "Limit of items for pagination"
 // @Acept json
 // @Produce json
 // @Success 200 {array} entities.ServiceCategory
@@ -70,7 +88,21 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
-	categories, err := h.dbAdapter.GetCategories("")
+	query := req.URL.Query()
+	page, err := getParamInt(query.Get("page"), 0)
+	if err != nil {
+		h.logger.Error("server::GetCities::getParamInt", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+	limit, err := getParamInt(query.Get("limit"), -1)
+	if err != nil {
+		h.logger.Error("server::GetCities::getParamInt", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	categories, err := h.dbAdapter.GetCategories("", page, limit)
 	if err != nil {
 		h.logger.Error("server::GetCategories::GetCategories", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -93,6 +125,8 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 // @Summary Get services
 // @Description Get all available services, filters by category_id if provided
 // @Tags Service
+// @Param page query string false "Page number for pagination"
+// @Param limit query string false "Limit of items for pagination"
 // @Param category_id query string false "ID of the service category"
 // @Accept json
 // @Produce json
@@ -103,9 +137,22 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
+	page, err := getParamInt(query.Get("page"), 0)
+	if err != nil {
+		h.logger.Error("server::GetCities::getParamInt", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+	limit, err := getParamInt(query.Get("limit"), -1)
+	if err != nil {
+		h.logger.Error("server::GetCities::getParamInt", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	categoryId := query.Get("category_id")
 
-	services, err := h.dbAdapter.GetServices(categoryId, "")
+	services, err := h.dbAdapter.GetServices(categoryId, "", page, limit)
 	if err != nil {
 		h.logger.Error("server::GetServices::GetServices", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -128,8 +175,8 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 // @Summary Get masters
 // @Description Get all available masters for the selected city and the service
 // @Tags Master
-// @Param page query string true "Page number for pagination"
-// @Param limit query string true "Limit of items for pagination"
+// @Param page query string false "Page number for pagination"
+// @Param limit query string false "Limit of items for pagination"
 // @Param city_id query string true "ID of the selected city"
 // @Param service_id query string true "ID of the seleted service"
 // @Accept json
@@ -142,17 +189,15 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
-	pageParam := query.Get("page")
-	page, err := strconv.Atoi(pageParam)
+	page, err := getParamInt(query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("server::GetMasters::Atoi", err)
+		h.logger.Error("server::GetMasters::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
-	limitParam := query.Get("limit")
-	limit, err := strconv.Atoi(limitParam)
+	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("server::GetMasters::Atoi", err)
+		h.logger.Error("server::GetMasters::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}

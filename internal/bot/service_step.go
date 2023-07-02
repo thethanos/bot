@@ -22,7 +22,7 @@ type BaseServiceCategoryMode struct {
 }
 
 func (b *BaseServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
-	return b.dbAdapter.GetCategories(cityId)
+	return b.dbAdapter.GetCategories(cityId, 0, -1)
 }
 
 func (b *BaseServiceCategoryMode) Text() string {
@@ -45,7 +45,7 @@ type MainMenuServiceCategoryMode struct {
 }
 
 func (m *MainMenuServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
-	return m.dbAdapter.GetCategories("")
+	return m.dbAdapter.GetCategories("", 0, -1)
 }
 
 func (m *MainMenuServiceCategoryMode) Text() string {
@@ -67,7 +67,7 @@ type AdminServiceCategoryMode struct {
 }
 
 func (a *AdminServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
-	return a.dbAdapter.GetCategories("")
+	return a.dbAdapter.GetCategories("", 0, -1)
 }
 
 func (a *AdminServiceCategoryMode) NextStep() StepType {
@@ -147,7 +147,7 @@ type BaseServiceSelectionMode struct {
 }
 
 func (b *BaseServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
-	return b.dbAdapter.GetServices(categoryId, cityId)
+	return b.dbAdapter.GetServices(categoryId, cityId, 0, -1)
 }
 
 func (b *BaseServiceSelectionMode) MenuItems(services []*entities.Service) [][]tgbotapi.KeyboardButton {
@@ -174,7 +174,7 @@ type MainMenuServiceSelectionMode struct {
 }
 
 func (m *MainMenuServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
-	return m.dbAdapter.GetServices(categoryId, "")
+	return m.dbAdapter.GetServices(categoryId, "", 0, -1)
 }
 
 func (m *MainMenuServiceSelectionMode) NextStep() StepType {

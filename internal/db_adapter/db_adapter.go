@@ -74,13 +74,13 @@ func (d *DbAdapter) GetCity(name string) (*entities.City, error) {
 	return mapper.FromCityModel(city), nil
 }
 
-func (d *DbAdapter) GetCities(serviceId string) ([]*entities.City, error) {
+func (d *DbAdapter) GetCities(serviceId string, page, limit int) ([]*entities.City, error) {
 
 	result := make([]*entities.City, 0)
 	cities := make([]*models.City, 0)
 
 	if serviceId == "" {
-		if err := d.dbConn.Find(&cities).Error; err != nil {
+		if err := d.dbConn.Offset(page).Limit(limit).Find(&cities).Error; err != nil {
 			d.logger.Error(err)
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (d *DbAdapter) GetCities(serviceId string) ([]*entities.City, error) {
 		cityIds = append(cityIds, join.CityID)
 	}
 
-	if err := d.dbConn.Where("id IN ?", cityIds).Find(&cities).Error; err != nil {
+	if err := d.dbConn.Offset(page).Limit(limit).Where("id IN ?", cityIds).Find(&cities).Error; err != nil {
 		d.logger.Error(err)
 		return nil, err
 	}
@@ -111,12 +111,12 @@ func (d *DbAdapter) GetCities(serviceId string) ([]*entities.City, error) {
 	return result, nil
 }
 
-func (d *DbAdapter) GetCategories(cityId string) ([]*entities.ServiceCategory, error) {
+func (d *DbAdapter) GetCategories(cityId string, page, limit int) ([]*entities.ServiceCategory, error) {
 	result := make([]*entities.ServiceCategory, 0)
 	categories := make([]*models.ServiceCategory, 0)
 
 	if len(cityId) == 0 {
-		if err := d.dbConn.Find(&categories).Error; err != nil {
+		if err := d.dbConn.Offset(page).Limit(limit).Find(&categories).Error; err != nil {
 			d.logger.Error(err)
 			return nil, err
 		}
@@ -136,7 +136,7 @@ func (d *DbAdapter) GetCategories(cityId string) ([]*entities.ServiceCategory, e
 		categoryIds = append(categoryIds, join.ServiceCategoryID)
 	}
 
-	if err := d.dbConn.Where("id IN ?", categoryIds).Find(&categories).Error; err != nil {
+	if err := d.dbConn.Offset(page).Limit(limit).Where("id IN ?", categoryIds).Find(&categories).Error; err != nil {
 		return nil, err
 	}
 	for _, category := range categories {
@@ -145,12 +145,12 @@ func (d *DbAdapter) GetCategories(cityId string) ([]*entities.ServiceCategory, e
 	return result, nil
 }
 
-func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service, error) {
+func (d *DbAdapter) GetServices(categoryId, cityId string, page, limit int) ([]*entities.Service, error) {
 	result := make([]*entities.Service, 0)
 	services := make([]*models.Service, 0)
 
 	if len(categoryId) == 0 {
-		if err := d.dbConn.Find(&services).Error; err != nil {
+		if err := d.dbConn.Offset(page).Limit(limit).Find(&services).Error; err != nil {
 			return nil, err
 		}
 	} else if len(cityId) != 0 {
@@ -164,11 +164,11 @@ func (d *DbAdapter) GetServices(categoryId, cityId string) ([]*entities.Service,
 			serviceIds = append(serviceIds, join.ServiceID)
 		}
 
-		if err := d.dbConn.Where("category_id = ? AND id IN ?", categoryId, serviceIds).Find(&services).Error; err != nil {
+		if err := d.dbConn.Offset(page).Limit(limit).Where("category_id = ? AND id IN ?", categoryId, serviceIds).Find(&services).Error; err != nil {
 			return nil, err
 		}
 	} else {
-		if err := d.dbConn.Where("category_id = ?", categoryId).Find(&services).Error; err != nil {
+		if err := d.dbConn.Offset(page).Limit(limit).Where("category_id = ?", categoryId).Find(&services).Error; err != nil {
 			return nil, err
 		}
 	}

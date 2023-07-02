@@ -63,7 +63,7 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 	c.logger.Infof("CitySelection step is sending request")
 	c.inProgress = true
 
-	cities, _ := c.dbAdapter.GetCities(c.state.GetServiceID())
+	cities, _ := c.dbAdapter.GetCities(c.state.GetServiceID(), 0, -1)
 
 	if msg.Source == ma.TELEGRAM {
 		rows := c.mode.MenuItems(cities)
