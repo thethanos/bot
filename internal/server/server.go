@@ -7,17 +7,17 @@ import (
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/logger"
 	handler "multimessenger_bot/internal/server/handler"
-	middleware "multimessenger_bot/internal/server/middleware"
+	corsMiddleware "multimessenger_bot/internal/server/middleware"
 	"net/http"
 
-	httpSwagger "github.com/swaggo/http-swagger"
-
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 )
 
 func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.DbAdapter) (*http.Server, error) {
 
 	handler := handler.NewHandler(logger, dbAdapter)
+	docHandler := middleware.Redoc(middleware.RedocOpts{SpecURL: "swagger.yaml"}, nil)
 
 	router := mux.NewRouter()
 	getRouter := router.Methods(http.MethodGet).Subrouter()
@@ -25,9 +25,9 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 	getRouter.HandleFunc("/categories", handler.GetCategories)
 	getRouter.HandleFunc("/services", handler.GetServices)
 	getRouter.HandleFunc("/masters", handler.GetMasters)
-	getRouter.PathPrefix("/").Handler(http.FileServer(http.Dir("./webapp")))
-	getRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
-	getRouter.PathPrefix("/docs/").Handler(http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs"))))
+	getRouter.PathPrefix("/webapp").Handler(http.FileServer(http.Dir("/multimessenger_bot")))
+	getRouter.Handle("/docs", docHandler)
+	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("/multimessenger_bot/docs")))
 
 	postRouter := router.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/masters", handler.SaveMasterRegForm)
@@ -45,7 +45,7 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 	}
 
 	return &http.Server{
-		Handler: middleware.CorsMiddlware(router),
+		Handler: corsMiddleware.CorsMiddlware(router),
 		Addr:    addr,
 	}, nil
 }
