@@ -7,6 +7,7 @@ require (
 	github.com/go-playground/validator/v10 v10.14.1
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
+	github.com/magefile/mage v1.15.0
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/mdp/qrterminal v1.0.1
 	github.com/pelletier/go-toml v1.9.5
@@ -52,6 +53,5 @@ require (
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
-	gorm.io/driver/sqlite v1.5.2 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
