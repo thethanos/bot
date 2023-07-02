@@ -129,7 +129,7 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 // @Description Get all available masters for the selected city and the service
 // @Tags Master
 // @Param page query string true "Page number for pagination"
-// @Param limit query string true "Limit number for pagination"
+// @Param limit query string true "Limit of items for pagination"
 // @Param city_id query string true "ID of the selected city"
 // @Param service_id query string true "ID of the seleted service"
 // @Accept json
@@ -139,6 +139,60 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 // @Failure 500 {string} string "Error message"
 // @Router /masters [get]
 func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	query := req.URL.Query()
+	pageParam := query.Get("page")
+	page, err := strconv.Atoi(pageParam)
+	if err != nil {
+		h.logger.Error("server::GetMasters::Atoi", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+	limitParam := query.Get("limit")
+	limit, err := strconv.Atoi(limitParam)
+	if err != nil {
+		h.logger.Error("server::GetMasters::Atoi", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	cityId := query.Get("city_id")
+	serviceId := query.Get("service_id")
+
+	masters, err := h.dbAdapter.GetMasters(cityId, serviceId, page, limit)
+	if err != nil {
+		h.logger.Error("server::GetMasters::GetMasters", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	mastersResp, err := json.Marshal(masters)
+	if err != nil {
+		h.logger.Error("server::GetMasters::Marshal", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	rw.Write(mastersResp)
+	h.logger.Info("Response sent")
+}
+
+// @Summary Get masters in html blocks
+// @Description Get all available masters wrapped up in the html blocks
+// @Tags Master
+// @Param page query string true "Page number for pagination"
+// @Param limit query string true "Limit of items for pagination"
+// @Param city_id query string true "ID of the selected city"
+// @Param service_id query string true "ID of the seleted service"
+// @Accept json
+// @Produce json
+// @Success 200 {string} string "Collection of HTML blocks"
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /masters/html [get]
+func (h *Handler) GetMastersHTML(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
@@ -199,7 +253,7 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 // @Success 201 {string} string "Success message"
 // @Failure 400 {string} string "Error message"
 // @Failure 500 {string} string "Error message"
-// @Router /msters [post]
+// @Router /masters [post]
 func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
@@ -237,6 +291,16 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
+// @Summary Save master's image
+// @Description Save the image that was attached to the registration form
+// @Tags Master
+// @Param master_id path string true "ID of a master, whose picture is uploaded"
+// @Param file formData file true "Image to upload"
+// @Accept multipart/form-data
+// @Produce json
+// @Success 201 {string} string "Success message"
+// @Failure 500 {string} string "Error message"
+// @Router /masters/images/{master_id} [post]
 func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
@@ -279,10 +343,19 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
+	rw.WriteHeader(http.StatusCreated)
 	h.logger.Info("Response sent")
 }
 
+// @Summary Approve master
+// @Description Approve and save master in the system
+// @Tags Master
+// @Param master_id path string true "ID of the approved master"
+// @Accept json
+// @Produce json
+// @Success 201 {string} string "Success message"
+// @Failure 500 {string} string "Error message"
+// @Router /masters/approve/{maser_id} [post]
 func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
