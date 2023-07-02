@@ -247,9 +247,8 @@ func (d *DbAdapter) SaveService(name, categoryId string) error {
 func (d *DbAdapter) SaveCity(name string) error {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	city := &models.City{
-		ID:       id,
-		IndexStr: clearText(name),
-		Name:     name,
+		ID:   id,
+		Name: name,
 	}
 	if err := d.dbConn.Create(city).Error; err != nil {
 		return err
@@ -263,9 +262,10 @@ func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
 	master := &models.Master{
 		ID:          data.ID,
 		Name:        data.Name,
+		Contact:     data.Contact,
 		Description: data.Description,
-		CityID:      data.CityID,
 		Images:      data.Images,
+		CityID:      data.CityID,
 	}
 
 	tx := d.dbConn.Begin()

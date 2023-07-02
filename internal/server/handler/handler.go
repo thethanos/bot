@@ -30,10 +30,11 @@ func NewHandler(logger logger.Logger, dbAdapter *db_adapter.DbAdapter) *Handler 
 
 // @Summary Get cities
 // @Description Get all available cities
-// @Tags Cities
+// @Tags City
 // @Accept json
 // @Produce json
 // @Success 200 {array} entities.City
+// @Failure 500 {string} string "Error message"
 // @Router /cities [get]
 func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
@@ -58,6 +59,14 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
+// @Summary Get categories
+// @Description Get all available service categories
+// @Tags Service
+// @Acept json
+// @Produce json
+// @Success 200 {array} entities.ServiceCategory
+// @Failure 500 {string} string "Error message"
+// @Router /categories [get]
 func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
@@ -81,6 +90,15 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
+// @Summary Get services
+// @Description Get all available services, filters by category_id if provided
+// @Tags Service
+// @Param category_id query string false "ID of the service category"
+// @Accept json
+// @Produce json
+// @Success 200 {array} entities.Service
+// @Failure 500 {string} string "Error message"
+// @Router /services [get]
 func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
@@ -107,6 +125,19 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
+// @Summary Get masters
+// @Description Get all available masters for the selected city and the service
+// @Tags Master
+// @Param page query string true "Page number for pagination"
+// @Param limit query string true "Limit number for pagination"
+// @Param city_id query string true "ID of the selected city"
+// @Param service_id query string true "ID of the seleted service"
+// @Accept json
+// @Produce json
+// @Success 200 {array} entities.Master
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /masters [get]
 func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
@@ -159,6 +190,16 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
+// @Summary Save master registration form
+// @Description Save registration form of a new master
+// @Tags Master
+// @Param form body entities.MasterRegForm true "Registration form"
+// @Accept json
+// @Produce json
+// @Success 201 {string} string "Success message"
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /msters [post]
 func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 

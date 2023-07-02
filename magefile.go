@@ -6,14 +6,26 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
+func Tidy() error {
+	return sh.Run("go", "mod", "tidy")
+}
+
+func GenDoc() error {
+	return sh.Run("swag", "init", "-g", "internal/server/handler/handler.go", "--ot", "yaml")
+}
+
+func RunTests() error {
+	return sh.Run("go", "test", "./...")
+}
+
 func Build() error {
-	if err := sh.Run("go", "mod", "tidy"); err != nil {
+	if err := Tidy(); err != nil {
 		return err
 	}
-	if err := sh.Run("swag", "init", "-g", "internal/server/handler/handler.go", "--ot", "yaml"); err != nil {
+	if err := GenDoc(); err != nil {
 		return err
 	}
-	if err := sh.Run("go", "test", "./..."); err != nil {
+	if err := RunTests(); err != nil {
 		return err
 	}
 	return sh.Run("go", "build", "-o", "multimessenger_bot", "cmd/main.go")

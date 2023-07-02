@@ -24,27 +24,23 @@ func (i string_array) Value() (driver.Value, error) {
 }
 
 type City struct {
-	ID       string `gorm:"primarykey"`
-	IndexStr string `gorm:"index_str"`
-	Name     string `gorm:"name"`
+	ID   string `gorm:"primarykey"`
+	Name string `gorm:"name"`
 }
 
 type ServiceCategory struct {
-	ID       string `gorm:"primarykey"`
-	IndexStr string `gorm:"index_str"`
-	Name     string `gorm:"name"`
+	ID   string `gorm:"primarykey"`
+	Name string `gorm:"name"`
 }
 
 type Service struct {
 	ID         string `gorm:"primarykey"`
-	IndexStr   string `gorm:"index_str"`
 	Name       string `gorm:"name"`
 	CategoryID string `gorm:"category_id"`
 }
 
 type Master struct {
 	ID          string       `gorm:"primarykey"`
-	IndexStr    string       `gorm:"index_str"`
 	Name        string       `gorm:"name"`
 	Images      string_array `gorm:"type:text"`
 	Description string       `gorm:"description"`
