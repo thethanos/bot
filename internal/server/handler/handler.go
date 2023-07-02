@@ -28,6 +28,13 @@ func NewHandler(logger logger.Logger, dbAdapter *db_adapter.DbAdapter) *Handler 
 	}
 }
 
+// @Summary Get cities
+// @Description Get all available cities
+// @Tags Cities
+// @Accept json
+// @Produce json
+// @Success 200 {array} entities.City
+// @Router /cities [get]
 func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 

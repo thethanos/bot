@@ -2,7 +2,8 @@ FROM golang:1.20.3-buster
 
 RUN go install -v golang.org/x/tools/gopls@latest && \
     go install -v github.com/go-delve/delve/cmd/dlv@latest && \
-    go install -v github.com/magefile/mage@latest
+    go install -v github.com/magefile/mage@latest && \
+    go install -v github.com/swaggo/swag/cmd/swag@latest
 
 WORKDIR /multimessenger_bot
 COPY go.mod go.sum ./

@@ -13,5 +13,8 @@ func Build() error {
 	if err := sh.Run("go", "test", "./..."); err != nil {
 		return err
 	}
+	if err := sh.Run("swag", "init", "-g", "internal/server/handler/handler.go"); err != nil {
+		return err
+	}
 	return sh.Run("go", "build", "-o", "multimessenger_bot", "cmd/main.go")
 }

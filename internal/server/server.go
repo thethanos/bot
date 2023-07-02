@@ -10,6 +10,8 @@ import (
 	middleware "multimessenger_bot/internal/server/middleware"
 	"net/http"
 
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/gorilla/mux"
 )
 
@@ -24,6 +26,8 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 	getRouter.HandleFunc("/services", handler.GetServices)
 	getRouter.HandleFunc("/masters", handler.GetMasters)
 	getRouter.PathPrefix("/").Handler(http.FileServer(http.Dir("./webapp")))
+	getRouter.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	getRouter.PathPrefix("/docs/").Handler(http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs"))))
 
 	postRouter := router.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/masters", handler.SaveMasterRegForm)
