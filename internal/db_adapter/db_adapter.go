@@ -111,7 +111,7 @@ func (d *DbAdapter) GetCities(serviceId string, page, limit int) ([]*entities.Ci
 	return result, nil
 }
 
-func (d *DbAdapter) GetCategories(cityId string, page, limit int) ([]*entities.ServiceCategory, error) {
+func (d *DbAdapter) GetServiceCategories(cityId string, page, limit int) ([]*entities.ServiceCategory, error) {
 	result := make([]*entities.ServiceCategory, 0)
 	categories := make([]*models.ServiceCategory, 0)
 
@@ -217,20 +217,20 @@ func (d *DbAdapter) GetMasterRegForm(master_id string) (*entities.MasterRegForm,
 	return mapper.FromMasterRegFormModel(master), nil
 }
 
-func (d *DbAdapter) SaveServiceCategory(name string) error {
+func (d *DbAdapter) SaveServiceCategory(name string) (string, error) {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	service := &models.ServiceCategory{
 		ID:   id,
 		Name: name,
 	}
 	if err := d.dbConn.Create(service).Error; err != nil {
-		return err
+		return "", err
 	}
 	d.logger.Infof("New service category added successfully, id: %s, name: %s", id, name)
-	return nil
+	return id, nil
 }
 
-func (d *DbAdapter) SaveService(name, categoryId string) error {
+func (d *DbAdapter) SaveService(name, categoryId string) (string, error) {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	service := &models.Service{
 		ID:         id,
@@ -238,26 +238,26 @@ func (d *DbAdapter) SaveService(name, categoryId string) error {
 		CategoryID: categoryId,
 	}
 	if err := d.dbConn.Create(service).Error; err != nil {
-		return err
+		return "", err
 	}
 	d.logger.Infof("New service added successfully, id: %s, name: %s", id, name)
-	return nil
+	return id, nil
 }
 
-func (d *DbAdapter) SaveCity(name string) error {
+func (d *DbAdapter) SaveCity(name string) (string, error) {
 	id := fmt.Sprintf("%d", time.Now().Unix())
 	city := &models.City{
 		ID:   id,
 		Name: name,
 	}
 	if err := d.dbConn.Create(city).Error; err != nil {
-		return err
+		return "", err
 	}
 	d.logger.Infof("New city added successfully, id: %s, name: %s", id, name)
-	return nil
+	return id, nil
 }
 
-func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
+func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) (string, error) {
 
 	master := &models.Master{
 		ID:          data.ID,
@@ -272,32 +272,32 @@ func (d *DbAdapter) SaveMaster(data *entities.MasterRegForm) error {
 	defer tx.Rollback()
 
 	if err := tx.Create(master).Error; err != nil {
-		return err
+		return "", err
 	}
 
-	if err := tx.Where("city_id = ? AND service_category_id = ?", data.CityID, data.CategoryID).First(&models.JoinCityCategory{}).Error; err != nil {
-		d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.CityID, data.CategoryID)
-		if err := tx.Create(&models.JoinCityCategory{CityID: data.CityID, ServiceCategoryID: data.CategoryID}).Error; err != nil {
-			return err
+	if err := tx.Where("city_id = ? AND service_category_id = ?", data.CityID, data.ServiceCategoryID).First(&models.JoinCityCategory{}).Error; err != nil {
+		d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.CityID, data.ServiceCategoryID)
+		if err := tx.Create(&models.JoinCityCategory{CityID: data.CityID, ServiceCategoryID: data.ServiceCategoryID}).Error; err != nil {
+			return "", err
 		}
 	}
 
 	for _, serviceID := range data.ServiceIDs {
 		if err := tx.Create(&models.Join{CityID: data.CityID, ServiceID: serviceID, MasterID: master.ID}).Error; err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	if err := tx.Delete(&models.MasterRegForm{ID: data.ID}).Error; err != nil {
-		return err
+		return "", err
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return err
+		return "", err
 	}
 
 	d.logger.Infof("New master added successfully, id: %s, name: %s", master.ID, master.Name)
-	return nil
+	return master.ID, nil
 }
 
 func (d *DbAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, error) {
@@ -309,14 +309,14 @@ func (d *DbAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, e
 	}
 
 	regForm := &models.MasterRegForm{
-		ID:          id,
-		Name:        master.Name,
-		CityID:      master.CityID,
-		CategoryID:  master.CategoryID,
-		ServiceIDs:  master.ServiceIDs,
-		Contact:     master.Contact,
-		Description: master.Description,
-		Images:      images,
+		ID:                id,
+		Name:              master.Name,
+		CityID:            master.CityID,
+		ServiceCategoryID: master.ServiceCategoryID,
+		ServiceIDs:        master.ServiceIDs,
+		Contact:           master.Contact,
+		Description:       master.Description,
+		Images:            images,
 	}
 	if err := d.dbConn.Create(regForm).Error; err != nil {
 		return "", err

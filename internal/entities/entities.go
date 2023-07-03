@@ -41,7 +41,7 @@ type ServiceCategory struct {
 type Service struct {
 	ID         string `json:"id"`
 	Name       string `json:"name"`
-	CategoryID string `json:"-"`
+	CategoryID string `json:"category_id" validate:"required"`
 }
 
 type Master struct {
@@ -54,12 +54,12 @@ type Master struct {
 }
 
 type MasterRegForm struct {
-	ID          string   `json:"id,omitempty"`
-	Name        string   `json:"name" validate:"required"`
-	Images      []string `json:"images" validate:"required"`
-	Description string   `json:"description,omitempty"`
-	Contact     string   `json:"contact" validate:"required"`
-	CityID      string   `json:"city_id" validate:"required"`
-	CategoryID  string   `json:"category_id" validate:"required"`
-	ServiceIDs  []string `json:"service_ids" validate:"required"`
+	ID                string   `json:"id,omitempty"`
+	Name              string   `json:"name" validate:"required"`
+	Images            []string `json:"images" validate:"required"`
+	Description       string   `json:"description,omitempty"`
+	Contact           string   `json:"contact" validate:"required"`
+	CityID            string   `json:"city_id" validate:"required"`
+	ServiceCategoryID string   `json:"service_category_id" validate:"required"`
+	ServiceIDs        []string `json:"service_ids" validate:"required"`
 }

@@ -8,3 +8,15 @@ func getParamInt(param string, defaultValue int) (int, error) {
 	}
 	return strconv.Atoi(param)
 }
+
+type ID struct {
+	ID string `json:"id"`
+}
+
+type Name struct {
+	Name string `json:"name"`
+}
+
+type URL struct {
+	URL string `json:"url"`
+}

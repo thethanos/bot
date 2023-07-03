@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"multimessenger_bot/internal/config"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/logger"
 	"multimessenger_bot/internal/webapp"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -18,12 +18,14 @@ import (
 
 type Handler struct {
 	logger    logger.Logger
+	cfg       *config.Config
 	dbAdapter *db_adapter.DbAdapter
 }
 
-func NewHandler(logger logger.Logger, dbAdapter *db_adapter.DbAdapter) *Handler {
+func NewHandler(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.DbAdapter) *Handler {
 	return &Handler{
 		logger:    logger,
+		cfg:       cfg,
 		dbAdapter: dbAdapter,
 	}
 }
@@ -48,6 +50,7 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
 		h.logger.Error("server::GetCities::getParamInt", err)
@@ -75,7 +78,7 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
-// @Summary Get categories
+// @Summary Get service categories
 // @Description Get all available service categories
 // @Tags Service
 // @Param page query string false "Page number for pagination"
@@ -84,8 +87,8 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 // @Produce json
 // @Success 200 {array} entities.ServiceCategory
 // @Failure 500 {string} string "Error message"
-// @Router /categories [get]
-func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
+// @Router /services/categories [get]
+func (h *Handler) GetServiceCategories(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
@@ -95,6 +98,7 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
 		h.logger.Error("server::GetCities::getParamInt", err)
@@ -102,7 +106,7 @@ func (h *Handler) GetCategories(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	categories, err := h.dbAdapter.GetCategories("", page, limit)
+	categories, err := h.dbAdapter.GetServiceCategories("", page, limit)
 	if err != nil {
 		h.logger.Error("server::GetCategories::GetCategories", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -143,6 +147,7 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
 		h.logger.Error("server::GetCities::getParamInt", err)
@@ -195,6 +200,7 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
 		h.logger.Error("server::GetMasters::getParamInt", err)
@@ -224,7 +230,7 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
-// @Summary Get masters in html blocks
+// @Summary Get masters in html
 // @Description Get all available masters wrapped up in the html blocks
 // @Tags Master
 // @Param page query string true "Page number for pagination"
@@ -241,17 +247,16 @@ func (h *Handler) GetMastersHTML(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
-	pageParam := query.Get("page")
-	page, err := strconv.Atoi(pageParam)
+	page, err := getParamInt(query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("server::GetMasters::Atoi", err)
+		h.logger.Error("server::GetMasters::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
-	limitParam := query.Get("limit")
-	limit, err := strconv.Atoi(limitParam)
+
+	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("server::GetMasters::Atoi", err)
+		h.logger.Error("server::GetMasters::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -289,13 +294,132 @@ func (h *Handler) GetMastersHTML(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Info("Response sent")
 }
 
+// @Summary Save city
+// @Description Save a new city in the system
+// @Tags City
+// @Param name body Name true "City name"
+// @Accept json
+// @Produce json
+// @Success 201 {object} ID "ID of the new city"
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /cities [post]
+func (h *Handler) SaveCity(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		h.logger.Error("server::SaveCity::ReadAll")
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	city := &entities.City{}
+	if err := json.Unmarshal(body, city); err != nil {
+		h.logger.Error("server::SaveCity::Unmarshal")
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id, err := h.dbAdapter.SaveCity(city.Name)
+	if err != nil {
+		h.logger.Error("server::SaveCity::SaveCity", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusCreated)
+	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id)))
+	h.logger.Info("Response sent")
+}
+
+// @Summary Save service category
+// @Description Save a new service category in the system
+// @Tags Service
+// @Param name body Name true "Service category name"
+// @Accept json
+// @Produce json
+// @Success 201 {object} ID "ID of the new service category"
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /services/categories [post]
+func (h *Handler) SaveServiceCategory(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		h.logger.Error("server::SaveServiceCategory::ReadAll", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	serviceCategory := &entities.ServiceCategory{}
+	if err := json.Unmarshal(body, serviceCategory); err != nil {
+		h.logger.Error("server::SaveServiceCategory::Unmarshal", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id, err := h.dbAdapter.SaveServiceCategory(serviceCategory.Name)
+	if err != nil {
+		h.logger.Error("server::SaveServiceCategory::SaveServiceCategory", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusCreated)
+	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id)))
+	h.logger.Info("Response sent")
+}
+
+// @Summary Save service
+// @Description Save a new service in the system
+// @Tags Service
+// @Param service body entities.Service true "New service"
+// @Accept json
+// @Produce json
+// @Success 201 {object} ID "ID of the new service"
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+func (h *Handler) SaveService(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		h.logger.Error("server::SaveService::ReadAll", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	service := &entities.Service{}
+	if err := json.Unmarshal(body, service); err != nil {
+		h.logger.Error("server::SaveService::Unmarshal", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id, err := h.dbAdapter.SaveService(service.Name, service.CategoryID)
+	if err != nil {
+		h.logger.Error("server::SaveService::SaveService", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusCreated)
+	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id)))
+	h.logger.Info("Response sent")
+}
+
 // @Summary Save master registration form
 // @Description Save registration form of a new master
 // @Tags Master
 // @Param form body entities.MasterRegForm true "Registration form"
 // @Accept json
 // @Produce json
-// @Success 201 {string} string "Success message"
+// @Success 201 {object} ID "ID of the new master"
 // @Failure 400 {string} string "Error message"
 // @Failure 500 {string} string "Error message"
 // @Router /masters [post]
@@ -305,14 +429,14 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		h.logger.Error("server::SaveMasterRegForm::ReadAll", err)
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	regForm := &entities.MasterRegForm{}
 	if err := json.Unmarshal(body, regForm); err != nil {
 		h.logger.Error("server::SaveMasterRegForm::Unmarshal", err)
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -343,7 +467,8 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 // @Param file formData file true "Image to upload"
 // @Accept multipart/form-data
 // @Produce json
-// @Success 201 {string} string "Success message"
+// @Success 201 {object} URL "URL of the saved picture"
+// @Failure 400 {string} string "Error message"
 // @Failure 500 {string} string "Error message"
 // @Router /masters/images/{master_id} [post]
 func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
@@ -351,12 +476,17 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 
 	params := mux.Vars(req)
 	masterID := params["master_id"]
+	if len(masterID) == 0 {
+		h.logger.Error("server::ApproveMaster::params[]", "no masterID")
+		http.Error(rw, "no masterID", http.StatusBadRequest)
+		return
+	}
 
 	req.ParseMultipartForm(10 << 20)
 	formFile, meta, err := req.FormFile("image")
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::FormFile", err)
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer formFile.Close()
@@ -387,8 +517,11 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	imgUrl := fmt.Sprintf("%s/%s/%s", h.cfg.ImagePrefix, masterID, meta.Filename)
+
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
+	rw.Write([]byte(fmt.Sprintf(`{ "url" : "%s" }`, imgUrl)))
 	h.logger.Info("Response sent")
 }
 
@@ -398,7 +531,8 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 // @Param master_id path string true "ID of the approved master"
 // @Accept json
 // @Produce json
-// @Success 201 {string} string "Success message"
+// @Success 201 {object} ID "ID of the approved master"
+// @Failure 400 {string} string "Error message"
 // @Failure 500 {string} string "Error message"
 // @Router /masters/approve/{maser_id} [post]
 func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
@@ -406,6 +540,11 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 
 	params := mux.Vars(req)
 	masterID := params["master_id"]
+	if len(masterID) == 0 {
+		h.logger.Error("server::ApproveMaster::params[]", "no masterID")
+		http.Error(rw, "no masterID", http.StatusBadRequest)
+		return
+	}
 
 	masterForm, err := h.dbAdapter.GetMasterRegForm(masterID)
 	if err != nil {
@@ -414,7 +553,7 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := h.dbAdapter.SaveMaster(masterForm); err != nil {
+	if _, err := h.dbAdapter.SaveMaster(masterForm); err != nil {
 		h.logger.Error("server::ApproveMaster::SaveMaster", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
@@ -422,5 +561,6 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
+	rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, masterID)))
 	h.logger.Info("Response sent")
 }

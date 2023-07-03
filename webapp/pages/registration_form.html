@@ -83,8 +83,8 @@
       <option value="" disabled selected hidden>Выберите город</option>
     </select>
 
-    <label for="category"><b>Категория услуг</b></label>
-    <select name="category" id="category" required>
+    <label for="service_category"><b>Категория услуг</b></label>
+    <select name="service_category" id="service_category" required>
       <option value="" disabled selected hidden>Выберите категорию</option>
     </select>
 
@@ -122,23 +122,23 @@
           window.alert("GET /cities returned error");
         });
 
-      const categorySelect = document.getElementById("category");
-      fetch("https://bot-dev-domain.com/categories")
+      const serviceCategorySelect = document.getElementById("service_category");
+      fetch("https://bot-dev-domain.com/services/categories")
         .then(response => response.json())
-        .then(categories => {
-          for (var category of categories) {
-            categorySelect.options[categorySelect.options.length] = new Option(category.name, category.id);
+        .then(serviceCategories => {
+          for (var serviceCategory of serviceCategories) {
+            serviceCategorySelect.options[serviceCategorySelect.options.length] = new Option(serviceCategory.name, serviceCategory.id);
           }
         })
         .catch(error => {
-          window.alert("GET /categories returned error");
+          window.alert("GET /services/categories returned error");
         });
 
       const servicesSelect = document.getElementById("services");
-      categorySelect.onchange = function () {
+      serviceCategorySelect.onchange = function () {
         servicesSelect.length = 1;
         servicesSelect.selectedIndex = 0;
-        fetch(`https://bot-dev-domain.com/services?category_id=${categorySelect.value}`)
+        fetch(`https://bot-dev-domain.com/services?category_id=${serviceCategorySelect.value}`)
           .then(response => response.json())
           .then(services => {
             for (var service of services) {
@@ -155,13 +155,13 @@
 
       const nameInput = document.getElementById("name");
       const citySelect = document.getElementById("city");
-      const categorySelect = document.getElementById("category");
+      const serviceCategorySelect = document.getElementById("category");
       const servicesSelect = document.getElementById("services");
       const imagesInput = document.getElementById("images");
       const contactInput = document.getElementById("contact");
       const descriptionInput = document.getElementById("description");
 
-      if (!validation(nameInput, citySelect, categorySelect, servicesSelect, imagesInput, contactInput)) {
+      if (!validation(nameInput, citySelect, serviceCategorySelect, servicesSelect, imagesInput, contactInput)) {
         return
       }
 
@@ -180,7 +180,7 @@
       const object = {
         name: nameInput.value,
         city_id: citySelect.value,
-        category_id: categorySelect.value,
+        service_category_id: serviceCategorySelect.value,
         service_ids: services,
         contact: contactInput.value,
         description: descriptionInput.value,
@@ -209,7 +209,7 @@
             .then(() => {
               nameInput.value = '';
               citySelect.selectedIndex = 0;
-              categorySelect.selectedIndex = 0;
+              serviceCategorySelect.selectedIndex = 0;
               servicesSelect.length = 1;
               servicesSelect.selectedIndex = 0;
               imagesInput.value = '';
@@ -226,7 +226,7 @@
         });
     }
 
-    function validation(nameInput, citySelect, categorySelect, servicesSelect, imagesInput, contactInput) {
+    function validation(nameInput, citySelect, serviceCategorySelect, servicesSelect, imagesInput, contactInput) {
       if (nameInput.value === "") {
         nameInput.focus();
         return false;
@@ -235,8 +235,8 @@
         citySelect.focus();
         return false;
       }
-      if (categorySelect.value === "") {
-        categorySelect.focus();
+      if (serviceCategorySelect.value === "") {
+        serviceCategorySelect.focus();
         return false;
       }
       if (servicesSelect.selectedOptions[0].value === "default") {

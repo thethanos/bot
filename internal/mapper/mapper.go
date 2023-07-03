@@ -32,13 +32,13 @@ func FromMasterModel(model *models.Master) *entities.Master {
 
 func FromMasterRegFormModel(model *models.MasterRegForm) *entities.MasterRegForm {
 	return &entities.MasterRegForm{
-		ID:          model.ID,
-		Name:        model.Name,
-		Images:      model.Images,
-		Description: model.Description,
-		Contact:     model.Contact,
-		CityID:      model.CityID,
-		CategoryID:  model.CategoryID,
-		ServiceIDs:  model.ServiceIDs,
+		ID:                model.ID,
+		Name:              model.Name,
+		Images:            model.Images,
+		Description:       model.Description,
+		Contact:           model.Contact,
+		CityID:            model.CityID,
+		ServiceCategoryID: model.ServiceCategoryID,
+		ServiceIDs:        model.ServiceIDs,
 	}
 }

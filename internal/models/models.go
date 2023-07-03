@@ -49,14 +49,14 @@ type Master struct {
 }
 
 type MasterRegForm struct {
-	ID          string       `gorm:"primarykey"`
-	Name        string       `gorm:"name"`
-	CityID      string       `gorm:"city_id"`
-	CategoryID  string       `gorm:"category_id"`
-	ServiceIDs  string_array `gorm:"type:text"`
-	Contact     string       `gorm:"contact"`
-	Images      string_array `gorm:"type:text"`
-	Description string       `gotm:"description"`
+	ID                string       `gorm:"primarykey"`
+	Name              string       `gorm:"name"`
+	CityID            string       `gorm:"city_id"`
+	ServiceCategoryID string       `gorm:"service_category_id"`
+	ServiceIDs        string_array `gorm:"type:text"`
+	Contact           string       `gorm:"contact"`
+	Images            string_array `gorm:"type:text"`
+	Description       string       `gotm:"description"`
 }
 
 type Join struct {

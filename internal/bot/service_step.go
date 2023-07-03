@@ -22,7 +22,7 @@ type BaseServiceCategoryMode struct {
 }
 
 func (b *BaseServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
-	return b.dbAdapter.GetCategories(cityId, 0, -1)
+	return b.dbAdapter.GetServiceCategories(cityId, 0, -1)
 }
 
 func (b *BaseServiceCategoryMode) Text() string {
@@ -45,7 +45,7 @@ type MainMenuServiceCategoryMode struct {
 }
 
 func (m *MainMenuServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
-	return m.dbAdapter.GetCategories("", 0, -1)
+	return m.dbAdapter.GetServiceCategories("", 0, -1)
 }
 
 func (m *MainMenuServiceCategoryMode) Text() string {
@@ -67,7 +67,7 @@ type AdminServiceCategoryMode struct {
 }
 
 func (a *AdminServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
-	return a.dbAdapter.GetCategories("", 0, -1)
+	return a.dbAdapter.GetServiceCategories("", 0, -1)
 }
 
 func (a *AdminServiceCategoryMode) NextStep() StepType {
