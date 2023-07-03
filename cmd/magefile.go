@@ -22,7 +22,7 @@ func BuildBot() error {
 	if err := Tidy(); err != nil {
 		return err
 	}
-	return sh.Run("go", "build", "-o", "bot", "cmd/bot/main.go")
+	return sh.Run("go", "build", "-o", "../bot", "./bot/main.go")
 }
 
 func BuildServer() error {
@@ -32,5 +32,5 @@ func BuildServer() error {
 	if err := GenDoc(); err != nil {
 		return err
 	}
-	return sh.Run("go", "build", "-o", "server", "cmd/server/main.go")
+	return sh.Run("go", "build", "-o", "../server", "./server/main.go")
 }
