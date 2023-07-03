@@ -1,21 +1,32 @@
 version: '3'
 
 services:
-  bot:
-    build: 
+  server:
+    build:
       context: .
-      dockerfile: runtime.Dockerfile
-    image: bot:latest
+      dockerfile: docker/server.Dockerfile
+    image: server:latest
+    container_name: server
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - /home/multimessenger_bot
       - /home/images:/multimessenger_bot/webapp/pages/images
     ports:
       - 443:443
+  bot:
+    build: 
+      context: .
+      dockerfile: docker/bot.Dockerfile
+    image: bot:latest
     container_name: bot
     restart: always
     depends_on:
       db:
         condition: service_healthy
+      server:
   db:
     container_name: postgres
     image: postgres

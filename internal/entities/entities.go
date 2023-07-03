@@ -40,7 +40,7 @@ type ServiceCategory struct {
 
 type Service struct {
 	ID         string `json:"id"`
-	Name       string `json:"name"`
+	Name       string `json:"name" validate:"required"`
 	CategoryID string `json:"category_id" validate:"required"`
 }
 

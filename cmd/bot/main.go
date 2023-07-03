@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"multimessenger_bot/internal/bot"
 	"multimessenger_bot/internal/config"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/logger"
 	ma "multimessenger_bot/internal/messenger_adapter"
-	srv "multimessenger_bot/internal/server"
 	"multimessenger_bot/internal/telegram"
 	"os"
 	"os/signal"
@@ -38,11 +36,6 @@ func main() {
 		return
 	}
 
-	if err := dbAdapter.AutoMigrate(); err != nil {
-		logger.Error("main::db_adapter::AutoMigrate", err)
-		return
-	}
-
 	recvMsgChan := make(chan *ma.Message)
 	tgClient, _ := telegram.NewTelegramClient(logger, cfg, recvMsgChan)
 	//waClient, _ := whatsapp.NewWhatsAppClient(logger, cfg, waContainer, recvMsgChan)
@@ -53,23 +46,10 @@ func main() {
 	}
 	bot.Run()
 
-	server, err := srv.NewServer(logger, cfg, dbAdapter)
-	if err != nil {
-		logger.Error("main::server::NewServer", err)
-		return
-	}
-
-	go func() {
-		if err := server.ListenAndServeTLS("dev-full.crt", "dev-key.key"); err != nil {
-			logger.Fatal("main::server::ListenAndServeTLS", err)
-		}
-	}()
-
 	signalHandler := setupSignalHandler()
 	<-signalHandler
 
 	bot.Shutdown()
-	server.Shutdown(context.Background())
 }
 
 func setupSignalHandler() chan os.Signal {
