@@ -11,7 +11,7 @@ func Tidy() error {
 }
 
 func GenDoc() error {
-	return sh.Run("swag", "init", "-g", "internal/server/handler/handler.go", "--ot", "yaml")
+	return sh.Run("swag", "init", "-g", "../internal/server/handler/handler.go", "--ot", "yaml", "-o", "../docs")
 }
 
 func RunTests() error {
