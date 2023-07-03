@@ -383,6 +383,7 @@ func (h *Handler) SaveServiceCategory(rw http.ResponseWriter, req *http.Request)
 // @Success 201 {object} ID "ID of the new service"
 // @Failure 400 {string} string "Error message"
 // @Failure 500 {string} string "Error message"
+// @Router /services [post]
 func (h *Handler) SaveService(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
