@@ -2,7 +2,7 @@
     "name" : "multimessenger_bot-dev",
     "build" : {
         "context" : "..",
-        "dockerfile" : "../dev.Dockerfile"
+        "dockerfile" : "../docker/dev.Dockerfile"
     },
 
 	"extensions": [

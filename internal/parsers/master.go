@@ -26,7 +26,7 @@ func ParseMasterData(data []byte) (*entities.Master, error) {
 }
 
 func SaveFile(name, path, ext string, data []byte) string {
-	if err := os.MkdirAll(fmt.Sprintf("%s", path), os.ModePerm); err != nil {
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return ""
 	}
 

@@ -53,7 +53,8 @@ func main() {
 }
 
 func setupSignalHandler() chan os.Signal {
-	ch := make(chan os.Signal)
+	size := 2
+	ch := make(chan os.Signal, size)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	return ch
 }

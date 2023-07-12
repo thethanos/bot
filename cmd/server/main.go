@@ -47,11 +47,14 @@ func main() {
 	signalHandler := setupSignalHandler()
 	<-signalHandler
 
-	server.Shutdown(context.Background())
+	if err := server.Shutdown(context.Background()); err != nil {
+		logger.Error("main::server::Shutdown", err)
+	}
 }
 
 func setupSignalHandler() chan os.Signal {
-	ch := make(chan os.Signal)
+	size := 2
+	ch := make(chan os.Signal, size)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	return ch
 }

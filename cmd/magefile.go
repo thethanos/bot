@@ -10,6 +10,10 @@ func Tidy() error {
 	return sh.Run("go", "mod", "tidy")
 }
 
+func RunLinter() error {
+	return sh.Run("golangci-lint", "run")
+}
+
 func GenDoc() error {
 	return sh.Run("swag", "init", "-g", "../internal/server/handler/handler.go", "--ot", "yaml", "-o", "../docs")
 }

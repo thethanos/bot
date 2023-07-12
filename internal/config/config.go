@@ -8,7 +8,7 @@ type Mode string
 
 const (
 	DEBUG   Mode = "debug"
-	RELEASE      = "release"
+	RELEASE Mode = "release"
 )
 
 type Config struct {

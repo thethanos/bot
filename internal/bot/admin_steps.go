@@ -32,8 +32,11 @@ func (a *AddServiceCategory) ProcessResponse(msg *ma.Message) (*ma.Message, Step
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.dbAdapter.SaveServiceCategory(msg.Text)
-	a.logger.Info("Next step is PreviousStep")
+	if _, err := a.dbAdapter.SaveServiceCategory(msg.Text); err != nil {
+		a.logger.Error("AddServiceCategory::ProcessResponse::SaveServiceCategory", err)
+	} else {
+		a.logger.Info("Next step is PreviousStep")
+	}
 	return nil, PreviousStep
 }
 
@@ -62,8 +65,11 @@ func (a *AddService) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.dbAdapter.SaveService(msg.Text, a.state.ServiceCategory.ID)
-	a.logger.Info("Next step is PreviousStep")
+	if _, err := a.dbAdapter.SaveService(msg.Text, a.state.ServiceCategory.ID); err != nil {
+		a.logger.Error("AddService::ProcessResponse::SaveService", err)
+	} else {
+		a.logger.Info("Next step is PreviousStep")
+	}
 	return nil, PreviousStep
 }
 
@@ -92,7 +98,11 @@ func (a *AddCity) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		a.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	a.dbAdapter.SaveCity(msg.Text)
+	if _, err := a.dbAdapter.SaveCity(msg.Text); err != nil {
+		a.logger.Error("AddCity::ProcessResponse::SaveCity", err)
+	} else {
+		a.logger.Info("Next step is PreviousStep")
+	}
 	a.logger.Info("Next step is PreviousStep")
 	return nil, PreviousStep
 }

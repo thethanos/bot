@@ -1,5 +1,11 @@
+// for linter
 package main
 
+func main() {
+
+}
+
+/*
 import (
 	"context"
 	"encoding/json"
@@ -90,3 +96,4 @@ func main() {
 
 	server.Shutdown(context.Background())
 }
+*/

@@ -1,7 +1,7 @@
 package telegram
 
 import (
-	"io/ioutil"
+	"io"
 	"multimessenger_bot/internal/config"
 	"multimessenger_bot/internal/logger"
 	ma "multimessenger_bot/internal/messenger_adapter"
@@ -41,9 +41,11 @@ func (tc *TelegramClient) Connect() error {
 	dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{})
 	updates := ext.NewUpdater(&ext.UpdaterOpts{Dispatcher: dispatcher})
 
-	updates.StartPolling(tc.client, &ext.PollingOpts{
+	if err := updates.StartPolling(tc.client, &ext.PollingOpts{
 		DropPendingUpdates: true,
-	})
+	}); err != nil {
+		return err
+	}
 
 	handler := handler.NewHandler(tc.logger, tc.recvMsgChan)
 	dispatcher.AddHandler(handler)
@@ -110,6 +112,6 @@ func (tc *TelegramClient) DownloadFile(fileType ma.FileType, msg *ma.Message) []
 	}
 	defer resp.Body.Close()
 
-	data, _ := ioutil.ReadAll(resp.Body)
+	data, _ := io.ReadAll(resp.Body)
 	return data
 }

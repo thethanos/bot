@@ -50,7 +50,9 @@ func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, dbAdapter *d
 func (b *Bot) Run() {
 
 	for _, client := range b.clients {
-		client.Connect()
+		if err := client.Connect(); err != nil {
+			b.logger.Error("bot::Run::Connect", err)
+		}
 	}
 
 	go func() {
@@ -80,7 +82,7 @@ func (b *Bot) Run() {
 		for {
 			time.Sleep(time.Hour)
 			for id, user := range b.userSessions {
-				if time.Now().Sub(user.LastActivity) >= (time.Hour * 24) {
+				if time.Since(user.LastActivity) >= (time.Hour * 24) {
 					b.logger.Infof("User session %s has been deleted due to inactivity for the last 24 hours", id)
 					delete(b.userSessions, id)
 				}

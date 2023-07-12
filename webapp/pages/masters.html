@@ -8,10 +8,10 @@
     <style>
         body {
             background-color: #c9d5e3;
-            font-family: Verdana, sans-serif; 
-            margin:0
+            font-family: Verdana, sans-serif;
+            margin: 0
         }
-        
+
 
         /* Master grid */
         .container {
@@ -85,8 +85,9 @@
             height: auto;
         }
 
-        .master-image-prev-btn:hover, .master-image-next-btn:hover {
-            background-color: rgba(0,0,0,0.8);
+        .master-image-prev-btn:hover,
+        .master-image-next-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
         }
 
         .master-image-prev-btn {
@@ -146,10 +147,16 @@
 
         function loadMasters(page, limit) {
             const row = document.getElementById("master-grid-row");
-            fetch(`https://bot-dev-domain.com/masters/html?page=${page}&limit=${limit}&city_id=${cityId}&service_id=${serviceId}`)
+            const url = new URL("https://bot-dev-domain.com/masters/html");
+            url.searchParams.set("page", String(page));
+            url.searchParams.set("limit", String(limit));
+            url.searchParams.set("city_id", cityId);
+            url.searchParams.set("service_id", serviceId);
+
+            fetch(url.toString())
                 .then(response => response.json())
                 .then(masters => {
-                    for (var master of masters) {
+                    for (let master of masters) {
                         const div = document.createElement("div");
                         div.className = "col";
                         div.innerHTML = master;
