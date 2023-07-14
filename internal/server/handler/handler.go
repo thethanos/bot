@@ -516,7 +516,7 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	formFile, meta, err := req.FormFile("image")
+	formFile, meta, err := req.FormFile("file")
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::FormFile", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
