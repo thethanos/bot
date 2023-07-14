@@ -111,47 +111,64 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const citySelect = document.getElementById("city");
-      fetch("https://bot-dev-domain.com/cities")
-        .then(response => response.json())
-        .then(cities => {
-          for (var city of cities) {
-            citySelect.options[citySelect.options.length] = new Option(city.name, city.id);
-          }
-        })
-        .catch(error => {
-          window.alert("GET /cities returned error");
-        });
+      fillSelect(citySelect, "https://bot-dev-domain.com/cities");
 
       const serviceCategorySelect = document.getElementById("service_category");
-      fetch("https://bot-dev-domain.com/services/categories")
-        .then(response => response.json())
-        .then(serviceCategories => {
-          for (var serviceCategory of serviceCategories) {
-            serviceCategorySelect.options[serviceCategorySelect.options.length] = new Option(serviceCategory.name, serviceCategory.id);
-          }
-        })
-        .catch(error => {
-          window.alert("GET /services/categories returned error");
-        });
+      fillSelect(serviceCategorySelect, "https://bot-dev-domain.com/services/categories");
 
       const servicesSelect = document.getElementById("services");
       serviceCategorySelect.onchange = function () {
         servicesSelect.length = 1;
         servicesSelect.selectedIndex = 0;
-        fetch(`https://bot-dev-domain.com/services?category_id=${serviceCategorySelect.value}`)
-          .then(response => response.json())
-          .then(services => {
-            for (var service of services) {
-              servicesSelect.options[servicesSelect.options.length] = new Option(service.name, service.id);
-            }
-          })
-          .catch(error => {
-            window.alert("GET /services returned error");
-          });
+        fillSelect(servicesSelect, `https://bot-dev-domain.com/services?category_id=${serviceCategorySelect.value}`);
       }
     });
 
-    function registration() {
+    async function fillSelect(select, url) {
+      try {
+        let response = await fetch(url);
+        if (!response.ok) {
+          console.error("Error has occured during request GET ", url, response.status);
+          return;
+        }
+
+        let options = await response.json();
+        for (let option of options) {
+          select.options[select.options.length] = new Option(option.name, option.id);
+        }
+
+      } catch (exception) {
+        console.error(`Exception has been thrown in fillSelect ${select.getAttribute("name")}`, exception);
+      }
+    }
+
+    async function uploadFile(file, url) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          let formData = new FormData();
+          formData.append("file", file);
+
+          let response = await fetch(url, {
+            method: "POST",
+            body: formData
+          }
+          );
+
+          if (!response.ok) {
+            console.error("Error has occured during request POST ", url, response.status);
+            reject();
+            return;
+          }
+        } catch (exception) {
+          console.error("Exception has been thrown during file upload", exception);
+          reject();
+        }
+
+        resolve();
+      })
+    }
+
+    async function registration() {
 
       const nameInput = document.getElementById("name");
       const citySelect = document.getElementById("city");
@@ -160,10 +177,6 @@
       const imagesInput = document.getElementById("images");
       const contactInput = document.getElementById("contact");
       const descriptionInput = document.getElementById("description");
-
-      if (!validation(nameInput, citySelect, serviceCategorySelect, servicesSelect, imagesInput, contactInput)) {
-        return
-      }
 
       const services = [];
       for (var option of servicesSelect.options) {
@@ -188,70 +201,46 @@
       };
       const body = JSON.stringify(object);
 
-      fetch("https://bot-dev-domain.com/masters", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: body
-      })
-        .then(response => response.json())
-        .then(data => {
-          const masterId = data.id;
-          for (file of imagesInput.files) {
-            const uploadReq = new XMLHttpRequest();
-            const formData = new FormData();
-            formData.append("image", file);
-            uploadReq.open("POST", `https://bot-dev-domain.com/masters/images/${masterId}`, false);
-            uploadReq.send(formData);
-          }
-          fetch(`https://bot-dev-domain.com/masters/approve/${masterId}`, { method: 'POST' })
-            .then(() => {
-              nameInput.value = '';
-              citySelect.selectedIndex = 0;
-              serviceCategorySelect.selectedIndex = 0;
-              servicesSelect.length = 1;
-              servicesSelect.selectedIndex = 0;
-              imagesInput.value = '';
-              contactInput.value = '';
-              descriptionInput.value = '';
-              window.alert("Регистрация прошла успешно!");
-            })
-            .catch(error => {
-              window.alert("POST /masters/approve returned error");
-            })
-        })
-        .catch(error => {
-          window.alert("POST /masters returned error");
+      try {
+        let response = await fetch("https://bot-dev-domain.com/masters", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: body
         });
-    }
 
-    function validation(nameInput, citySelect, serviceCategorySelect, servicesSelect, imagesInput, contactInput) {
-      if (nameInput.value === "") {
-        nameInput.focus();
-        return false;
+        let data = await response.json();
+        if (!response.ok) {
+          console.error("Error has occured during request POST https://bot-dev-domain.com/masters", response.status);
+          return;
+        }
+
+        const promises = [];
+        for (let file of imagesInput.files) {
+          promises.push(uploadFile(file, `https://bot-dev-domain.com/masters/images/${data.id}`));
+        }
+        Promise.all(promises);
+
+        response = await fetch(`https://bot-dev-domain.com/masters/approve/${data.id}`, { method: 'POST' });
+        if (!response.ok) {
+          console.error(`Error has occured during request POST https://bot-dev-domain.com/masters/approve/${data.id}`, response.status);
+          return;
+        }
+
+        nameInput.value = '';
+        citySelect.selectedIndex = 0;
+        serviceCategorySelect.selectedIndex = 0;
+        servicesSelect.length = 1;
+        servicesSelect.selectedIndex = 0;
+        imagesInput.value = '';
+        contactInput.value = '';
+        descriptionInput.value = '';
+        window.alert("Регистрация прошла успешно!");
+
+      } catch (exception) {
+        console.error("Exception has been thrown during request POST https://bot-dev-domain.com/masters", exception);
       }
-      if (citySelect.value === "") {
-        citySelect.focus();
-        return false;
-      }
-      if (serviceCategorySelect.value === "") {
-        serviceCategorySelect.focus();
-        return false;
-      }
-      if (servicesSelect.selectedOptions[0].value === "default") {
-        servicesSelect.focus();
-        return false;
-      }
-      if (imagesInput.value === "") {
-        imagesInput.focus();
-        return false;
-      }
-      if (contactInput.value === "") {
-        contactInput.focus();
-        return false;
-      }
-      return true;
     }
   </script>
 </body>
