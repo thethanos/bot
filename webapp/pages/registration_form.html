@@ -69,7 +69,7 @@
 
 <body>
 
-  <div class="container">
+  <form onsubmit="submit_form(event)" class="container">
     <h1>Регистрация</h1>
     <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в
       качестве мастера.</p>
@@ -106,8 +106,8 @@
 
     <hr>
 
-    <button onclick="registration()" class="registerbtn">Зарегистрироваться</button>
-  </div>
+    <button type="submit" class="registerbtn">Зарегистрироваться</button>
+  </form>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const citySelect = document.getElementById("city");
@@ -168,15 +168,17 @@
       })
     }
 
-    async function registration() {
+    async function submit_form(event) {
+      event.preventDefault();
 
-      const nameInput = document.getElementById("name");
-      const citySelect = document.getElementById("city");
-      const serviceCategorySelect = document.getElementById("service_category");
-      const servicesSelect = document.getElementById("services");
-      const imagesInput = document.getElementById("images");
-      const contactInput = document.getElementById("contact");
-      const descriptionInput = document.getElementById("description");
+      const form = event.target;
+      const nameInput = form.elements.name;
+      const citySelect = form.elements.city;
+      const serviceCategorySelect = form.elements.service_category;
+      const servicesSelect = form.elements.services;
+      const imagesInput = form.elements.images;
+      const contactInput = form.elements.contact;
+      const descriptionInput = form.elements.description;
 
       const services = [];
       for (var option of servicesSelect.options) {
@@ -237,7 +239,7 @@
         contactInput.value = '';
         descriptionInput.value = '';
         window.alert("Регистрация прошла успешно!");
-
+        
       } catch (exception) {
         console.error("Exception has been thrown during request POST https://bot-dev-domain.com/masters", exception);
       }

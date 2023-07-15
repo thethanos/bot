@@ -145,7 +145,7 @@
             loadMasters(currentPage, 6);
         }
 
-        function loadMasters(page, limit) {
+        async function loadMasters(page, limit) {
             const row = document.getElementById("master-grid-row");
             const url = new URL("https://bot-dev-domain.com/masters/html");
             url.searchParams.set("page", String(page));
@@ -153,25 +153,30 @@
             url.searchParams.set("city_id", cityId);
             url.searchParams.set("service_id", serviceId);
 
-            fetch(url.toString())
-                .then(response => response.json())
-                .then(masters => {
-                    for (let master of masters) {
-                        const div = document.createElement("div");
-                        div.className = "col";
-                        div.innerHTML = master;
-                        row.appendChild(div);
-                    }
+            try {
+                let response = await fetch(url.toString());
+                if (!response.ok) {
+                    console.error("Error has occured during request GET ", url, response.status);
+                    return;
+                }
 
-                    if (masters.length === 0) {
-                        return;
-                    }
+                let masters = await response.json();
+                for (let master of masters) {
+                    const div = document.createElement("div");
+                    div.className = "col";
+                    div.innerHTML = master;
+                    row.appendChild(div);
+                }
+
+                if (masters.length != 0) {
                     currentPage++;
-                })
-                .catch(error => {
-                    console.error("Error:", error)
-                });
+                }
+
+            } catch (exception) {
+                console.error(`Exception has been thrown during request GET `, url, exception);
+            }
         }
+
         var imageIndex = 0;
         function changeImage(index, id) {
             let imageContainer = document.getElementById(id);
