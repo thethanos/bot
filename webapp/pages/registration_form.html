@@ -52,13 +52,20 @@
 
     /* Set a style for the submit button */
     .registerbtn {
-      background-color: #48ff00;
       padding: 16px 20px;
       margin: 8px 0;
       border: none;
       cursor: pointer;
       width: 100%;
       opacity: 0.9;
+      border-radius: 4px;
+      background: #67A8C4;
+      color: #FFF;
+      font-family: Inter;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
     }
 
     .registerbtn:hover {
@@ -239,7 +246,7 @@
         contactInput.value = '';
         descriptionInput.value = '';
         window.alert("Регистрация прошла успешно!");
-        
+
       } catch (exception) {
         console.error("Exception has been thrown during request POST https://bot-dev-domain.com/masters", exception);
       }

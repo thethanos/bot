@@ -2,9 +2,9 @@
 <div class="master-container">
     <div class="master-image-container" id="{{.ID}}">
         {{range $index, $image := .Images}}
-        <div class="master-images" style="{{if ne $index 0}}display: none;{{end}}">
-            <img src="{{$image}}" alt="nice picture" style="width:100%">
-        </div>
+            <div class="master-images" style="{{if ne $index 0}}display: none;{{end}}">
+                <img src="{{$image}}" alt="nice picture" style="width:100%">
+            </div>
         {{end}}
         {{if gt (len .Images) 1}}
             <button class="master-image-prev-btn" onclick="prevImage({{.ID}})">&#8249;</button>

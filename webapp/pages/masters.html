@@ -17,6 +17,10 @@
             margin-top: 10px;
         }
 
+        .col {
+            width: 185px;
+        }
+
         .master-container {
             border-radius: 6px;
             width: 178px;
@@ -27,8 +31,12 @@
             box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
         }
 
-        .master-image-container {
+        .master-images {
             height: 112px;
+        }
+
+        .master-images img {
+            max-height: 100%;
         }
 
         .master-bottom {
@@ -60,7 +68,7 @@
         .master-contact-btn {
             width: 152px;
             height: 31px;
-            border: 0px;
+            border: none;
             border-radius: 4px;
             background: #67A8C4;
             color: #FFF;
@@ -124,7 +132,7 @@
 
 <body>
     <div class="container">
-        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 gx-2 gy-2" id="master-grid-row">
+        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 gy-2" id="master-grid-row">
         </div>
     </div>
     <button type="button" class="master-show-more-btn" onclick="onShowMoreBtn()">Посмотреть еще</button>
