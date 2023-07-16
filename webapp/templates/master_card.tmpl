@@ -1,21 +1,20 @@
 {{define "master_card" -}}
 <div class="master-container">
-    <div class="master-container-layout">
-        <h3 class="master-title">{{.Name}}</h3>
-        <hr class="line"></hr>
-        <div class="master-image-container" id="{{.ID}}">
-            {{range $index, $image := .Images}}
-            <div class="master-images" style="{{if ne $index 0}}display: none;{{end}}">
-                <img src="{{$image}}" alt="nice picture" style="width:100%">
-            </div>
-            {{end}}
-            {{if gt (len .Images) 1}}
-                <button class="master-image-prev-btn" onclick="prevImage({{.ID}})">&#8249;</button>
-                <button class="master-image-next-btn" onclick="nextImage({{.ID}})">&#8250;</button>
-            {{end}}
+    <div class="master-image-container" id="{{.ID}}">
+        {{range $index, $image := .Images}}
+        <div class="master-images" style="{{if ne $index 0}}display: none;{{end}}">
+            <img src="{{$image}}" alt="nice picture" style="width:100%">
         </div>
-        <div class="master-description">{{.Description}}</div>
-        <button class="master-contact-btn">Связаться</button>
+        {{end}}
+        {{if gt (len .Images) 1}}
+            <button class="master-image-prev-btn" onclick="prevImage({{.ID}})">&#8249;</button>
+            <button class="master-image-next-btn" onclick="nextImage({{.ID}})">&#8250;</button>
+        {{end}}
+    </div>
+    <div class="master-bottom>
+        <h3 class="master-name">{{.Name}}</h3>
+        <p class="master-description">{{.Description}}</p>
+        <button class="master-contact-btn">Написать мастеру</button>
     </div>
 </div>
 {{end}}

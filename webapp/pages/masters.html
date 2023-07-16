@@ -7,64 +7,68 @@
         integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <style>
         body {
-            background-color: #c9d5e3;
             font-family: Verdana, sans-serif;
             margin: 0
         }
 
-
         /* Master grid */
         .container {
-            background-color: #c9e3e3;
+            background: #FFF;
             margin-top: 10px;
         }
 
-        /* Master card */
         .master-container {
-            display: block;
+            border-radius: 6px;
+            width: 178px;
+            height: 255px;
             position: relative;
-            background-color: white;
-            border-radius: 15px;
-            height: auto;
-            width: 100%;
-            overflow: auto;
-            background-color: white;
-            padding: 0.5vw;
-        }
-
-        .master-container-layout {
-            display: block;
-            position: relative;
-            margin-top: 10px;
-            margin-bottom: 15px;
-            margin-left: 10px;
-            margin-right: 10px;
-            background-color: white;
-            height: auto;
-            width: auto;
-        }
-
-        .master-title {
-            height: 2vh;
-            font-size: 4vh;
-        }
-
-        .line {
-            height: 2px;
-            background-color: #0000FF;
-            margin-top: 4vh;
-            margin-bottom: 4vh;
+            overflow: hidden;
+            background: #FAFAFC;
+            box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
         }
 
         .master-image-container {
-            height: 25vh;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
+            height: 112px;
         }
 
-        .master-image-box {
-            display: none;
+        .master-bottom {
+            height: 143px;
+            padding: 13px;
+        }
+
+        .master-name {
+            color: #393F42;
+            font-family: Inter;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .master-description {
+            height: 47px;
+            overflow: hidden;
+            color: #393F42;
+            text-overflow: ellipsis;
+            font-family: Inter;
+            font-size: 11px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .master-contact-btn {
+            width: 152px;
+            height: 31px;
+            border: 0px;
+            border-radius: 4px;
+            background: #67A8C4;
+            color: #FFF;
+            font-family: Inter;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
         }
 
         .master-image-prev-btn,
@@ -98,35 +102,54 @@
             right: 1px;
         }
 
-        .master-description {
-            font-size: 2vh;
-            word-wrap: break-word;
-            height: 30%;
-        }
-
-        .master-contact-btn {
-            display: block;
-            height: 4vh;
-            width: 27vw;
-            background-color: #0000FF;
-            font-size: 2.5vh;
-            border-style: hidden;
-            margin-top: 10px;
-            border-radius: 10px;
-        }
-
         /* Show more button */
-        .show-more-btn {
+        .master-show-more-btn {
             position: absolute;
             left: 35%;
             width: 30%;
             height: 6vh;
             margin-top: 15px;
-            background-color: #0000FF;
             border: none;
-            border-radius: 10px;
+            border-radius: 4px;
+            background: #67A8C4;
+            color: #FFF;
+            font-family: Inter;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
         }
     </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 gx-2 gy-2" id="master-grid-row">
+            <div class="col">
+                <div class="master-container">
+                    <div class="master-image-container">
+                    </div>
+                    <div class="master-bottom">
+                        <h3 class="master-name">text</h3>
+                        <p class="master-description"></p>
+                        <button class="master-contact-btn">Написать мастеру</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="master-container">
+                    <div class="master-image-container">
+                    </div>
+                    <div class="master-bottom">
+                        <h3 class="master-name">text</h3>
+                        <p class="master-description"></p>
+                        <button class="master-contact-btn">Написать мастеру</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="master-show-more-btn" onclick="onShowMoreBtn()">Посмотреть еще</button>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
         crossorigin="anonymous"></script>
@@ -201,14 +224,6 @@
             changeImage(imageIndex -= 1, id);
         }
     </script>
-</head>
-
-<body>
-    <div class="container">
-        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 gx-2 gy-2" id="master-grid-row">
-        </div>
-    </div>
-    <button type="button" class="show-more-btn" onclick="onShowMoreBtn()">Еще</button>
 </body>
 
 </html>
