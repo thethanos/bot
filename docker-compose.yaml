@@ -27,7 +27,7 @@ services:
       - /home/multimessenger_bot
       - /home/images:/multimessenger_bot/webapp/pages/images
     ports:
-      - 80:80
+      - 444:444
   bot:
     build: 
       context: .
