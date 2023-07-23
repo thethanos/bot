@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"multimessenger_bot/internal/config"
+	srv "multimessenger_bot/internal/data_server"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/logger"
-	srv "multimessenger_bot/internal/server"
 	"os"
 	"os/signal"
 	"syscall"
@@ -32,15 +32,15 @@ func main() {
 		return
 	}
 
-	server, err := srv.NewServer(logger, cfg, dbAdapter)
+	server, err := srv.NewDataServer(logger, cfg, dbAdapter)
 	if err != nil {
-		logger.Error("main::server::NewServer", err)
+		logger.Error("main::data_server::NewDataServer", err)
 		return
 	}
 
 	go func() {
-		if err := server.ListenAndServeTLS("dev-full.crt", "dev-key.key"); err != nil {
-			logger.Fatal("main::server::ListenAndServeTLS", err)
+		if err := server.ListenAndServe(); err != nil {
+			logger.Fatal("main::data_server::ListenAndServe", err)
 		}
 	}()
 
@@ -48,7 +48,7 @@ func main() {
 	<-signalHandler
 
 	if err := server.Shutdown(context.Background()); err != nil {
-		logger.Error("main::server::Shutdown", err)
+		logger.Error("main::data_server::Shutdown", err)
 	}
 }
 

@@ -1,4 +1,4 @@
-package server
+package data_server
 
 import "strconv"
 
