@@ -27,6 +27,7 @@ services:
       db:
         condition: service_healthy
       server:
+        condition: service_started
   db:
     container_name: postgres
     image: postgres
