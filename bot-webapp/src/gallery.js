@@ -10,8 +10,8 @@ function Gallery() {
 
   const pageUrl = new URL(window.location.href);
   const params = new URLSearchParams(pageUrl.search);
-  const cityId = "1687079793"; //params.get("city_id");
-  const serviceId = "1687523708";//params.get("service_id");
+  const cityId = params.get("city_id");
+  const serviceId = params.get("service_id");
 
   async function loadMasters() {
     const url = new URL("https://bot-dev-domain.com:444/masters");
@@ -48,10 +48,10 @@ function Gallery() {
   }, []);
 
   return (
-    <React.Fragment>
+    <div className="gallery">
       <Grid cards={masters} />
       <button className="show-more-btn" onClick={onShowMoreBtn}>Посмотреть еще</button>
-    </React.Fragment>
+    </div>
   );
 }
 

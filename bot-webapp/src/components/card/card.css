@@ -74,12 +74,6 @@
   height: 100%;
 }
 
-/*
-  .master-image-prev-btn:hover,
-  .master-image-next-btn:hover {
-    background-color: rgba(0, 0, 0, 0.8);
-  }
-  */
 .master-image-prev-btn {
   left: 1px;
 }
