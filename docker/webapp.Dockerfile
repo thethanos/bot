@@ -1,11 +1,12 @@
 FROM node:20.4-alpine3.17
 
-WORKDIR /multimessenger_bot
 COPY bot-webapp ./
 COPY dev-full.crt ./bot-webapp/dev-full.crt
 COPY dev-key.key ./bot-webapp/dev-key.key
 
+ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN npm install -g serve http-server
-RUN cd bot-webapp && npm run build
+RUN cd bot-webapp && npm install && npm run build
 
-CMD ["http-server build -S -C dev-full.crt -K dev-key.key -p 443"]
+WORKDIR /bot-webapp/build
+CMD ["http-server", "--cors", "-S", "-C", "../dev-full.crt", "-K", "../dev-key.key", "-p", "443"]

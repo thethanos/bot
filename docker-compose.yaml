@@ -10,9 +10,9 @@ services:
     restart: always
     depends_on:
       data_server:
-        condition: service_healthy
-      ports:
-        - 444:444
+        condition: service_started
+    ports:
+      - 443:443
   data_server:
     build:
       context: .
@@ -39,6 +39,7 @@ services:
       db:
         condition: service_started
       data_server:
+        condition: service_started
   db:
     container_name: postgres
     image: postgres
