@@ -1,20 +1,20 @@
-package server
+package data_server
 
 import (
 	"errors"
 	"fmt"
 	"multimessenger_bot/internal/config"
+	handler "multimessenger_bot/internal/data_server/handler"
+	corsMiddleware "multimessenger_bot/internal/data_server/middleware"
 	"multimessenger_bot/internal/db_adapter"
 	"multimessenger_bot/internal/logger"
-	handler "multimessenger_bot/internal/server/handler"
-	corsMiddleware "multimessenger_bot/internal/server/middleware"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 )
 
-func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.DbAdapter) (*http.Server, error) {
+func NewDataServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.DbAdapter) (*http.Server, error) {
 
 	handler := handler.NewHandler(logger, cfg, dbAdapter)
 	docHandler := middleware.Redoc(middleware.RedocOpts{SpecURL: "swagger.yaml"}, nil)
@@ -25,7 +25,6 @@ func NewServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.D
 	getRouter.HandleFunc("/services/categories", handler.GetServiceCategories)
 	getRouter.HandleFunc("/services", handler.GetServices)
 	getRouter.HandleFunc("/masters", handler.GetMasters)
-	getRouter.HandleFunc("/masters/html", handler.GetMastersHTML)
 	getRouter.PathPrefix("/webapp").Handler(http.FileServer(http.Dir("/multimessenger_bot")))
 	getRouter.Handle("/docs", docHandler)
 	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("/multimessenger_bot/docs")))

@@ -1,0 +1,16 @@
+.show-more-btn {
+  position: relative;
+  left: 35%;
+  width: 30%;
+  height: 6vh;
+  margin-top: 15px;
+  border: none;
+  border-radius: 4px;
+  background: #67A8C4;
+  color: #FFF;
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}

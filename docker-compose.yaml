@@ -1,12 +1,24 @@
 version: '3'
 
 services:
-  server:
+  webapp:
     build:
       context: .
-      dockerfile: docker/server.Dockerfile
-    image: server:latest
-    container_name: server
+      dockerfile: docker/webapp.Dockerfile
+      image: webapp:latest
+      container_name: webapp
+      restart: always
+      depends_on:
+        data_server:
+          condition: service_healthy
+        ports:
+          - 444:444
+  data_server:
+    build:
+      context: .
+      dockerfile: docker/data_server.Dockerfile
+    image: data_server:latest
+    container_name: data_server
     restart: always
     depends_on:
       db:
@@ -15,7 +27,7 @@ services:
       - /home/multimessenger_bot
       - /home/images:/multimessenger_bot/webapp/pages/images
     ports:
-      - 443:443
+      - 80:80
   bot:
     build: 
       context: .
@@ -25,9 +37,8 @@ services:
     restart: always
     depends_on:
       db:
-        condition: service_healthy
-      server:
         condition: service_started
+      data_server:
   db:
     container_name: postgres
     image: postgres
