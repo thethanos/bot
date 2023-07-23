@@ -5,14 +5,14 @@ services:
     build:
       context: .
       dockerfile: docker/webapp.Dockerfile
-      image: webapp:latest
-      container_name: webapp
-      restart: always
-      depends_on:
-        data_server:
-          condition: service_healthy
-        ports:
-          - 444:444
+    image: webapp:latest
+    container_name: webapp
+    restart: always
+    depends_on:
+      data_server:
+        condition: service_healthy
+      ports:
+        - 444:444
   data_server:
     build:
       context: .
