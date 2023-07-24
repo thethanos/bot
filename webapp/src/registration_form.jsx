@@ -1,121 +1,82 @@
-<!DOCTYPE html>
-<html>
+import React from "react";
+import "./registration_form.css"
+import { useEffect, useState } from "react";
+import Multiselect from "./components/multiselect/multiselect";
 
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: black;
+function RegistrationForm() {
+    
+    const [showMultiselect, setShowMultiselect] = useState(false)
+    const [cities, setCities] = useState([]);
+    const [serviceCategories, setServiceCategories] = useState([]);
+
+    async function loadData(url, setter) {
+        try {
+            let response = await fetch(url);
+            if (!response.ok) {
+                console.error(`Error has occured during request GET ${url} ${response.status}`);
+                return;
+            }
+            setter(await response.json());
+        } catch(exception) {
+            console.error(`Exception has been thrown during request GET ${url} ${exception}`);
+        }
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    useEffect(()=>{
+        loadData("https://bot-dev-domain.com:444/cities", setCities);
+    }, [])
 
-    /* Add padding to containers */
-    .container {
-      padding: 16px;
-      background-color: white;
-    }
+    useEffect(()=>{
+        loadData("https://bot-dev-domain.com:444/services/categories", setServiceCategories);
+    }, [])
 
-    /* Full-width input fields */
-    input[type=text],
-    input[type=file],
-    select {
-      width: 100%;
-      margin: 5px 0 22px 0;
-      display: inline-block;
-      border: none;
-      background: #f1f1f1;
-    }
+    return (
+        <div className="container">
+            <form onSubmit={()=>{}}>
+                <h1>Регистрация</h1>
+                <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в
+                    качестве мастера.</p>
+                <hr />
 
-    input[type=text],
-    input[type=file] {
-      padding: 15px;
-    }
+                <label htmlFor="name"><b>Имя</b></label>
+                <input type="text" placeholder="Введите свое имя" name="name" id="name" required />
 
-    select {
-      padding: 15px 11px;
-    }
+                <label htmlFor="city"><b>Город</b></label>
+                <select name="city" id="city" required>
+                    <option defaultValue="Выберите город" disabled hidden />
+                    { cities.map((city, index) => (<option key={index} value={city.id}>{city.name}</ option>))}
+                </select>
 
-    input[type=text]:focus {
-      background-color: #ddd;
-      outline: none;
-    }
+                <label htmlFor="service_category"><b>Категория услуг</b></label>
+                <select name="service_category" id="service_category" required>
+                    <option defaultValue="Выберите категорию" disabled hidden />
+                    { serviceCategories.map((category, index) => (<option key={index} value={category.id}>{category.name}</option>))}
+                </select>
+                
+                <label htmlFor="services"><b>Услуга</b></label>
+                <div className="services" onClick={() => {setShowMultiselect(true)}}>Выберите услугу</div>
+                { showMultiselect && <Multiselect services={serviceCategories} handleClose={() => {setShowMultiselect(false)}}/>
+                }
+                <label htmlFor="images"><b>Фотографии</b></label>
+                <input type="file" multiple name="images" id="images" accept="image/*" required />
 
-    /* Overwrite default styles of hr */
-    hr {
-      border: 1px solid #f1f1f1;
-      margin-bottom: 25px;
-    }
+                <label htmlFor="contact"><b>Контактные данные</b></label>
+                <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact" required />
 
-    /* Set a style for the submit button */
-    .registerbtn {
-      padding: 16px 20px;
-      margin: 8px 0;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-      opacity: 0.9;
-      border-radius: 4px;
-      background: #67A8C4;
-      color: #FFF;
-      font-family: Inter;
-      font-size: 12px;
-      font-style: normal;
-      font-weight: 400;
-      line-height: normal;
-    }
+                <label htmlFor="description"><b>Коротко о себе</b></label>
+                <input type="text" placeholder="Текст, который будет отображаться в вашем профиле" name="description" id="description" />
 
-    .registerbtn:hover {
-      opacity: 1;
-    }
-  </style>
-</head>
+                <hr />
+                <button type="submit" className="registerbtn">Зарегистрироваться</button>
+            </form>
+        </div>
+    )
+}
 
-<body>
+export default RegistrationForm;
 
-  <form onsubmit="submit_form(event)" class="container">
-    <h1>Регистрация</h1>
-    <p>Пожалуйста заполните анкету чтобы зарегистрироваться в системе в
-      качестве мастера.</p>
-    <hr>
-
-    <label for="name"><b>Имя</b></label>
-    <input type="text" placeholder="Введите свое имя" name="name" id="name" required>
-
-    <label for="city"><b>Город</b></label>
-    <select name="city" id="city" required>
-      <option value="" disabled selected hidden>Выберите город</option>
-    </select>
-
-    <label for="service_category"><b>Категория услуг</b></label>
-    <select name="service_category" id="service_category" required>
-      <option value="" disabled selected hidden>Выберите категорию</option>
-    </select>
-
-    <label for="services"><b>Услуга</b></label>
-    <select name="services" id="services" multiple required>
-      <option value="default" disabled selected hidden>Выберите услугу</option>
-    </select>
-
-    <label for="images"><b>Фотографии</b></label>
-    <input type="file" multiple name="images" id="images" accept="image/*" required>
-
-    <label for="contact"><b>Контактные данные</b></label>
-    <input type="text" placeholder="Введите номер телефона или ссылку на социальную сеть" name="contact" id="contact"
-      required>
-
-    <label for="description"><b>Коротко о себе</b></label>
-    <input type="text" placeholder="Текст, который будет отображаться в вашем профиле" name="description"
-      id="description">
-
-    <hr>
-
-    <button type="submit" class="registerbtn">Зарегистрироваться</button>
-  </form>
-  <script>
+/*
+<script>
     document.addEventListener("DOMContentLoaded", function () {
       const citySelect = document.getElementById("city");
       fillSelect(citySelect, "https://bot-dev-domain.com/cities");
@@ -252,6 +213,4 @@
       }
     }
   </script>
-</body>
-
-</html>
+  */

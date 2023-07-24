@@ -456,13 +456,13 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	}
 	defer formFile.Close()
 
-	if err := os.MkdirAll(fmt.Sprintf("./webapp/pages/images/%s", masterID), os.ModePerm); err != nil {
+	if err := os.MkdirAll(fmt.Sprintf("./images/%s", masterID), os.ModePerm); err != nil {
 		h.logger.Error("data_server::SaveMasterImage::MkdirAll", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	image, err := os.Create(fmt.Sprintf("./webapp/pages/images/%s/%s", masterID, meta.Filename))
+	image, err := os.Create(fmt.Sprintf("./images/%s/%s", masterID, meta.Filename))
 	if err != nil {
 		h.logger.Error("data_server::SaveMasterImage::Create", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)

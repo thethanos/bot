@@ -288,7 +288,7 @@ func (i *ImageUpload) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 		return ma.NewTextMessage("Не удалось загрузить изображение", msg, nil, false), EmptyStep
 	}
 
-	image := parsers.SaveFile(i.state.Master.ID, "./webapp/pages/images", "jpeg", file)
+	image := parsers.SaveFile(i.state.Master.ID, "./images", "jpeg", file)
 	i.state.Master.Images = append(i.state.Master.Images, fmt.Sprintf("https://bot-dev-domain.com/pages/images/%s/%s", i.state.Master.ID, image))
 	return nil, EmptyStep
 }
