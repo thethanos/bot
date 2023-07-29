@@ -35,7 +35,7 @@ select, .services {
     padding: 15px 11px;
 }
 
-input[type=text]:focus {
+input[type=text]:focus, select:focus {
     background-color: #ddd;
     outline: none;
 }

@@ -5,43 +5,53 @@ import Multiselect from "./components/multiselect/multiselect";
 
 function RegistrationForm() {
     
-    let [checked, clearChecks] = useState({});
-      
-    const setChecked = (id)=> {
-      checked[id] = checked[id]?!checked[id]:true;
-    }
-
+    const [checked, setChecks] = useState({});
     const [showMultiselect, setShowMultiselect] = useState(false)
+    const [textMultiselect, setTextMultiselect] = useState("Выберите услугу");
     const [cities, setCities] = useState([]);
     const [serviceCategories, setServiceCategories] = useState([]);
     const [services, setServices] = useState([]);
 
-    async function loadData(url, setter) {
+    async function loadData(url, setter, dependency) {
         try {
             let response = await fetch(url);
             if (!response.ok) {
                 console.error(`Error has occured during request GET ${url} ${response.status}`);
                 return;
             }
-            setter(await response.json());
+            let json = await response.json();
+            if (!json) {
+              return;
+            }
+
+            setter(json);
+            if (dependency) {
+              dependency(json[0].id);
+            }
         } catch(exception) {
             console.error(`Exception has been thrown during request GET ${url} ${exception}`);
         }
     }
 
-    useEffect(()=>{
-        loadData("https://bot-dev-domain.com:444/cities", setCities);
-    }, [])
-
-    useEffect(()=>{
-        loadData("https://bot-dev-domain.com:444/services/categories", setServiceCategories);
-    }, [])
+    const onServiceCategoryLoad = (id) => {
+      setChecks({});
+      loadData(`https://bot-dev-domain.com:444/services?category_id=${id}`, setServices, null)
+    }
 
     const onServiceCategoryChange = (event)=> {
       let id = event.target.value;
-      clearChecks({});
-      loadData(`https://bot-dev-domain.com:444/services?category_id=${id}`, setServices)
+      setChecks({});
+      setTextMultiselect("Выберите услуги");
+      loadData(`https://bot-dev-domain.com:444/services?category_id=${id}`, setServices, null)
     }
+
+    useEffect(()=>{
+        loadData("https://bot-dev-domain.com:444/cities", setCities, null);
+    }, [])
+
+    useEffect(()=>{
+        loadData("https://bot-dev-domain.com:444/services/categories", setServiceCategories, onServiceCategoryLoad);
+    }, [])
 
     return (
         <div className="container">
@@ -52,7 +62,7 @@ function RegistrationForm() {
                 <hr />
 
                 <label htmlFor="name"><b>Имя</b></label>
-                <input type="text" placeholder="Введите свое имя" name="name" id="name" required />
+                <input type="text" placeholder="Введите свое имя" className="name" id="name" required />
 
                 <label htmlFor="city"><b>Город</b></label>
                 <select name="city" id="city" required>
@@ -60,18 +70,19 @@ function RegistrationForm() {
                 </select>
 
                 <label htmlFor="service_category"><b>Категория услуг</b></label>
-                <select name="service_category" id="service_category" required onChange={onServiceCategoryChange}>
+                <select className="service_category" id="service_category" required onChange={onServiceCategoryChange}>
                     { serviceCategories && serviceCategories.map((category, index) => (<option key={index} value={category.id}>{category.name}</option>))}
                 </select>
                 
                 <label htmlFor="services"><b>Услуга</b></label>
-                <div className="services" onClick={() => {setShowMultiselect(true)}}>Выберите услугу</div>
+                <div className="services" onClick={() => {setShowMultiselect(true)}}>{textMultiselect}</div>
                 { showMultiselect && 
                   <Multiselect 
                     services={services}
                     checked={checked}
-                    handleCheck={setChecked}
+                    handleCheck={setChecks}
                     handleClose={() => {setShowMultiselect(false)}}
+                    handleText={setTextMultiselect}
                   />
                 }
                 <label htmlFor="images"><b>Фотографии</b></label>
@@ -94,39 +105,6 @@ export default RegistrationForm;
 
 /*
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const citySelect = document.getElementById("city");
-      fillSelect(citySelect, "https://bot-dev-domain.com/cities");
-
-      const serviceCategorySelect = document.getElementById("service_category");
-      fillSelect(serviceCategorySelect, "https://bot-dev-domain.com/services/categories");
-
-      const servicesSelect = document.getElementById("services");
-      serviceCategorySelect.onchange = function () {
-        servicesSelect.length = 1;
-        servicesSelect.selectedIndex = 0;
-        fillSelect(servicesSelect, `https://bot-dev-domain.com/services?category_id=${serviceCategorySelect.value}`);
-      }
-    });
-
-    async function fillSelect(select, url) {
-      try {
-        let response = await fetch(url);
-        if (!response.ok) {
-          console.error("Error has occured during request GET ", url, response.status);
-          return;
-        }
-
-        let options = await response.json();
-        for (let option of options) {
-          select.options[select.options.length] = new Option(option.name, option.id);
-        }
-
-      } catch (exception) {
-        console.error(`Exception has been thrown in fillSelect ${select.getAttribute("name")}`, exception);
-      }
-    }
-
     async function uploadFile(file, url) {
       return new Promise(async (resolve, reject) => {
         try {
