@@ -233,7 +233,7 @@ func (a *Admin) Request(msg *ma.Message) *ma.Message {
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить услугу"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить город"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Добавить мастера", WebApp: &tgbotapi.WebAppInfo{
-			Url: "https://bot-dev-domain.com/webapp/registration"},
+			Url: "https://bot-dev-domain.com:444/webapp/registration"},
 		}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}

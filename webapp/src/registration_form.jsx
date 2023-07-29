@@ -1,13 +1,20 @@
 import React from "react";
-import "./registration_form.css"
+import "./registration_form.css";
 import { useEffect, useState } from "react";
 import Multiselect from "./components/multiselect/multiselect";
 
 function RegistrationForm() {
     
+    let [checked, clearChecks] = useState({});
+      
+    const setChecked = (id)=> {
+      checked[id] = checked[id]?!checked[id]:true;
+    }
+
     const [showMultiselect, setShowMultiselect] = useState(false)
     const [cities, setCities] = useState([]);
     const [serviceCategories, setServiceCategories] = useState([]);
+    const [services, setServices] = useState([]);
 
     async function loadData(url, setter) {
         try {
@@ -30,6 +37,12 @@ function RegistrationForm() {
         loadData("https://bot-dev-domain.com:444/services/categories", setServiceCategories);
     }, [])
 
+    const onServiceCategoryChange = (event)=> {
+      let id = event.target.value;
+      clearChecks({});
+      loadData(`https://bot-dev-domain.com:444/services?category_id=${id}`, setServices)
+    }
+
     return (
         <div className="container">
             <form onSubmit={()=>{}}>
@@ -43,19 +56,23 @@ function RegistrationForm() {
 
                 <label htmlFor="city"><b>Город</b></label>
                 <select name="city" id="city" required>
-                    <option defaultValue="Выберите город" disabled hidden />
-                    { cities.map((city, index) => (<option key={index} value={city.id}>{city.name}</ option>))}
+                    { cities && cities && cities.map((city, index) => (<option key={index} value={city.id}>{city.name}</ option>))}
                 </select>
 
                 <label htmlFor="service_category"><b>Категория услуг</b></label>
-                <select name="service_category" id="service_category" required>
-                    <option defaultValue="Выберите категорию" disabled hidden />
-                    { serviceCategories.map((category, index) => (<option key={index} value={category.id}>{category.name}</option>))}
+                <select name="service_category" id="service_category" required onChange={onServiceCategoryChange}>
+                    { serviceCategories && serviceCategories.map((category, index) => (<option key={index} value={category.id}>{category.name}</option>))}
                 </select>
                 
                 <label htmlFor="services"><b>Услуга</b></label>
                 <div className="services" onClick={() => {setShowMultiselect(true)}}>Выберите услугу</div>
-                { showMultiselect && <Multiselect services={serviceCategories} handleClose={() => {setShowMultiselect(false)}}/>
+                { showMultiselect && 
+                  <Multiselect 
+                    services={services}
+                    checked={checked}
+                    handleCheck={setChecked}
+                    handleClose={() => {setShowMultiselect(false)}}
+                  />
                 }
                 <label htmlFor="images"><b>Фотографии</b></label>
                 <input type="file" multiple name="images" id="images" accept="image/*" required />
