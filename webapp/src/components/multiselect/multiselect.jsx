@@ -30,7 +30,7 @@ function Multiselect({ services, checked, handleCheck, handleClose, handleText }
             <div className="modal">
                 <div className="modal-checkbox-container">
                     { services.map((service, index) => (
-                            <div className="modal-checkbox-input-container">
+                            <div className="modal-checkbox-input-container" key={index + services.length * 2}>
                                 <input 
                                     className="modal-checkbox" 
                                     key={index} 
