@@ -184,8 +184,8 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string, page, limit int) ([]*en
 	masters := make([]*models.Master, 0)
 	joins := make([]*models.Join, 0)
 
+	query := d.dbConn.Offset(page * limit).Limit(limit)
 	if len(cityId) != 0 || len(serviceId) != 0 {
-		query := d.dbConn.Offset(page * limit).Limit(limit)
 		if len(cityId) != 0 {
 			query = query.Where("city_id = ?", cityId)
 		}
@@ -206,7 +206,7 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string, page, limit int) ([]*en
 			return nil, err
 		}
 	} else {
-		if err := d.dbConn.Find(&masters).Error; err != nil {
+		if err := query.Find(&masters).Error; err != nil {
 			return nil, err
 		}
 	}
