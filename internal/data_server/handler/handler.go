@@ -190,8 +190,8 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 // @Tags Master
 // @Param page query string false "Page number for pagination"
 // @Param limit query string false "Limit of items for pagination"
-// @Param city_id query string true "ID of the selected city"
-// @Param service_id query string true "ID of the seleted service"
+// @Param city_id query string false "ID of the selected city"
+// @Param service_id query string false "ID of the seleted service"
 // @Accept json
 // @Produce json
 // @Success 200 {array} entities.Master

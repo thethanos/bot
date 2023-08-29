@@ -183,18 +183,34 @@ func (d *DbAdapter) GetMasters(cityId, serviceId string, page, limit int) ([]*en
 	result := make([]*entities.Master, 0)
 	masters := make([]*models.Master, 0)
 	joins := make([]*models.Join, 0)
-	if err := d.dbConn.Offset(page*limit).Limit(limit).Where("city_id = ? AND service_id = ?", cityId, serviceId).Find(&joins).Error; err != nil {
-		return nil, err
+
+	if len(cityId) != 0 || len(serviceId) != 0 {
+		query := d.dbConn.Offset(page * limit).Limit(limit)
+		if len(cityId) != 0 {
+			query = query.Where("city_id = ?", cityId)
+		}
+		if len(serviceId) != 0 {
+			query = query.Where("service_id = ?", serviceId)
+		}
+
+		if err := query.Find(&joins).Error; err != nil {
+			return nil, err
+		}
+
+		masterIds := make([]string, 0)
+		for _, join := range joins {
+			masterIds = append(masterIds, join.MasterID)
+		}
+
+		if err := d.dbConn.Where("id IN ?", masterIds).Find(&masters).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := d.dbConn.Find(&masters).Error; err != nil {
+			return nil, err
+		}
 	}
 
-	masterIds := make([]string, 0)
-	for _, join := range joins {
-		masterIds = append(masterIds, join.MasterID)
-	}
-
-	if err := d.dbConn.Where("id IN ?", masterIds).Find(&masters).Error; err != nil {
-		return nil, err
-	}
 	for _, master := range masters {
 		result = append(result, &entities.Master{
 			ID:          master.ID,
