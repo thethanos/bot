@@ -1,18 +1,6 @@
 version: '3'
 
 services:
-  webapp:
-    build:
-      context: .
-      dockerfile: docker/webapp.Dockerfile
-    image: webapp:latest
-    container_name: webapp
-    restart: always
-    depends_on:
-      data_server:
-        condition: service_started
-    ports:
-      - 443:443
   data_server:
     build:
       context: .

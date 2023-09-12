@@ -8,3 +8,4 @@ service_credentials.json
 *.key
 images/*
 webapp/.DS_Store
+.DS_Store
