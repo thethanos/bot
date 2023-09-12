@@ -1,7 +1,7 @@
 package bot
 
 import (
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
@@ -20,11 +20,6 @@ const (
 	FindModelStep
 	CollaborationStep
 	PreviousStep
-	AdminStep
-	AdminServiceCategorySelectionStep
-	AddServiceCategoryStep
-	AddServiceStep
-	AddCityStep
 	EmptyStep
 )
 
@@ -52,14 +47,6 @@ func getStepTypeName(step StepType) string {
 		return "EmptyStep"
 	case PreviousStep:
 		return "PreviousStep"
-	case AdminStep:
-		return "AdminStep"
-	case AddServiceCategoryStep:
-		return "AddServiceCategoryStep"
-	case AddServiceStep:
-		return "AddServiceStep"
-	case AddCityStep:
-		return "AddCityStep"
 	default:
 		return "Unknown type"
 	}

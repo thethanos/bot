@@ -1,4 +1,4 @@
-package messenger_adapter
+package msgadapter
 
 import (
 	"os"

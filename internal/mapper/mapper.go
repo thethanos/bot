@@ -26,7 +26,6 @@ func FromMasterModel(model *models.Master) *entities.Master {
 		Images:      model.Images,
 		Description: model.Description,
 		Contact:     model.Contact,
-		CityID:      model.CityID,
 	}
 }
 

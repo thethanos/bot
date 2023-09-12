@@ -4,7 +4,7 @@ import (
 	"multimessenger_bot/internal/config"
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 	"reflect"
 	"testing"
 
@@ -199,11 +199,6 @@ func TestMainMenuStep(t *testing.T) {
 
 	resp = ma.NewTextMessage("По вопросам сотрудничества", msg, nil, true)
 	if _, nextStep := step.ProcessResponse(resp); nextStep != CollaborationStep {
-		t.Error("MainMenu step returned wrong next step")
-	}
-
-	resp = ma.NewTextMessage("Админ", msg, nil, true)
-	if _, nextStep := step.ProcessResponse(resp); nextStep != AdminStep {
 		t.Error("MainMenu step returned wrong next step")
 	}
 }

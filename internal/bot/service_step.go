@@ -2,9 +2,9 @@ package bot
 
 import (
 	"fmt"
-	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/dbadapter"
 	"multimessenger_bot/internal/entities"
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
@@ -18,7 +18,7 @@ type ServiceCategoryStepMode interface {
 }
 
 type BaseServiceCategoryMode struct {
-	dbAdapter *db_adapter.DbAdapter
+	dbAdapter *dbadapter.DBAdapter
 }
 
 func (b *BaseServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
@@ -60,18 +60,6 @@ func (m *MainMenuServiceCategoryMode) Buttons() [][]tgbotapi.KeyboardButton {
 
 func (m *MainMenuServiceCategoryMode) NextStep() StepType {
 	return MainMenuServiceSelectionStep
-}
-
-type AdminServiceCategoryMode struct {
-	BaseServiceCategoryMode
-}
-
-func (a *AdminServiceCategoryMode) GetServiceCategories(cityId string) ([]*entities.ServiceCategory, error) {
-	return a.dbAdapter.GetServiceCategories("", 0, -1)
-}
-
-func (a *AdminServiceCategoryMode) NextStep() StepType {
-	return AddServiceStep
 }
 
 type ServiceCategorySelection struct {
@@ -143,7 +131,7 @@ type ServiceSelectionStepMode interface {
 }
 
 type BaseServiceSelectionMode struct {
-	dbAdapter *db_adapter.DbAdapter
+	dbAdapter *dbadapter.DBAdapter
 }
 
 func (b *BaseServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {

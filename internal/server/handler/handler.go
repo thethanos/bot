@@ -1,11 +1,11 @@
-package data_server
+package server
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
 	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/dbadapter"
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/logger"
 	"net/http"
@@ -18,14 +18,14 @@ import (
 type Handler struct {
 	logger    logger.Logger
 	cfg       *config.Config
-	dbAdapter *db_adapter.DbAdapter
+	DBAdapter *dbadapter.DBAdapter
 }
 
-func NewHandler(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.DbAdapter) *Handler {
+func NewHandler(logger logger.Logger, cfg *config.Config, DBAdapter *dbadapter.DBAdapter) *Handler {
 	return &Handler{
 		logger:    logger,
 		cfg:       cfg,
-		dbAdapter: dbAdapter,
+		DBAdapter: DBAdapter,
 	}
 }
 
@@ -45,28 +45,28 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	query := req.URL.Query()
 	page, err := getParamInt(query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("data_server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("data_server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	cities, err := h.dbAdapter.GetCities("", page, limit)
+	cities, err := h.DBAdapter.GetCities("", page, limit)
 	if err != nil {
-		h.logger.Error("data_server::GetCities::GetCities", err)
+		h.logger.Error("server::GetCities::GetCities", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	cityList, err := json.Marshal(&cities)
 	if err != nil {
-		h.logger.Error("data_server::GetCities::Marshal", err)
+		h.logger.Error("server::GetCities::Marshal", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -74,7 +74,7 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	if _, err := rw.Write(cityList); err != nil {
-		h.logger.Error("data_server::GetCities::Write", err)
+		h.logger.Error("server::GetCities::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -96,28 +96,28 @@ func (h *Handler) GetServiceCategories(rw http.ResponseWriter, req *http.Request
 	query := req.URL.Query()
 	page, err := getParamInt(query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("data_server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("data_server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	categories, err := h.dbAdapter.GetServiceCategories("", page, limit)
+	categories, err := h.DBAdapter.GetServiceCategories("", page, limit)
 	if err != nil {
-		h.logger.Error("data_server::GetCategories::GetCategories", err)
+		h.logger.Error("server::GetCategories::GetCategories", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	categoryList, err := json.Marshal(&categories)
 	if err != nil {
-		h.logger.Error("data_server::GetCategories::Marshal", err)
+		h.logger.Error("server::GetCategories::Marshal", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -125,7 +125,7 @@ func (h *Handler) GetServiceCategories(rw http.ResponseWriter, req *http.Request
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	if _, err := rw.Write(categoryList); err != nil {
-		h.logger.Error("data_server::GetServiceCategories::Write", err)
+		h.logger.Error("server::GetServiceCategories::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -148,30 +148,30 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	query := req.URL.Query()
 	page, err := getParamInt(query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("data_server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("data_server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	categoryId := query.Get("category_id")
 
-	services, err := h.dbAdapter.GetServices(categoryId, "", page, limit)
+	services, err := h.DBAdapter.GetServices(categoryId, "", page, limit)
 	if err != nil {
-		h.logger.Error("data_server::GetServices::GetServices", err)
+		h.logger.Error("server::GetServices::GetServices", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	serviceList, err := json.Marshal(&services)
 	if err != nil {
-		h.logger.Error("data_server::GetServices::Marshal", err)
+		h.logger.Error("server::GetServices::Marshal", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -179,7 +179,7 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	if _, err := rw.Write(serviceList); err != nil {
-		h.logger.Error("data_server::GetServices::Write", err)
+		h.logger.Error("server::GetServices::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -204,14 +204,14 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	query := req.URL.Query()
 	page, err := getParamInt(query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("data_server::GetMasters::getParamInt", err)
+		h.logger.Error("server::GetMasters::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	limit, err := getParamInt(query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("data_server::GetMasters::getParamInt", err)
+		h.logger.Error("server::GetMasters::getParamInt", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -219,23 +219,23 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	cityId := query.Get("city_id")
 	serviceId := query.Get("service_id")
 
-	masters, err := h.dbAdapter.GetMasters(cityId, serviceId, page, limit)
+	masters, err := h.DBAdapter.GetMasters(cityId, serviceId, page, limit)
 	if err != nil {
-		h.logger.Error("data_server::GetMasters::GetMasters", err)
+		h.logger.Error("server::GetMasters::GetMasters", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	mastersResp, err := json.Marshal(masters)
 	if err != nil {
-		h.logger.Error("data_server::GetMasters::Marshal", err)
+		h.logger.Error("server::GetMasters::Marshal", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	rw.WriteHeader(http.StatusOK)
 	if _, err := rw.Write(mastersResp); err != nil {
-		h.logger.Error("data_server::GetMasters::Write", err)
+		h.logger.Error("server::GetMasters::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -256,21 +256,21 @@ func (h *Handler) SaveCity(rw http.ResponseWriter, req *http.Request) {
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		h.logger.Error("data_server::SaveCity::ReadAll")
+		h.logger.Error("server::SaveCity::ReadAll")
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	city := &entities.City{}
 	if err := json.Unmarshal(body, city); err != nil {
-		h.logger.Error("data_server::SaveCity::Unmarshal")
+		h.logger.Error("server::SaveCity::Unmarshal")
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	id, err := h.dbAdapter.SaveCity(city.Name)
+	id, err := h.DBAdapter.SaveCity(city.Name)
 	if err != nil {
-		h.logger.Error("data_server::SaveCity::SaveCity", err)
+		h.logger.Error("server::SaveCity::SaveCity", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -278,7 +278,7 @@ func (h *Handler) SaveCity(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
 	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id))); err != nil {
-		h.logger.Error("data_server::SaveCity::Write", err)
+		h.logger.Error("server::SaveCity::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -299,21 +299,21 @@ func (h *Handler) SaveServiceCategory(rw http.ResponseWriter, req *http.Request)
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		h.logger.Error("data_server::SaveServiceCategory::ReadAll", err)
+		h.logger.Error("server::SaveServiceCategory::ReadAll", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	serviceCategory := &entities.ServiceCategory{}
 	if err := json.Unmarshal(body, serviceCategory); err != nil {
-		h.logger.Error("data_server::SaveServiceCategory::Unmarshal", err)
+		h.logger.Error("server::SaveServiceCategory::Unmarshal", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	id, err := h.dbAdapter.SaveServiceCategory(serviceCategory.Name)
+	id, err := h.DBAdapter.SaveServiceCategory(serviceCategory.Name)
 	if err != nil {
-		h.logger.Error("data_server::SaveServiceCategory::SaveServiceCategory", err)
+		h.logger.Error("server::SaveServiceCategory::SaveServiceCategory", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -321,7 +321,7 @@ func (h *Handler) SaveServiceCategory(rw http.ResponseWriter, req *http.Request)
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
 	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id))); err != nil {
-		h.logger.Error("data_server::SaveServiceCategory::Write", err)
+		h.logger.Error("server::SaveServiceCategory::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -342,21 +342,21 @@ func (h *Handler) SaveService(rw http.ResponseWriter, req *http.Request) {
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		h.logger.Error("data_server::SaveService::ReadAll", err)
+		h.logger.Error("server::SaveService::ReadAll", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	service := &entities.Service{}
 	if err := json.Unmarshal(body, service); err != nil {
-		h.logger.Error("data_server::SaveService::Unmarshal", err)
+		h.logger.Error("server::SaveService::Unmarshal", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	id, err := h.dbAdapter.SaveService(service.Name, service.CategoryID)
+	id, err := h.DBAdapter.SaveService(service.Name, service.CategoryID)
 	if err != nil {
-		h.logger.Error("data_server::SaveService::SaveService", err)
+		h.logger.Error("server::SaveService::SaveService", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -364,7 +364,7 @@ func (h *Handler) SaveService(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
 	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id))); err != nil {
-		h.logger.Error("data_server::SaveService::Write", err)
+		h.logger.Error("server::SaveService::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -385,28 +385,28 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		h.logger.Error("data_server::SaveMasterRegForm::ReadAll", err)
+		h.logger.Error("server::SaveMasterRegForm::ReadAll", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	regForm := &entities.MasterRegForm{}
 	if err := json.Unmarshal(body, regForm); err != nil {
-		h.logger.Error("data_server::SaveMasterRegForm::Unmarshal", err)
+		h.logger.Error("server::SaveMasterRegForm::Unmarshal", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	validator := validator.New()
 	if err := validator.Struct(regForm); err != nil {
-		h.logger.Error("data_server::SaveMasterRegForm::Struct", err)
+		h.logger.Error("server::SaveMasterRegForm::Struct", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	id, err := h.dbAdapter.SaveMasterRegForm(regForm)
+	id, err := h.DBAdapter.SaveMasterRegForm(regForm)
 	if err != nil {
-		h.logger.Error("data_server::SaveMasterRegForm::SaveMasterRegForm", err)
+		h.logger.Error("server::SaveMasterRegForm::SaveMasterRegForm", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -414,7 +414,7 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
 	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id))); err != nil {
-		h.logger.Error("data_server::SaveMasterRegForm::Write", err)
+		h.logger.Error("server::SaveMasterRegForm::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -437,47 +437,47 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	masterID := params["master_id"]
 	if len(masterID) == 0 {
-		h.logger.Error("data_server::SaveMasterImage::params[]", "no masterID")
+		h.logger.Error("server::SaveMasterImage::params[]", "no masterID")
 		http.Error(rw, "no masterID", http.StatusBadRequest)
 		return
 	}
 
 	if err := req.ParseMultipartForm(10 << 20); err != nil {
-		h.logger.Error("data_server::SaveMasterImage::ParseMultipartForm", err)
+		h.logger.Error("server::SaveMasterImage::ParseMultipartForm", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	formFile, meta, err := req.FormFile("file")
 	if err != nil {
-		h.logger.Error("data_server::SaveMasterImage::FormFile", err)
+		h.logger.Error("server::SaveMasterImage::FormFile", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer formFile.Close()
 
 	if err := os.MkdirAll(fmt.Sprintf("./images/%s", masterID), os.ModePerm); err != nil {
-		h.logger.Error("data_server::SaveMasterImage::MkdirAll", err)
+		h.logger.Error("server::SaveMasterImage::MkdirAll", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	image, err := os.Create(fmt.Sprintf("./images/%s/%s", masterID, meta.Filename))
 	if err != nil {
-		h.logger.Error("data_server::SaveMasterImage::Create", err)
+		h.logger.Error("server::SaveMasterImage::Create", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	imageBytes, err := io.ReadAll(formFile)
 	if err != nil {
-		h.logger.Error("data_server::SaveMasterImage::ReadAll", err)
+		h.logger.Error("server::SaveMasterImage::ReadAll", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if _, err := image.Write(imageBytes); err != nil {
-		h.logger.Error("data_server::SaveMasterImage::Write", err)
+		h.logger.Error("server::SaveMasterImage::Write", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -487,7 +487,7 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
 	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "url" : "%s" }`, imgUrl))); err != nil {
-		h.logger.Error("data_server::SaveMasterImage::Write", err)
+		h.logger.Error("server::SaveMasterImage::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")
@@ -509,20 +509,20 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	masterID := params["master_id"]
 	if len(masterID) == 0 {
-		h.logger.Error("data_server::ApproveMaster::params[]", "no masterID")
+		h.logger.Error("server::ApproveMaster::params[]", "no masterID")
 		http.Error(rw, "no masterID", http.StatusBadRequest)
 		return
 	}
 
-	masterForm, err := h.dbAdapter.GetMasterRegForm(masterID)
+	masterForm, err := h.DBAdapter.GetMasterRegForm(masterID)
 	if err != nil {
-		h.logger.Error("data_server::ApproveMaster::GetMasterRegForm", err)
+		h.logger.Error("server::ApproveMaster::GetMasterRegForm", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if _, err := h.dbAdapter.SaveMaster(masterForm); err != nil {
-		h.logger.Error("data_server::ApproveMaster::SaveMaster", err)
+	if _, err := h.DBAdapter.SaveMaster(masterForm); err != nil {
+		h.logger.Error("server::ApproveMaster::SaveMaster", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -530,7 +530,7 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
 	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, masterID))); err != nil {
-		h.logger.Error("data_server::ApproveMaster::Write", err)
+		h.logger.Error("server::ApproveMaster::Write", err)
 		return
 	}
 	h.logger.Info("Response sent")

@@ -50,7 +50,9 @@ type Master struct {
 	Images      []string `json:"images"`
 	Description string   `json:"description"`
 	Contact     string   `json:"contact"`
-	CityID      string   `json:"city_id"`
+	CityName    string   `json:"cityName"`
+	ServCatName string   `json:"servCatName"`
+	RegDate     string   `json:"regDate"`
 }
 
 type MasterRegForm struct {

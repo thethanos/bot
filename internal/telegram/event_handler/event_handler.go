@@ -3,7 +3,7 @@ package telegram
 import (
 	"fmt"
 	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"

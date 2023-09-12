@@ -1,4 +1,4 @@
-package data_server
+package server
 
 import "net/http"
 

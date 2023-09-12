@@ -1,22 +1,22 @@
-package data_server
+package server
 
 import (
 	"errors"
 	"fmt"
 	"multimessenger_bot/internal/config"
-	handler "multimessenger_bot/internal/data_server/handler"
-	corsMiddleware "multimessenger_bot/internal/data_server/middleware"
-	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/dbadapter"
 	"multimessenger_bot/internal/logger"
+	handler "multimessenger_bot/internal/server/handler"
+	corsMiddleware "multimessenger_bot/internal/server/middleware"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 )
 
-func NewDataServer(logger logger.Logger, cfg *config.Config, dbAdapter *db_adapter.DbAdapter) (*http.Server, error) {
+func NewServer(logger logger.Logger, cfg *config.Config, DBAdapter *dbadapter.DBAdapter) (*http.Server, error) {
 
-	handler := handler.NewHandler(logger, cfg, dbAdapter)
+	handler := handler.NewHandler(logger, cfg, DBAdapter)
 	docHandler := middleware.Redoc(middleware.RedocOpts{SpecURL: "swagger.yaml"}, nil)
 
 	router := mux.NewRouter()

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"multimessenger_bot/internal/config"
-	srv "multimessenger_bot/internal/data_server"
-	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/dbadapter"
 	"multimessenger_bot/internal/logger"
+	srv "multimessenger_bot/internal/server"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,26 +21,26 @@ func main() {
 
 	logger := logger.NewLogger(cfg.Mode)
 
-	dbAdapter, err := db_adapter.NewDbAdapter(logger, cfg)
+	DBAdapter, err := dbadapter.NewDbAdapter(logger, cfg)
 	if err != nil {
-		logger.Error("main::db_adapter::NewDbAdapter", err)
+		logger.Error("main::dbadapter::NewDBAdapter", err)
 		return
 	}
 
-	if err := dbAdapter.AutoMigrate(); err != nil {
-		logger.Error("main::db_adapter::AutoMigrate", err)
+	if err := DBAdapter.AutoMigrate(); err != nil {
+		logger.Error("main::dbadapter::AutoMigrate", err)
 		return
 	}
 
-	server, err := srv.NewDataServer(logger, cfg, dbAdapter)
+	server, err := srv.NewServer(logger, cfg, DBAdapter)
 	if err != nil {
-		logger.Error("main::data_server::NewDataServer", err)
+		logger.Error("main::server::NewServer", err)
 		return
 	}
 
 	go func() {
 		if err := server.ListenAndServeTLS("dev-full.crt", "dev-key.key"); err != nil {
-			logger.Fatal("main::data_server::ListenAndServe", err)
+			logger.Fatal("main::server::ListenAndServe", err)
 		}
 	}()
 
@@ -48,7 +48,7 @@ func main() {
 	<-signalHandler
 
 	if err := server.Shutdown(context.Background()); err != nil {
-		logger.Error("main::data_server::Shutdown", err)
+		logger.Error("main::server::Shutdown", err)
 	}
 }
 

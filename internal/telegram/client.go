@@ -4,7 +4,7 @@ import (
 	"io"
 	"multimessenger_bot/internal/config"
 	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 	"net/http"
 
 	handler "multimessenger_bot/internal/telegram/event_handler"

@@ -1,10 +1,10 @@
 package bot
 
 import (
-	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/dbadapter"
 	"multimessenger_bot/internal/entities"
 	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 	"strings"
 	"time"
 )
@@ -22,10 +22,10 @@ type Bot struct {
 	userSessions map[string]*UserSession
 	recvMsgChan  chan *ma.Message
 	sendMsgChan  chan *ma.Message
-	dbAdapter    *db_adapter.DbAdapter
+	DBAdapter    *dbadapter.DBAdapter
 }
 
-func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, dbAdapter *db_adapter.DbAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
+func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, DBAdapter *dbadapter.DBAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
 
 	clients := make(map[ma.MessageSource]ma.ClientInterface)
 	for _, client := range clientArray {
@@ -40,7 +40,7 @@ func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, dbAdapter *d
 		clients:      clients,
 		userSessions: userSessions,
 		recvMsgChan:  recvMsgChan,
-		dbAdapter:    dbAdapter,
+		DBAdapter:    DBAdapter,
 		sendMsgChan:  sendMsgChan,
 	}
 
@@ -105,73 +105,58 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 		}
 	case CitySelectionStep:
 		return &CitySelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode:     &BaseCitySelectionMode{dbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
+			mode:     &BaseCitySelectionMode{dbAdapter: b.DBAdapter},
 		}
 	case MainMenuCitySelectionStep:
 		return &CitySelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
 			mode: &MainMenuCitySelectionMode{
 				BaseCitySelectionMode{
-					dbAdapter: b.dbAdapter,
+					dbAdapter: b.DBAdapter,
 				},
 			},
 		}
 	case ServiceCategorySelectionStep:
 		return &ServiceCategorySelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
 			mode: &BaseServiceCategoryMode{
-				dbAdapter: b.dbAdapter,
+				dbAdapter: b.DBAdapter,
 			},
 		}
 	case MainMenuServiceCategorySelectionStep:
 		return &ServiceCategorySelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
 			mode: &MainMenuServiceCategoryMode{
 				BaseServiceCategoryMode: BaseServiceCategoryMode{
-					dbAdapter: b.dbAdapter,
+					dbAdapter: b.DBAdapter,
 				},
 			},
 		}
-	case MainMenuServiceSelectionStep:
-		return &ServiceSelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode:     &MainMenuServiceSelectionMode{BaseServiceSelectionMode{dbAdapter: b.dbAdapter}},
-		}
 	case ServiceSelectionStep:
 		return &ServiceSelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode:     &BaseServiceSelectionMode{dbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
+			mode:     &BaseServiceSelectionMode{dbAdapter: b.DBAdapter},
+		}
+	case MainMenuServiceSelectionStep:
+		return &ServiceSelection{
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
+			mode:     &MainMenuServiceSelectionMode{BaseServiceSelectionMode{dbAdapter: b.DBAdapter}},
 		}
 	case MasterSelectionStep:
 		return &MasterSelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
 		}
 	case FindModelStep:
 		return &FindModel{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
 		}
 	case CollaborationStep:
 		return &Collaboration{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
+			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
 		}
 	case EmptyStep:
 		return nil
-	case AdminStep:
-		return &Admin{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
-	case AdminServiceCategorySelectionStep:
-		return &ServiceCategorySelection{
-			StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter},
-			mode: &AdminServiceCategoryMode{
-				BaseServiceCategoryMode: BaseServiceCategoryMode{dbAdapter: b.dbAdapter},
-			},
-		}
-	case AddServiceCategoryStep:
-		return &AddServiceCategory{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
-	case AddServiceStep:
-		return &AddService{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
-	case AddCityStep:
-		return &AddCity{StepBase: StepBase{logger: b.logger, state: state, dbAdapter: b.dbAdapter}}
 	default:
 		return &MainMenu{StepBase: StepBase{logger: b.logger, state: state}}
 	}

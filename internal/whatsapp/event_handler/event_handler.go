@@ -2,7 +2,7 @@ package whatsapp
 
 import (
 	"fmt"
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 
 	"go.mau.fi/whatsmeow/types/events"
 )

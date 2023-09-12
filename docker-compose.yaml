@@ -1,12 +1,12 @@
 version: '3'
 
 services:
-  data_server:
+  server:
     build:
       context: .
-      dockerfile: docker/data_server.Dockerfile
-    image: data_server:latest
-    container_name: data_server
+      dockerfile: docker/server.Dockerfile
+    image: server:latest
+    container_name: server
     restart: always
     depends_on:
       db:
@@ -26,7 +26,7 @@ services:
     depends_on:
       db:
         condition: service_started
-      data_server:
+      server:
         condition: service_started
   db:
     container_name: postgres

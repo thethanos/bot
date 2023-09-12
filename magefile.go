@@ -15,7 +15,7 @@ func RunLinter() error {
 }
 
 func GenDoc() error {
-	return sh.Run("swag", "init", "-g", "internal/data_server/handler/handler.go", "--ot", "yaml", "-o", "docs")
+	return sh.Run("swag", "init", "-g", "internal/server/handler/handler.go", "--ot", "yaml", "-o", "docs")
 }
 
 func RunTests() error {
@@ -29,12 +29,12 @@ func BuildBot() error {
 	return sh.Run("go", "build", "-o", "bot", "cmd/bot/main.go")
 }
 
-func BuildDataServer() error {
+func BuildServer() error {
 	if err := Tidy(); err != nil {
 		return err
 	}
 	if err := GenDoc(); err != nil {
 		return err
 	}
-	return sh.Run("go", "build", "-o", "data_server", "cmd/data_server/main.go")
+	return sh.Run("go", "build", "-o", "server", "cmd/server/main.go")
 }

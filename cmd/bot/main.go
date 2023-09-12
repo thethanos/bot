@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"multimessenger_bot/internal/bot"
 	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/dbadapter"
 	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 	"multimessenger_bot/internal/telegram"
 	"os"
 	"os/signal"
@@ -30,9 +30,9 @@ func main() {
 
 	logger := logger.NewLogger(cfg.Mode)
 
-	dbAdapter, err := db_adapter.NewDbAdapter(logger, cfg)
+	DBAdapter, err := dbadapter.NewDbAdapter(logger, cfg)
 	if err != nil {
-		logger.Error("main::db_adapter::NewDbAdapter", err)
+		logger.Error("main::dbadapter::NewDbAdapter", err)
 		return
 	}
 
@@ -40,7 +40,7 @@ func main() {
 	tgClient, _ := telegram.NewTelegramClient(logger, cfg, recvMsgChan)
 	//waClient, _ := whatsapp.NewWhatsAppClient(logger, cfg, waContainer, recvMsgChan)
 
-	bot, err := bot.NewBot(logger, []ma.ClientInterface{tgClient}, dbAdapter, recvMsgChan)
+	bot, err := bot.NewBot(logger, []ma.ClientInterface{tgClient}, DBAdapter, recvMsgChan)
 	if err != nil {
 		logger.Error("main::bot::NewBot", err)
 	}

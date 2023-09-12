@@ -2,9 +2,9 @@ package bot
 
 import (
 	"fmt"
-	"multimessenger_bot/internal/db_adapter"
+	"multimessenger_bot/internal/dbadapter"
 	"multimessenger_bot/internal/entities"
-	ma "multimessenger_bot/internal/messenger_adapter"
+	ma "multimessenger_bot/internal/msgadapter"
 	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
@@ -17,7 +17,7 @@ type CitySelectionStepMode interface {
 }
 
 type BaseCitySelectionMode struct {
-	dbAdapter *db_adapter.DbAdapter
+	dbAdapter *dbadapter.DBAdapter
 }
 
 func (b *BaseCitySelectionMode) MenuItems(cities []*entities.City) [][]tgbotapi.KeyboardButton {
@@ -63,7 +63,7 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 	c.logger.Infof("CitySelection step is sending request")
 	c.inProgress = true
 
-	cities, _ := c.dbAdapter.GetCities(c.state.GetServiceID(), 0, -1)
+	cities, _ := c.DBAdapter.GetCities(c.state.GetServiceID(), 0, -1)
 
 	if msg.Source == ma.TELEGRAM {
 		rows := c.mode.MenuItems(cities)
