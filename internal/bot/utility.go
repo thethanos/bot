@@ -1,7 +1,7 @@
 package bot
 
 import (
-	ma "multimessenger_bot/internal/msgadapter"
+	ma "bot/internal/msgadapter"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )

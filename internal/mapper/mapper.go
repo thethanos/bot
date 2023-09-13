@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"multimessenger_bot/internal/entities"
-	"multimessenger_bot/internal/models"
+	"bot/internal/entities"
+	"bot/internal/models"
 )
 
 func FromCityModel(model *models.City) *entities.City {

@@ -12,8 +12,8 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - /home/multimessenger_bot
-      - /home/images:/multimessenger_bot/images
+      - /home/bot
+      - /home/images:/bot/images
     ports:
       - 444:444
   bot:

@@ -1,13 +1,13 @@
 package server
 
 import (
+	"bot/internal/config"
+	"bot/internal/dbadapter"
+	"bot/internal/logger"
+	handler "bot/internal/server/handler"
+	corsMiddleware "bot/internal/server/middleware"
 	"errors"
 	"fmt"
-	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/dbadapter"
-	"multimessenger_bot/internal/logger"
-	handler "multimessenger_bot/internal/server/handler"
-	corsMiddleware "multimessenger_bot/internal/server/middleware"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -25,9 +25,9 @@ func NewServer(logger logger.Logger, cfg *config.Config, DBAdapter *dbadapter.DB
 	getRouter.HandleFunc("/services/categories", handler.GetServiceCategories)
 	getRouter.HandleFunc("/services", handler.GetServices)
 	getRouter.HandleFunc("/masters", handler.GetMasters)
-	getRouter.PathPrefix("/images").Handler(http.FileServer(http.Dir("/multimessenger_bot")))
+	getRouter.PathPrefix("/images").Handler(http.FileServer(http.Dir("/bot")))
 	getRouter.Handle("/docs", docHandler)
-	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("/multimessenger_bot/docs")))
+	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("/bot/docs")))
 
 	postRouter := router.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/cities", handler.SaveCity)

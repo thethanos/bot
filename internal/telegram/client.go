@@ -1,13 +1,13 @@
 package telegram
 
 import (
+	"bot/internal/config"
+	"bot/internal/logger"
+	ma "bot/internal/msgadapter"
 	"io"
-	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/msgadapter"
 	"net/http"
 
-	handler "multimessenger_bot/internal/telegram/event_handler"
+	handler "bot/internal/telegram/event_handler"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"

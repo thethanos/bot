@@ -1,13 +1,13 @@
 package main
 
 import (
+	"bot/internal/bot"
+	"bot/internal/config"
+	"bot/internal/dbadapter"
+	"bot/internal/logger"
+	ma "bot/internal/msgadapter"
+	"bot/internal/telegram"
 	"fmt"
-	"multimessenger_bot/internal/bot"
-	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/dbadapter"
-	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/msgadapter"
-	"multimessenger_bot/internal/telegram"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,12 +16,6 @@ import (
 )
 
 func main() {
-
-	//gCalendarClient, err := google_calendar.NewGoogleCalendarClient("service_credentials.json")
-	//if err != nil {
-	//	  fmt.Println(err)
-	//	  return
-	//}
 
 	cfg, err := config.Load("config.toml")
 	if err != nil {

@@ -1,10 +1,10 @@
 package bot
 
 import (
-	"multimessenger_bot/internal/dbadapter"
-	"multimessenger_bot/internal/entities"
-	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/msgadapter"
+	"bot/internal/dbadapter"
+	"bot/internal/entities"
+	"bot/internal/logger"
+	ma "bot/internal/msgadapter"
 	"strings"
 	"time"
 )

@@ -1,14 +1,14 @@
 package dbadapter
 
 import (
+	"bot/internal/config"
+	"bot/internal/entities"
+	"bot/internal/mapper"
+	"bot/internal/models"
 	"fmt"
-	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/entities"
-	"multimessenger_bot/internal/mapper"
-	"multimessenger_bot/internal/models"
 	"time"
 
-	"multimessenger_bot/internal/logger"
+	"bot/internal/logger"
 
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"

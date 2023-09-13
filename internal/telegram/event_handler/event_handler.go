@@ -1,9 +1,9 @@
 package telegram
 
 import (
+	"bot/internal/logger"
+	ma "bot/internal/msgadapter"
 	"fmt"
-	"multimessenger_bot/internal/logger"
-	ma "multimessenger_bot/internal/msgadapter"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"

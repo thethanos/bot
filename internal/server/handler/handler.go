@@ -1,13 +1,13 @@
 package server
 
 import (
+	"bot/internal/config"
+	"bot/internal/dbadapter"
+	"bot/internal/entities"
+	"bot/internal/logger"
 	"encoding/json"
 	"fmt"
 	"io"
-	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/dbadapter"
-	"multimessenger_bot/internal/entities"
-	"multimessenger_bot/internal/logger"
 	"net/http"
 	"os"
 

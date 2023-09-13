@@ -1,4 +1,4 @@
-module multimessenger_bot
+module bot
 
 go 1.20
 

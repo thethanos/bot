@@ -1,10 +1,10 @@
 package bot
 
 import (
+	"bot/internal/dbadapter"
+	"bot/internal/entities"
+	ma "bot/internal/msgadapter"
 	"fmt"
-	"multimessenger_bot/internal/dbadapter"
-	"multimessenger_bot/internal/entities"
-	ma "multimessenger_bot/internal/msgadapter"
 	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"

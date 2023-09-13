@@ -1,12 +1,12 @@
 package main
 
 import (
+	"bot/internal/config"
+	"bot/internal/dbadapter"
+	"bot/internal/logger"
+	srv "bot/internal/server"
 	"context"
 	"fmt"
-	"multimessenger_bot/internal/config"
-	"multimessenger_bot/internal/dbadapter"
-	"multimessenger_bot/internal/logger"
-	srv "multimessenger_bot/internal/server"
 	"os"
 	"os/signal"
 	"syscall"

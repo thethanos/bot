@@ -1,9 +1,9 @@
 package logger
 
 import (
+	"bot/internal/config"
 	"bytes"
 	"log"
-	"multimessenger_bot/internal/config"
 	"os"
 
 	"go.uber.org/zap"

@@ -6,7 +6,7 @@ RUN go install -v golang.org/x/tools/gopls@latest && \
     go install -v github.com/swaggo/swag/cmd/swag@latest && \
     go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
 
-WORKDIR /multimessenger_bot
+WORKDIR /bot
 COPY go.mod go.sum ./
 
 
