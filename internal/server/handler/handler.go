@@ -427,9 +427,16 @@ func (h *Handler) SaveMasterRegForm(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// temporary, while the approvement mechanism is not integrated
+	if _, err := h.DBAdapter.SaveMaster(id); err != nil {
+		h.logger.Error("server::SaveMasterRegForm::SaveMaster", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
-	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id))); err != nil {
+	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%d" }`, id))); err != nil {
 		h.logger.Error("server::SaveMasterRegForm::Write", err)
 		return
 	}
@@ -451,10 +458,10 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	params := mux.Vars(req)
-	masterID := params["master_id"]
-	if len(masterID) == 0 {
-		h.logger.Error("server::SaveMasterImage::params[]", "no masterID")
-		http.Error(rw, "no masterID", http.StatusBadRequest)
+	masterID, err := getParam[uint](params["master_id"], 0)
+	if err != nil {
+		h.logger.Error("server::SaveMasterImage::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -472,13 +479,13 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	}
 	defer formFile.Close()
 
-	if err := os.MkdirAll(fmt.Sprintf("./images/%s", masterID), os.ModePerm); err != nil {
+	if err := os.MkdirAll(fmt.Sprintf("./images/%d", masterID), os.ModePerm); err != nil {
 		h.logger.Error("server::SaveMasterImage::MkdirAll", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	image, err := os.Create(fmt.Sprintf("./images/%s/%s", masterID, meta.Filename))
+	image, err := os.Create(fmt.Sprintf("./images/%d/%s", masterID, meta.Filename))
 	if err != nil {
 		h.logger.Error("server::SaveMasterImage::Create", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -498,7 +505,7 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	imgUrl := fmt.Sprintf("%s/%s/%s", h.cfg.ImagePrefix, masterID, meta.Filename)
+	imgUrl := fmt.Sprintf("%s/%d/%s", h.cfg.ImagePrefix, masterID, meta.Filename)
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
@@ -523,21 +530,14 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	params := mux.Vars(req)
-	masterID := params["master_id"]
-	if len(masterID) == 0 {
-		h.logger.Error("server::ApproveMaster::params[]", "no masterID")
-		http.Error(rw, "no masterID", http.StatusBadRequest)
-		return
-	}
-
-	masterForm, err := h.DBAdapter.GetMasterRegForm(masterID)
+	masterID, err := getParam[uint](params["master_id"], 0)
 	if err != nil {
-		h.logger.Error("server::ApproveMaster::GetMasterRegForm", err)
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		h.logger.Error("server::ApproveMaster::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if _, err := h.DBAdapter.SaveMaster(masterForm); err != nil {
+	if _, err := h.DBAdapter.SaveMaster(masterID); err != nil {
 		h.logger.Error("server::ApproveMaster::SaveMaster", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
@@ -545,7 +545,7 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
-	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, masterID))); err != nil {
+	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%d" }`, masterID))); err != nil {
 		h.logger.Error("server::ApproveMaster::Write", err)
 		return
 	}

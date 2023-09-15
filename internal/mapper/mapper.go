@@ -34,21 +34,18 @@ func FromMasterServRelationModel(model *models.MasterServRelation) *entities.Mas
 		Name:        model.Name,
 		Description: model.Description,
 		Contact:     model.Contact,
-		Images:      model.Images,
 		CityName:    model.CityName,
 		ServCatName: model.ServCatName,
+		RegDate:     model.CreatedAt.Format("2006-01-02"),
 	}
 }
 
 func FromMasterRegFormModel(model *models.MasterRegForm) *entities.MasterRegForm {
 	return &entities.MasterRegForm{
-		ID:          model.ID,
 		Name:        model.Name,
-		Images:      model.Images,
 		Description: model.Description,
 		Contact:     model.Contact,
 		CityID:      model.CityID,
 		ServCatID:   model.ServCatID,
-		ServIDs:     model.ServIDs,
 	}
 }

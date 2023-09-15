@@ -41,27 +41,25 @@ type ServiceCategory struct {
 type Service struct {
 	ID      uint   `json:"id"`
 	Name    string `json:"name" validate:"required"`
-	CatID   uint   `json:"category_id" validate:"required"`
-	CatName string `json:"category_name" validate:"required"`
-}
-
-type Master struct {
-	ID          uint     `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Contact     string   `json:"contact"`
-	Images      []string `json:"images"`
-	CityName    string   `json:"cityName"`
-	ServCatName string   `json:"servCatName"`
+	CatID   uint   `json:"cat_id" validate:"required"`
+	CatName string `json:"cat_name"`
 }
 
 type MasterRegForm struct {
-	ID          uint     `json:"id,omitempty"`
-	Name        string   `json:"name" validate:"required"`
-	Images      []string `json:"images" validate:"required"`
-	Description string   `json:"description,omitempty"`
-	Contact     string   `json:"contact" validate:"required"`
-	CityID      uint     `json:"city_id" validate:"required"`
-	ServCatID   uint     `json:"serv_cat_id" validate:"required"`
-	ServIDs     []string `json:"serv_ids" validate:"required"`
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description,omitempty"`
+	Contact     string `json:"contact" validate:"required"`
+	CityID      uint   `json:"city_id" validate:"required"`
+	ServCatID   uint   `json:"serv_cat_id" validate:"required"`
+	ServIDs     []uint `json:"serv_ids" validate:"required"`
+}
+
+type Master struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Contact     string `json:"contact"`
+	CityName    string `json:"cityName"`
+	ServCatName string `json:"servCatName"`
+	RegDate     string `json:"regDate"`
 }

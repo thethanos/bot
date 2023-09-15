@@ -217,44 +217,43 @@ func (d *DBAdapter) GetMasters(cityID, servCatID, servID uint, page, limit int) 
 	return result, nil
 }
 
-func (d *DBAdapter) GetMasterRegForm(master_id string) (*entities.MasterRegForm, error) {
-
-	master := &models.MasterRegForm{}
-	if err := d.DBConn.Where("id = ?", master_id).First(master).Error; err != nil {
-		return nil, err
-	}
-
-	return mapper.FromMasterRegFormModel(master), nil
-}
-
 func (d *DBAdapter) SaveServiceCategory(name string) (uint, error) {
 	id := uint(time.Now().Unix())
 	service := &models.ServiceCategory{
 		Model: gorm.Model{
-			ID: id,
+			ID:        id,
+			CreatedAt: time.Now(),
 		},
 		Name: name,
 	}
 	if err := d.DBConn.Create(service).Error; err != nil {
 		return 0, err
 	}
-	d.logger.Infof("New service category added successfully, id: %s, name: %s", id, name)
+	d.logger.Infof("New service category added successfully, id: %d, name: %s", id, name)
 	return id, nil
 }
 
 func (d *DBAdapter) SaveService(name string, categoryID uint) (uint, error) {
 	id := uint(time.Now().Unix())
+
+	category := models.ServiceCategory{}
+	if err := d.DBConn.Where("id = ?", categoryID).First(&category).Error; err != nil {
+		return 0, err
+	}
+
 	service := &models.Service{
 		Model: gorm.Model{
-			ID: id,
+			ID:        id,
+			CreatedAt: time.Now(),
 		},
-		Name:  name,
-		CatID: categoryID,
+		Name:    name,
+		CatID:   category.ID,
+		CatName: category.Name,
 	}
 	if err := d.DBConn.Create(service).Error; err != nil {
 		return 0, err
 	}
-	d.logger.Infof("New service added successfully, id: %s, name: %s", id, name)
+	d.logger.Infof("New service added successfully, id: %d, name: %s", id, name)
 	return id, nil
 }
 
@@ -262,37 +261,90 @@ func (d *DBAdapter) SaveCity(name string) (uint, error) {
 	id := uint(time.Now().Unix())
 	city := &models.City{
 		Model: gorm.Model{
-			ID: id,
+			ID:        id,
+			CreatedAt: time.Now(),
 		},
 		Name: name,
 	}
 	if err := d.DBConn.Create(city).Error; err != nil {
 		return 0, err
 	}
-	d.logger.Infof("New city added successfully, id: %s, name: %s", id, name)
+	d.logger.Infof("New city added successfully, id: %d, name: %s", id, name)
 	return id, nil
 }
 
-func (d *DBAdapter) SaveMaster(data *entities.MasterRegForm) (uint, error) {
-	master := &models.MasterServRelation{
+func (d *DBAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (uint, error) {
+	city := models.City{}
+	if err := d.DBConn.Where("id = ?", master.CityID).First(&city).Error; err != nil {
+		return 0, err
+	}
+
+	id := uint(time.Now().Unix())
+	regForm := models.MasterRegForm{
 		Model: gorm.Model{
-			ID: data.ID,
+			ID:        uint(time.Now().Unix()),
+			CreatedAt: time.Now(),
 		},
-		Name:        data.Name,
-		Contact:     data.Contact,
-		Description: data.Description,
-		Images:      data.Images,
-		CityID:      data.CityID,
+		MasterID:    id,
+		Name:        master.Name,
+		Contact:     master.Contact,
+		Description: master.Description,
+		CityID:      city.ID,
+		CityName:    city.Name,
+	}
+
+	forms := make([]models.MasterRegForm, 0)
+	for _, servID := range master.ServIDs {
+		service := models.Service{}
+		if err := d.DBConn.Where("id = ?", servID).First(&service).Error; err != nil {
+			return 0, err
+		}
+		regForm.ServCatID = service.CatID
+		regForm.ServCatName = service.CatName
+		regForm.ServID = service.ID
+		regForm.ServName = service.Name
+		forms = append(forms, regForm)
+	}
+
+	if err := d.DBConn.Create(&forms).Error; err != nil {
+		return 0, err
+	}
+	d.logger.Infof("Form saved successfully, id: %d, name: %s", id, master.Name)
+	return id, nil
+}
+
+func (d *DBAdapter) SaveMaster(id uint) (uint, error) {
+
+	master := &models.MasterRegForm{}
+	if err := d.DBConn.Where("master_id = ?", id).First(master).Error; err != nil {
+		return 0, err
+	}
+
+	result := &models.MasterServRelation{
+		Model: gorm.Model{
+			ID:        uint(time.Now().Unix()),
+			CreatedAt: time.Now(),
+		},
+		MasterID:    id,
+		Name:        master.Name,
+		Description: master.Description,
+		Contact:     master.Contact,
+		CityID:      master.CityID,
+		CityName:    master.CityName,
+		ServCatID:   master.ServCatID,
+		ServCatName: master.ServCatName,
+		ServID:      master.ServID,
+		ServName:    master.ServName,
 	}
 
 	tx := d.DBConn.Begin()
 	defer tx.Rollback()
 
-	if err := tx.Create(master).Error; err != nil {
+	if err := tx.Create(result).Error; err != nil {
 		return 0, err
 	}
 
-	if err := tx.Delete(&models.MasterRegForm{Model: gorm.Model{ID: data.ID}}).Error; err != nil {
+	if err := tx.Where("master_id = ?", id).Delete(&models.MasterRegForm{}).Error; err != nil {
 		return 0, err
 	}
 
@@ -300,33 +352,6 @@ func (d *DBAdapter) SaveMaster(data *entities.MasterRegForm) (uint, error) {
 		return 0, err
 	}
 
-	d.logger.Infof("New master added successfully, id: %s, name: %s", master.ID, master.Name)
+	d.logger.Infof("New master added successfully, id: %d, name: %s", master.ID, master.Name)
 	return master.ID, nil
-}
-
-func (d *DBAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (uint, error) {
-	id := uint(time.Now().Unix())
-
-	images := make([]string, 0)
-	for _, image := range master.Images {
-		images = append(images, fmt.Sprintf("%s/%d/%s", d.cfg.ImagePrefix, id, image))
-	}
-
-	regForm := &models.MasterRegForm{
-		Model: gorm.Model{
-			ID: id,
-		},
-		Name:        master.Name,
-		CityID:      master.CityID,
-		ServCatID:   master.ServCatID,
-		ServIDs:     master.ServIDs,
-		Contact:     master.Contact,
-		Description: master.Description,
-		Images:      images,
-	}
-	if err := d.DBConn.Create(regForm).Error; err != nil {
-		return 0, err
-	}
-	d.logger.Infof("Form saved successfully, id: %s, name: %s", id, master.Name)
-	return id, nil
 }
