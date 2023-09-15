@@ -41,17 +41,17 @@ type ServiceCategory struct {
 type Service struct {
 	ID      uint   `json:"id"`
 	Name    string `json:"name" validate:"required"`
-	CatID   uint   `json:"cat_id" validate:"required"`
-	CatName string `json:"cat_name"`
+	CatID   uint   `json:"catID" validate:"required"`
+	CatName string `json:"catName"`
 }
 
 type MasterRegForm struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description,omitempty"`
 	Contact     string `json:"contact" validate:"required"`
-	CityID      uint   `json:"city_id" validate:"required"`
-	ServCatID   uint   `json:"serv_cat_id" validate:"required"`
-	ServIDs     []uint `json:"serv_ids" validate:"required"`
+	CityID      uint   `json:"cityID" validate:"required"`
+	ServCatID   uint   `json:"servCatID" validate:"required"`
+	ServIDs     []uint `json:"servIDs" validate:"required"`
 }
 
 type Master struct {
