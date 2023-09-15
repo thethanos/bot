@@ -14,54 +14,54 @@ func (u *UserState) Reset() {
 	u.RawInput = make(map[string]string)
 }
 
-func (u UserState) GetCityID() string {
+func (u UserState) GetCityID() uint {
 	if u.City != nil {
 		return u.City.ID
 	}
-	return ""
+	return 0
 }
 
-func (u UserState) GetServiceID() string {
+func (u UserState) GetServiceID() uint {
 	if u.Service != nil {
 		return u.Service.ID
 	}
-	return ""
+	return 0
 }
 
 type City struct {
-	ID   string `json:"id"`
+	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
 
 type ServiceCategory struct {
-	ID   string `json:"id"`
+	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
 
 type Service struct {
-	ID         string `json:"id"`
-	Name       string `json:"name" validate:"required"`
-	CategoryID string `json:"category_id" validate:"required"`
+	ID      uint   `json:"id"`
+	Name    string `json:"name" validate:"required"`
+	CatID   uint   `json:"category_id" validate:"required"`
+	CatName string `json:"category_name" validate:"required"`
 }
 
 type Master struct {
-	ID          string   `json:"id"`
+	ID          uint     `json:"id"`
 	Name        string   `json:"name"`
-	Images      []string `json:"images"`
 	Description string   `json:"description"`
 	Contact     string   `json:"contact"`
+	Images      []string `json:"images"`
 	CityName    string   `json:"cityName"`
 	ServCatName string   `json:"servCatName"`
-	RegDate     string   `json:"regDate"`
 }
 
 type MasterRegForm struct {
-	ID                string   `json:"id,omitempty"`
-	Name              string   `json:"name" validate:"required"`
-	Images            []string `json:"images" validate:"required"`
-	Description       string   `json:"description,omitempty"`
-	Contact           string   `json:"contact" validate:"required"`
-	CityID            string   `json:"city_id" validate:"required"`
-	ServiceCategoryID string   `json:"service_category_id" validate:"required"`
-	ServiceIDs        []string `json:"service_ids" validate:"required"`
+	ID          uint     `json:"id,omitempty"`
+	Name        string   `json:"name" validate:"required"`
+	Images      []string `json:"images" validate:"required"`
+	Description string   `json:"description,omitempty"`
+	Contact     string   `json:"contact" validate:"required"`
+	CityID      uint     `json:"city_id" validate:"required"`
+	ServCatID   uint     `json:"serv_cat_id" validate:"required"`
+	ServIDs     []string `json:"serv_ids" validate:"required"`
 }

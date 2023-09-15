@@ -49,166 +49,170 @@ func (d *DBAdapter) AutoMigrate() error {
 	if err := d.DBConn.AutoMigrate(&models.Service{}); err != nil {
 		return err
 	}
-	if err := d.DBConn.AutoMigrate(&models.Master{}); err != nil {
+	if err := d.DBConn.AutoMigrate(&models.MasterServRelation{}); err != nil {
 		return err
 	}
 	if err := d.DBConn.AutoMigrate(&models.MasterRegForm{}); err != nil {
-		return err
-	}
-	if err := d.DBConn.AutoMigrate(&models.Join{}); err != nil {
-		return err
-	}
-	if err := d.DBConn.AutoMigrate(&models.JoinCityCategory{}); err != nil {
 		return err
 	}
 	d.logger.Info("Auto-migration: success")
 	return nil
 }
 
-func (d *DBAdapter) GetCities(serviceId string, page, limit int) ([]*entities.City, error) {
+func (d *DBAdapter) GetCities(servID uint, page, limit int) ([]*entities.City, error) {
+
+	if servID != 0 {
+		return d.GetCitiesByService(servID, page, limit)
+	}
+
+	cities := make([]*models.City, 0)
+	if err := d.DBConn.Offset(page * limit).Limit(limit).Find(&cities).Error; err != nil {
+		return nil, err
+	}
 
 	result := make([]*entities.City, 0)
-	cities := make([]*models.City, 0)
-
-	if serviceId == "" {
-		if err := d.DBConn.Offset(page).Limit(limit).Find(&cities).Error; err != nil {
-			d.logger.Error(err)
-			return nil, err
-		}
-		for _, city := range cities {
-			result = append(result, &entities.City{ID: city.ID, Name: city.Name})
-		}
-		return result, nil
-	}
-
-	joins := make([]*models.Join, 0)
-	if err := d.DBConn.Where("service_id = ?", serviceId).Find(&joins).Error; err != nil {
-		d.logger.Error(err)
-		return nil, err
-	}
-
-	cityIds := make([]string, 0)
-	for _, join := range joins {
-		cityIds = append(cityIds, join.CityID)
-	}
-
-	if err := d.DBConn.Offset(page).Limit(limit).Where("id IN ?", cityIds).Find(&cities).Error; err != nil {
-		d.logger.Error(err)
-		return nil, err
-	}
 	for _, city := range cities {
-		result = append(result, &entities.City{ID: city.ID, Name: city.Name})
+		result = append(result, mapper.FromCityModel(city))
 	}
+
 	return result, nil
 }
 
-func (d *DBAdapter) GetServiceCategories(cityId string, page, limit int) ([]*entities.ServiceCategory, error) {
-	result := make([]*entities.ServiceCategory, 0)
+func (d *DBAdapter) GetCitiesByService(servID uint, page, limit int) ([]*entities.City, error) {
+
+	masterServRelations := make([]*models.MasterServRelation, 0)
+	query := d.DBConn.Offset(page * limit).Limit(limit)
+	query = query.Where("serv_id = ?", servID).Select("DISTINCT ON (city_id) city_id, city_name")
+	if err := query.Find(&masterServRelations).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]*entities.City, 0)
+	for _, relation := range masterServRelations {
+		result = append(result, &entities.City{
+			ID:   relation.CityID,
+			Name: relation.CityName,
+		})
+	}
+
+	return nil, nil
+}
+
+func (d *DBAdapter) GetServCategories(cityID uint, page, limit int) ([]*entities.ServiceCategory, error) {
+
+	if cityID != 0 {
+		return d.GetServCategoriesByCity(cityID, page, limit)
+	}
+
 	categories := make([]*models.ServiceCategory, 0)
-
-	if len(cityId) == 0 {
-		if err := d.DBConn.Offset(page).Limit(limit).Find(&categories).Error; err != nil {
-			d.logger.Error(err)
-			return nil, err
-		}
-		for _, category := range categories {
-			result = append(result, &entities.ServiceCategory{ID: category.ID, Name: category.Name})
-		}
-		return result, nil
-	}
-
-	joins := make([]*models.JoinCityCategory, 0)
-	if err := d.DBConn.Where("city_id = ?", cityId).Find(&joins).Error; err != nil {
+	if err := d.DBConn.Offset(page * limit).Limit(limit).Find(&categories).Error; err != nil {
 		return nil, err
 	}
 
-	categoryIds := make([]string, 0)
-	for _, join := range joins {
-		categoryIds = append(categoryIds, join.ServiceCategoryID)
-	}
-
-	if err := d.DBConn.Offset(page).Limit(limit).Where("id IN ?", categoryIds).Find(&categories).Error; err != nil {
-		return nil, err
-	}
+	result := make([]*entities.ServiceCategory, 0)
 	for _, category := range categories {
-		result = append(result, &entities.ServiceCategory{ID: category.ID, Name: category.Name})
+		result = append(result, mapper.FromServCatModel(category))
 	}
+
 	return result, nil
 }
 
-func (d *DBAdapter) GetServices(categoryId, cityId string, page, limit int) ([]*entities.Service, error) {
+func (d *DBAdapter) GetServCategoriesByCity(cityID uint, page, limit int) ([]*entities.ServiceCategory, error) {
+
+	masterServRelations := make([]*models.MasterServRelation, 0)
+	query := d.DBConn.Offset(page * limit).Limit(limit)
+	query = query.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_cat_id) serv_cat_id, serv_cat_name")
+	if err := query.Find(&masterServRelations).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]*entities.ServiceCategory, 0)
+	for _, relation := range masterServRelations {
+		result = append(result, &entities.ServiceCategory{
+			ID:   relation.ServCatID,
+			Name: relation.ServCatName,
+		})
+	}
+
+	return result, nil
+}
+
+func (d *DBAdapter) GetServices(categoryID, cityID uint, page, limit int) ([]*entities.Service, error) {
+
+	if cityID != 0 {
+		return d.GetServicesByCity(categoryID, cityID, page, limit)
+	}
+
+	return d.GetServicesByCategory(categoryID, page, limit)
+}
+
+func (d *DBAdapter) GetServicesByCity(categoryID, cityID uint, page, limit int) ([]*entities.Service, error) {
+
+	masterServRelations := make([]*models.MasterServRelation, 0)
+	query := d.DBConn.Offset(page * limit).Limit(limit)
+	if categoryID != 0 {
+		query = query.Where("serv_cat_id = ?", categoryID)
+	}
+
+	query = query.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_id) * serv_id, serv_name, serv_cat_id, serv_cat_name")
+	if err := query.Find(&masterServRelations).Error; err != nil {
+		return nil, err
+	}
+
 	result := make([]*entities.Service, 0)
-	services := make([]*models.Service, 0)
-
-	if len(categoryId) == 0 {
-		if err := d.DBConn.Offset(page).Limit(limit).Find(&services).Error; err != nil {
-			return nil, err
-		}
-	} else if len(cityId) != 0 {
-		joins := make([]*models.Join, 0)
-		if err := d.DBConn.Select("service_id").Distinct().Where("city_id = ?", cityId).Find(&joins).Error; err != nil {
-			return nil, err
-		}
-
-		serviceIds := make([]string, 0)
-		for _, join := range joins {
-			serviceIds = append(serviceIds, join.ServiceID)
-		}
-
-		if err := d.DBConn.Offset(page).Limit(limit).Where("category_id = ? AND id IN ?", categoryId, serviceIds).Find(&services).Error; err != nil {
-			return nil, err
-		}
-	} else {
-		if err := d.DBConn.Offset(page).Limit(limit).Where("category_id = ?", categoryId).Find(&services).Error; err != nil {
-			return nil, err
-		}
+	for _, relation := range masterServRelations {
+		result = append(result, &entities.Service{
+			ID:      relation.ServID,
+			Name:    relation.ServName,
+			CatID:   relation.ServCatID,
+			CatName: relation.ServCatName,
+		})
 	}
 
-	for _, service := range services {
-		result = append(result, &entities.Service{ID: service.ID, Name: service.Name, CategoryID: service.CategoryID})
-	}
 	return result, nil
 }
 
-func (d *DBAdapter) GetMasters(cityId, serviceId string, page, limit int) ([]*entities.Master, error) {
-	result := make([]*entities.Master, 0)
-	masters := make([]*models.Master, 0)
-	joins := make([]*models.Join, 0)
+func (d *DBAdapter) GetServicesByCategory(categoryID uint, page, limit int) ([]*entities.Service, error) {
 
 	query := d.DBConn.Offset(page * limit).Limit(limit)
-	if len(cityId) != 0 || len(serviceId) != 0 {
-		if len(cityId) != 0 {
-			query = query.Where("city_id = ?", cityId)
-		}
-		if len(serviceId) != 0 {
-			query = query.Where("service_id = ?", serviceId)
-		}
-
-		if err := query.Find(&joins).Error; err != nil {
-			return nil, err
-		}
-
-		masterIds := make([]string, 0)
-		for _, join := range joins {
-			masterIds = append(masterIds, join.MasterID)
-		}
-
-		if err := d.DBConn.Where("id IN ?", masterIds).Find(&masters).Error; err != nil {
-			return nil, err
-		}
-	} else {
-		if err := query.Find(&masters).Error; err != nil {
-			return nil, err
-		}
+	if categoryID != 0 {
+		query = query.Where("cat_id = ?", categoryID)
 	}
 
+	services := make([]*models.Service, 0)
+	if err := query.Find(&services).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]*entities.Service, 0)
+	for _, service := range services {
+		result = append(result, mapper.FromServiceModel(service))
+	}
+
+	return result, nil
+}
+
+func (d *DBAdapter) GetMasters(cityID, servCatID, servID uint, page, limit int) ([]*entities.Master, error) {
+
+	query := d.DBConn.Offset(page * limit).Limit(limit)
+	if cityID != 0 {
+		query = query.Where("city_id = ?", cityID)
+	}
+	if servCatID != 0 {
+		query = query.Where("serv_cat_id = ?", servCatID)
+	}
+	if servID != 0 {
+		query = query.Where("serv_id = ?", servID)
+	}
+
+	masters := make([]*models.MasterServRelation, 0)
+	if err := query.Select("DISTINCT ON (master_id) *").Find(&masters).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]*entities.Master, 0)
 	for _, master := range masters {
-		result = append(result, &entities.Master{
-			ID:          master.ID,
-			Name:        master.Name,
-			Images:      master.Images,
-			Description: master.Description,
-		})
+		result = append(result, mapper.FromMasterServRelationModel(master))
 	}
 	return result, nil
 }
@@ -223,50 +227,57 @@ func (d *DBAdapter) GetMasterRegForm(master_id string) (*entities.MasterRegForm,
 	return mapper.FromMasterRegFormModel(master), nil
 }
 
-func (d *DBAdapter) SaveServiceCategory(name string) (string, error) {
-	id := fmt.Sprintf("%d", time.Now().Unix())
+func (d *DBAdapter) SaveServiceCategory(name string) (uint, error) {
+	id := uint(time.Now().Unix())
 	service := &models.ServiceCategory{
-		ID:   id,
+		Model: gorm.Model{
+			ID: id,
+		},
 		Name: name,
 	}
 	if err := d.DBConn.Create(service).Error; err != nil {
-		return "", err
+		return 0, err
 	}
 	d.logger.Infof("New service category added successfully, id: %s, name: %s", id, name)
 	return id, nil
 }
 
-func (d *DBAdapter) SaveService(name, categoryId string) (string, error) {
-	id := fmt.Sprintf("%d", time.Now().Unix())
+func (d *DBAdapter) SaveService(name string, categoryID uint) (uint, error) {
+	id := uint(time.Now().Unix())
 	service := &models.Service{
-		ID:         id,
-		Name:       name,
-		CategoryID: categoryId,
+		Model: gorm.Model{
+			ID: id,
+		},
+		Name:  name,
+		CatID: categoryID,
 	}
 	if err := d.DBConn.Create(service).Error; err != nil {
-		return "", err
+		return 0, err
 	}
 	d.logger.Infof("New service added successfully, id: %s, name: %s", id, name)
 	return id, nil
 }
 
-func (d *DBAdapter) SaveCity(name string) (string, error) {
-	id := fmt.Sprintf("%d", time.Now().Unix())
+func (d *DBAdapter) SaveCity(name string) (uint, error) {
+	id := uint(time.Now().Unix())
 	city := &models.City{
-		ID:   id,
+		Model: gorm.Model{
+			ID: id,
+		},
 		Name: name,
 	}
 	if err := d.DBConn.Create(city).Error; err != nil {
-		return "", err
+		return 0, err
 	}
 	d.logger.Infof("New city added successfully, id: %s, name: %s", id, name)
 	return id, nil
 }
 
-func (d *DBAdapter) SaveMaster(data *entities.MasterRegForm) (string, error) {
-
-	master := &models.Master{
-		ID:          data.ID,
+func (d *DBAdapter) SaveMaster(data *entities.MasterRegForm) (uint, error) {
+	master := &models.MasterServRelation{
+		Model: gorm.Model{
+			ID: data.ID,
+		},
 		Name:        data.Name,
 		Contact:     data.Contact,
 		Description: data.Description,
@@ -278,54 +289,43 @@ func (d *DBAdapter) SaveMaster(data *entities.MasterRegForm) (string, error) {
 	defer tx.Rollback()
 
 	if err := tx.Create(master).Error; err != nil {
-		return "", err
+		return 0, err
 	}
 
-	if err := tx.Where("city_id = ? AND service_category_id = ?", data.CityID, data.ServiceCategoryID).First(&models.JoinCityCategory{}).Error; err != nil {
-		d.logger.Infof("Creating new join record - city_id: %s, service_category_id: %s", data.CityID, data.ServiceCategoryID)
-		if err := tx.Create(&models.JoinCityCategory{CityID: data.CityID, ServiceCategoryID: data.ServiceCategoryID}).Error; err != nil {
-			return "", err
-		}
-	}
-
-	for _, serviceID := range data.ServiceIDs {
-		if err := tx.Create(&models.Join{CityID: data.CityID, ServiceID: serviceID, MasterID: master.ID}).Error; err != nil {
-			return "", err
-		}
-	}
-
-	if err := tx.Delete(&models.MasterRegForm{ID: data.ID}).Error; err != nil {
-		return "", err
+	if err := tx.Delete(&models.MasterRegForm{Model: gorm.Model{ID: data.ID}}).Error; err != nil {
+		return 0, err
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return "", err
+		return 0, err
 	}
 
 	d.logger.Infof("New master added successfully, id: %s, name: %s", master.ID, master.Name)
 	return master.ID, nil
 }
 
-func (d *DBAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (string, error) {
-	id := fmt.Sprintf("%d", time.Now().Unix())
+func (d *DBAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (uint, error) {
+	id := uint(time.Now().Unix())
 
 	images := make([]string, 0)
 	for _, image := range master.Images {
-		images = append(images, fmt.Sprintf("%s/%s/%s", d.cfg.ImagePrefix, id, image))
+		images = append(images, fmt.Sprintf("%s/%d/%s", d.cfg.ImagePrefix, id, image))
 	}
 
 	regForm := &models.MasterRegForm{
-		ID:                id,
-		Name:              master.Name,
-		CityID:            master.CityID,
-		ServiceCategoryID: master.ServiceCategoryID,
-		ServiceIDs:        master.ServiceIDs,
-		Contact:           master.Contact,
-		Description:       master.Description,
-		Images:            images,
+		Model: gorm.Model{
+			ID: id,
+		},
+		Name:        master.Name,
+		CityID:      master.CityID,
+		ServCatID:   master.ServCatID,
+		ServIDs:     master.ServIDs,
+		Contact:     master.Contact,
+		Description: master.Description,
+		Images:      images,
 	}
 	if err := d.DBConn.Create(regForm).Error; err != nil {
-		return "", err
+		return 0, err
 	}
 	d.logger.Infof("Form saved successfully, id: %s, name: %s", id, master.Name)
 	return id, nil

@@ -4,6 +4,8 @@ import (
 	"database/sql/driver"
 	"errors"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type string_array []string
@@ -24,48 +26,44 @@ func (i string_array) Value() (driver.Value, error) {
 }
 
 type City struct {
-	ID   string `gorm:"primarykey"`
+	gorm.Model
 	Name string `gorm:"name"`
 }
 
 type ServiceCategory struct {
-	ID   string `gorm:"primarykey"`
+	gorm.Model
 	Name string `gorm:"name"`
 }
 
 type Service struct {
-	ID         string `gorm:"primarykey"`
-	Name       string `gorm:"name"`
-	CategoryID string `gorm:"category_id"`
+	gorm.Model
+	Name    string `gorm:"name"`
+	CatID   uint   `gorm:"cat_id"`
+	CatName string `gorm:"cat_name"`
 }
 
-type Master struct {
-	ID          string       `gorm:"primarykey"`
+type MasterServRelation struct {
+	gorm.Model
+	MasterID    uint         `gorm:"master_id"`
 	Name        string       `gorm:"name"`
-	Images      string_array `gorm:"type:text"`
 	Description string       `gorm:"description"`
 	Contact     string       `gorm:"contact"`
-	CityID      string       `gorm:"city_id"`
+	Images      string_array `gorm:"type:text"`
+	CityID      uint         `gorm:"city_id"`
+	CityName    string       `gorm:"city_name"`
+	ServCatID   uint         `gorm:"serv_cat_id"`
+	ServCatName string       `gorm:"serv_cat_name"`
+	ServID      uint         `gorm:"serv_id"`
+	ServName    string       `gorm:"serv_name"`
 }
 
 type MasterRegForm struct {
-	ID                string       `gorm:"primarykey"`
-	Name              string       `gorm:"name"`
-	CityID            string       `gorm:"city_id"`
-	ServiceCategoryID string       `gorm:"service_category_id"`
-	ServiceIDs        string_array `gorm:"type:text"`
-	Contact           string       `gorm:"contact"`
-	Images            string_array `gorm:"type:text"`
-	Description       string       `gotm:"description"`
-}
-
-type Join struct {
-	CityID    string `gorm:"city_id"`
-	ServiceID string `gorm:"service_id"`
-	MasterID  string `gorm:"master_id"`
-}
-
-type JoinCityCategory struct {
-	CityID            string `gorm:"city_id"`
-	ServiceCategoryID string `gorm:"service_category_id"`
+	gorm.Model
+	Name        string       `gorm:"name"`
+	CityID      uint         `gorm:"city_id"`
+	ServCatID   uint         `gorm:"service_category_id"`
+	ServIDs     string_array `gorm:"type:text"`
+	Contact     string       `gorm:"contact"`
+	Images      string_array `gorm:"type:text"`
+	Description string       `gotm:"description"`
 }

@@ -170,7 +170,7 @@ func (f *FindModel) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог моделей", WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("https://bot-dev-domain.com/masters?city_id=%s&service_id=%s", f.state.GetCityID(), f.state.GetServiceID()),
+			Url: fmt.Sprintf("https://bot-dev-domain.com/masters?city_id=%d&service_id=%d", f.state.GetCityID(), f.state.GetServiceID()),
 		}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}

@@ -1,12 +1,22 @@
 package server
 
-import "strconv"
+import (
+	"strconv"
 
-func getParamInt(param string, defaultValue int) (int, error) {
+	"golang.org/x/exp/constraints"
+)
+
+func getParam[T constraints.Integer](param string, defaultValue T) (T, error) {
 	if len(param) == 0 {
 		return defaultValue, nil
 	}
-	return strconv.Atoi(param)
+
+	res, err := strconv.Atoi(param)
+	if err != nil {
+		return 0, err
+	}
+
+	return T(res), nil
 }
 
 type ID struct {

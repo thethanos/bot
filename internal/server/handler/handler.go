@@ -43,21 +43,21 @@ func (h *Handler) GetCities(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
-	page, err := getParamInt(query.Get("page"), 0)
+	page, err := getParam[int](query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParam[int]", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	limit, err := getParamInt(query.Get("limit"), -1)
+	limit, err := getParam[int](query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParam[int]", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	cities, err := h.DBAdapter.GetCities("", page, limit)
+	cities, err := h.DBAdapter.GetCities(0, page, limit)
 	if err != nil {
 		h.logger.Error("server::GetCities::GetCities", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -94,21 +94,21 @@ func (h *Handler) GetServiceCategories(rw http.ResponseWriter, req *http.Request
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
-	page, err := getParamInt(query.Get("page"), 0)
+	page, err := getParam[int](query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParam[int]", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	limit, err := getParamInt(query.Get("limit"), -1)
+	limit, err := getParam[int](query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParam[int]", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	categories, err := h.DBAdapter.GetServiceCategories("", page, limit)
+	categories, err := h.DBAdapter.GetServCategories(0, page, limit)
 	if err != nil {
 		h.logger.Error("server::GetCategories::GetCategories", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -146,23 +146,28 @@ func (h *Handler) GetServices(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
-	page, err := getParamInt(query.Get("page"), 0)
+	page, err := getParam[int](query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParam[int]", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	limit, err := getParamInt(query.Get("limit"), -1)
+	limit, err := getParam[int](query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("server::GetCities::getParamInt", err)
+		h.logger.Error("server::GetCities::getParam[int]", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	categoryId := query.Get("category_id")
+	categoryID, err := getParam[uint](query.Get("category_id"), 0)
+	if err != nil {
+		h.logger.Error("server::GetCities::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	services, err := h.DBAdapter.GetServices(categoryId, "", page, limit)
+	services, err := h.DBAdapter.GetServices(categoryID, 0, page, limit)
 	if err != nil {
 		h.logger.Error("server::GetServices::GetServices", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -202,24 +207,35 @@ func (h *Handler) GetMasters(rw http.ResponseWriter, req *http.Request) {
 	h.logger.Infof("Request received: %s", req.URL)
 
 	query := req.URL.Query()
-	page, err := getParamInt(query.Get("page"), 0)
+	page, err := getParam[int](query.Get("page"), 0)
 	if err != nil {
-		h.logger.Error("server::GetMasters::getParamInt", err)
+		h.logger.Error("server::GetMasters::getParam[int]", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	limit, err := getParamInt(query.Get("limit"), -1)
+	limit, err := getParam[int](query.Get("limit"), -1)
 	if err != nil {
-		h.logger.Error("server::GetMasters::getParamInt", err)
+		h.logger.Error("server::GetMasters::getParam[int]", err)
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	cityId := query.Get("city_id")
-	serviceId := query.Get("service_id")
+	cityID, err := getParam[uint](query.Get("city_id"), 0)
+	if err != nil {
+		h.logger.Error("server::GetMasters::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	masters, err := h.DBAdapter.GetMasters(cityId, serviceId, page, limit)
+	serviceID, err := getParam[uint](query.Get("service_id"), 0)
+	if err != nil {
+		h.logger.Error("server::GetMasters::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	masters, err := h.DBAdapter.GetMasters(cityID, 0, serviceID, page, limit)
 	if err != nil {
 		h.logger.Error("server::GetMasters::GetMasters", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -354,7 +370,7 @@ func (h *Handler) SaveService(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	id, err := h.DBAdapter.SaveService(service.Name, service.CategoryID)
+	id, err := h.DBAdapter.SaveService(service.Name, service.CatID)
 	if err != nil {
 		h.logger.Error("server::SaveService::SaveService", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
