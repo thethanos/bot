@@ -154,7 +154,7 @@ func (d *DBAdapter) GetServicesByCity(categoryID, cityID uint, page, limit int) 
 		query = query.Where("serv_cat_id = ?", categoryID)
 	}
 
-	query = query.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_id) * serv_id, serv_name, serv_cat_id, serv_cat_name")
+	query = query.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_id) serv_id, serv_name, serv_cat_id, serv_cat_name")
 	if err := query.Find(&masterServRelations).Error; err != nil {
 		return nil, err
 	}
