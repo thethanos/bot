@@ -55,11 +55,12 @@ type MasterRegForm struct {
 }
 
 type Master struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Contact     string `json:"contact"`
-	CityName    string `json:"cityName"`
-	ServCatName string `json:"servCatName"`
-	RegDate     string `json:"regDate"`
+	ID          uint     `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Contact     string   `json:"contact"`
+	CityName    string   `json:"cityName"`
+	ServCatName string   `json:"servCatName"`
+	RegDate     string   `json:"regDate"`
+	ImageURLs   []string `json:"imageURLs"`
 }

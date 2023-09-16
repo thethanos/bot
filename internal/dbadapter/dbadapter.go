@@ -212,8 +212,27 @@ func (d *DBAdapter) GetMasters(cityID, servCatID, servID uint, page, limit int) 
 
 	result := make([]*entities.Master, 0)
 	for _, master := range masters {
-		result = append(result, mapper.FromMasterServRelationModel(master))
+		urls, err := d.GetMasterImageURLs(master.MasterID)
+		if err != nil {
+			d.logger.Error("Failed to find image URLs for %d %s %s", master.MasterID, master.Name, err)
+		}
+		result = append(result, mapper.FromMasterServRelationModel(master, urls))
 	}
+	return result, nil
+}
+
+func (d *DBAdapter) GetMasterImageURLs(masterID uint) ([]string, error) {
+
+	urlRecs := make([]*models.MasterImages, 0)
+	if err := d.DBConn.Where("master_id = ?", masterID).Find(&urlRecs).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0)
+	for _, rec := range urlRecs {
+		result = append(result, rec.URL)
+	}
+
 	return result, nil
 }
 
@@ -354,4 +373,72 @@ func (d *DBAdapter) SaveMaster(id uint) (uint, error) {
 
 	d.logger.Infof("New master added successfully, id: %d, name: %s", master.ID, master.Name)
 	return master.ID, nil
+}
+
+func (d *DBAdapter) SaveMasterImageURL(masterID uint, URL string) error {
+
+	id := uint(time.Now().Unix())
+	urlRec := models.MasterImages{
+		Model: gorm.Model{
+			ID:        id,
+			CreatedAt: time.Now(),
+		},
+		MasterID: masterID,
+		URL:      URL,
+	}
+
+	if err := d.DBConn.Create(&urlRec).Error; err != nil {
+		return err
+	}
+
+	d.logger.Infof("Image url saved successfully, %s", URL)
+	return nil
+}
+
+func (d *DBAdapter) DeleteCity(id uint) error {
+	if err := d.DBConn.Where("id = ?", id).Delete(&models.City{}).Error; err != nil {
+		return err
+	}
+
+	d.logger.Infof("City was deleted successfully: %d", id)
+	return nil
+}
+
+func (d *DBAdapter) DeleteServCategory(id uint) error {
+
+	tx := d.DBConn.Begin()
+	defer tx.Rollback()
+
+	if err := tx.Where("id = ?", id).Delete(&models.ServiceCategory{}).Error; err != nil {
+		return err
+	}
+
+	if err := tx.Where("cat_id = ?", id).Delete(&models.Service{}).Error; err != nil {
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	d.logger.Infof("ServiceCategory was deleted successfully: %d", id)
+	return nil
+}
+
+func (d *DBAdapter) DeleteService(id uint) error {
+	if err := d.DBConn.Where("id = ?", id).Delete(&models.Service{}).Error; err != nil {
+		return err
+	}
+
+	d.logger.Infof("Service was deleted successfully: %d", id)
+	return nil
+}
+
+func (d *DBAdapter) DeleteMaster(id uint) error {
+	if err := d.DBConn.Where("master_id = ?", id).Delete(&models.MasterServRelation{}).Error; err != nil {
+		return err
+	}
+
+	d.logger.Infof("Master was deleted successfully: %d", id)
+	return nil
 }

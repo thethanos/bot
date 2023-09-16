@@ -293,7 +293,7 @@ func (h *Handler) SaveCity(rw http.ResponseWriter, req *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
-	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id))); err != nil {
+	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%d" }`, id))); err != nil {
 		h.logger.Error("server::SaveCity::Write", err)
 		return
 	}
@@ -336,7 +336,7 @@ func (h *Handler) SaveServiceCategory(rw http.ResponseWriter, req *http.Request)
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
-	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id))); err != nil {
+	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%d" }`, id))); err != nil {
 		h.logger.Error("server::SaveServiceCategory::Write", err)
 		return
 	}
@@ -379,7 +379,7 @@ func (h *Handler) SaveService(rw http.ResponseWriter, req *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
-	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%s" }`, id))); err != nil {
+	if _, err := rw.Write([]byte(fmt.Sprintf(`{ "id" : "%d" }`, id))); err != nil {
 		h.logger.Error("server::SaveService::Write", err)
 		return
 	}
@@ -506,6 +506,11 @@ func (h *Handler) SaveMasterImage(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	imgUrl := fmt.Sprintf("%s/%d/%s", h.cfg.ImagePrefix, masterID, meta.Filename)
+	if err := h.DBAdapter.SaveMasterImageURL(masterID, imgUrl); err != nil {
+		h.logger.Error("server::SaveMasterImage::SaveMasterImageURL", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusCreated)
@@ -549,5 +554,125 @@ func (h *Handler) ApproveMaster(rw http.ResponseWriter, req *http.Request) {
 		h.logger.Error("server::ApproveMaster::Write", err)
 		return
 	}
+	h.logger.Info("Response sent")
+}
+
+// @Summary Delete city
+// @Description Delete a city from the system
+// @Tags City
+// @Param city_id path uint true "ID of the city"
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /cities/{city_id} [delete]
+func (h *Handler) DeleteCity(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	params := mux.Vars(req)
+	cityID, err := getParam[uint](params["city_id"], 0)
+	if err != nil {
+		h.logger.Error("server::DeleteCity::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.DBAdapter.DeleteCity(cityID); err != nil {
+		h.logger.Error("server::DeleteCity::DeleteCity", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rw.WriteHeader(http.StatusOK)
+	h.logger.Info("Response sent")
+}
+
+// @Summary Delete service category
+// @Description Delete a service category along with all its services from the system
+// @Tags Service
+// @Param category_id path uint true "ID of the service category"
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /services/categories/{category_id} [delete]
+func (h *Handler) DeleteServCategory(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	params := mux.Vars(req)
+	catID, err := getParam[uint](params["category_id"], 0)
+	if err != nil {
+		h.logger.Error("server::DeleteServCategory::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.DBAdapter.DeleteServCategory(catID); err != nil {
+		h.logger.Error("server::DeleteServCategory::DeleteServCategory", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rw.WriteHeader(http.StatusOK)
+	h.logger.Info("Response sent")
+}
+
+// @Summary Delete service
+// @Description Delete a service  from the system
+// @Tags Service
+// @Param service_id path uint true "ID of the service"
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /services/{service_id} [delete]
+func (h *Handler) DeleteService(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	params := mux.Vars(req)
+	servID, err := getParam[uint](params["service_id"], 0)
+	if err != nil {
+		h.logger.Error("server::DeleteService::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.DBAdapter.DeleteService(servID); err != nil {
+		h.logger.Error("server::DeleteService::DeleteService", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rw.WriteHeader(http.StatusOK)
+	h.logger.Info("Response sent")
+}
+
+// @Summary Delete master
+// @Description Delete a master from the system
+// @Tags Master
+// @Param master_id path uint true "ID of the master"
+// @Accept json
+// @Produce json
+// @Success 200
+// @Failure 400 {string} string "Error message"
+// @Failure 500 {string} string "Error message"
+// @Router /masters/{master_id} [delete]
+func (h *Handler) DeleteMaster(rw http.ResponseWriter, req *http.Request) {
+	h.logger.Infof("Request received: %s", req.URL)
+
+	params := mux.Vars(req)
+	masterID, err := getParam[uint](params["master_id"], 0)
+	if err != nil {
+		h.logger.Error("server::DeleteMaster::getParam[uint]", err)
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.DBAdapter.DeleteMaster(masterID); err != nil {
+		h.logger.Error("server::DeleteMaster::DeleteMaster", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rw.WriteHeader(http.StatusOK)
 	h.logger.Info("Response sent")
 }

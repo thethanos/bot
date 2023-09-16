@@ -134,7 +134,7 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог мастеров", WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("https://bot-dev-domain.com/webapp/gallery?city_id=%s&service_id=%s", m.state.GetCityID(), m.state.GetServiceID()),
+			Url: fmt.Sprintf("https://bot-dev-domain.com:445/bot-webapp/gallery?city_id=%d&service_id=%d", m.state.GetCityID(), m.state.GetServiceID()),
 		}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
@@ -170,7 +170,7 @@ func (f *FindModel) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог моделей", WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("https://bot-dev-domain.com/masters?city_id=%d&service_id=%d", f.state.GetCityID(), f.state.GetServiceID()),
+			Url: fmt.Sprintf("https://bot-dev-domain.com:445/bot-webapp/masters?city_id=%d&service_id=%d", f.state.GetCityID(), f.state.GetServiceID()),
 		}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}

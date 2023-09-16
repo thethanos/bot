@@ -28,7 +28,7 @@ func FromServiceModel(model *models.Service) *entities.Service {
 	}
 }
 
-func FromMasterServRelationModel(model *models.MasterServRelation) *entities.Master {
+func FromMasterServRelationModel(model *models.MasterServRelation, imgURLs []string) *entities.Master {
 	return &entities.Master{
 		ID:          model.MasterID,
 		Name:        model.Name,
@@ -37,15 +37,6 @@ func FromMasterServRelationModel(model *models.MasterServRelation) *entities.Mas
 		CityName:    model.CityName,
 		ServCatName: model.ServCatName,
 		RegDate:     model.CreatedAt.Format("2006-01-02"),
-	}
-}
-
-func FromMasterRegFormModel(model *models.MasterRegForm) *entities.MasterRegForm {
-	return &entities.MasterRegForm{
-		Name:        model.Name,
-		Description: model.Description,
-		Contact:     model.Contact,
-		CityID:      model.CityID,
-		ServCatID:   model.ServCatID,
+		ImageURLs:   imgURLs,
 	}
 }
