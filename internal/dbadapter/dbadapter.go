@@ -383,12 +383,7 @@ func (d *DBAdapter) SaveMaster(id uint) (uint, error) {
 
 func (d *DBAdapter) SaveMasterImageURL(masterID uint, URL string) error {
 
-	id := uint(time.Now().Unix())
 	urlRec := models.MasterImages{
-		Model: gorm.Model{
-			ID:        id,
-			CreatedAt: time.Now(),
-		},
 		MasterID: masterID,
 		URL:      URL,
 	}

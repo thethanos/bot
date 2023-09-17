@@ -50,7 +50,7 @@ type MasterRegForm struct {
 }
 
 type MasterImages struct {
-	gorm.Model
+	ID       uint   `gorm:"primaryKey;autoIncrement;notNull"`
 	MasterID uint   `gorm:"master_id"`
 	URL      string `gorm:"url"`
 }
