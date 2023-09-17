@@ -673,6 +673,12 @@ func (h *Handler) DeleteMaster(rw http.ResponseWriter, req *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	if err := os.RemoveAll(fmt.Sprintf("./images/%d", masterID)); err != nil {
+		// non critical error, just logging it
+		h.logger.Error("server::DeleteMaster::RemoveAll", err)
+	}
+
 	rw.WriteHeader(http.StatusOK)
 	h.logger.Info("Response sent")
 }

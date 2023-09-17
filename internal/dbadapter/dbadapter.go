@@ -304,7 +304,6 @@ func (d *DBAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (uint, err
 	id := uint(time.Now().Unix())
 	regForm := models.MasterRegForm{
 		Model: gorm.Model{
-			ID:        uint(time.Now().Unix()),
 			CreatedAt: time.Now(),
 		},
 		MasterID:    id,
@@ -321,6 +320,7 @@ func (d *DBAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (uint, err
 		if err := d.DBConn.Where("id = ?", servID).First(&service).Error; err != nil {
 			return 0, err
 		}
+		regForm.ID = uint(time.Now().Unix())
 		regForm.ServCatID = service.CatID
 		regForm.ServCatName = service.CatName
 		regForm.ServID = service.ID
@@ -337,32 +337,35 @@ func (d *DBAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (uint, err
 
 func (d *DBAdapter) SaveMaster(id uint) (uint, error) {
 
-	master := &models.MasterRegForm{}
-	if err := d.DBConn.Where("master_id = ?", id).First(master).Error; err != nil {
+	masters := make([]*models.MasterRegForm, 0)
+	if err := d.DBConn.Where("master_id = ?", id).Find(&masters).Error; err != nil {
 		return 0, err
 	}
 
-	result := &models.MasterServRelation{
-		Model: gorm.Model{
-			ID:        uint(time.Now().Unix()),
-			CreatedAt: time.Now(),
-		},
-		MasterID:    id,
-		Name:        master.Name,
-		Description: master.Description,
-		Contact:     master.Contact,
-		CityID:      master.CityID,
-		CityName:    master.CityName,
-		ServCatID:   master.ServCatID,
-		ServCatName: master.ServCatName,
-		ServID:      master.ServID,
-		ServName:    master.ServName,
+	result := make([]*models.MasterServRelation, 0)
+	for _, master := range masters {
+		result = append(result, &models.MasterServRelation{
+			Model: gorm.Model{
+				ID:        uint(time.Now().Unix()),
+				CreatedAt: time.Now(),
+			},
+			MasterID:    id,
+			Name:        master.Name,
+			Description: master.Description,
+			Contact:     master.Contact,
+			CityID:      master.CityID,
+			CityName:    master.CityName,
+			ServCatID:   master.ServCatID,
+			ServCatName: master.ServCatName,
+			ServID:      master.ServID,
+			ServName:    master.ServName,
+		})
 	}
 
 	tx := d.DBConn.Begin()
 	defer tx.Rollback()
 
-	if err := tx.Create(result).Error; err != nil {
+	if err := tx.Create(&result).Error; err != nil {
 		return 0, err
 	}
 
@@ -374,8 +377,8 @@ func (d *DBAdapter) SaveMaster(id uint) (uint, error) {
 		return 0, err
 	}
 
-	d.logger.Infof("New master added successfully, id: %d, name: %s", master.ID, master.Name)
-	return master.ID, nil
+	d.logger.Infof("New master added successfully, id: %d", id)
+	return id, nil
 }
 
 func (d *DBAdapter) SaveMasterImageURL(masterID uint, URL string) error {
