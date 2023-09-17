@@ -315,12 +315,12 @@ func (d *DBAdapter) SaveMasterRegForm(master *entities.MasterRegForm) (uint, err
 	}
 
 	forms := make([]models.MasterRegForm, 0)
-	for _, servID := range master.ServIDs {
+	for index, servID := range master.ServIDs {
 		service := models.Service{}
 		if err := d.DBConn.Where("id = ?", servID).First(&service).Error; err != nil {
 			return 0, err
 		}
-		regForm.ID = uint(time.Now().Unix())
+		regForm.ID = id + uint(index)
 		regForm.ServCatID = service.CatID
 		regForm.ServCatName = service.CatName
 		regForm.ServID = service.ID
@@ -346,10 +346,10 @@ func (d *DBAdapter) SaveMaster(id uint) (uint, error) {
 	for _, master := range masters {
 		result = append(result, &models.MasterServRelation{
 			Model: gorm.Model{
-				ID:        uint(time.Now().Unix()),
+				ID:        master.ID,
 				CreatedAt: time.Now(),
 			},
-			MasterID:    id,
+			MasterID:    master.MasterID,
 			Name:        master.Name,
 			Description: master.Description,
 			Contact:     master.Contact,
