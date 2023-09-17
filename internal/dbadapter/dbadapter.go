@@ -55,6 +55,9 @@ func (d *DBAdapter) AutoMigrate() error {
 	if err := d.DBConn.AutoMigrate(&models.MasterRegForm{}); err != nil {
 		return err
 	}
+	if err := d.DBConn.AutoMigrate(&models.MasterImages{}); err != nil {
+		return err;
+	}
 	d.logger.Info("Auto-migration: success")
 	return nil
 }
@@ -214,7 +217,7 @@ func (d *DBAdapter) GetMasters(cityID, servCatID, servID uint, page, limit int) 
 	for _, master := range masters {
 		urls, err := d.GetMasterImageURLs(master.MasterID)
 		if err != nil {
-			d.logger.Error("Failed to find image URLs for %d %s %s", master.MasterID, master.Name, err)
+			d.logger.Errorf("Failed to find image URLs for %d %s %s", master.MasterID, master.Name, err)
 		}
 		result = append(result, mapper.FromMasterServRelationModel(master, urls))
 	}
