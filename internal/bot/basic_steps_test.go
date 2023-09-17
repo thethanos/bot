@@ -221,7 +221,7 @@ func TestMasterSelectionStep(t *testing.T) {
 
 	rows := make([][]tgbotapi.KeyboardButton, 0)
 	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог мастеров", WebApp: &tgbotapi.WebAppInfo{
-		Url: "https://bot-dev-domain.com:445/bot-webapp/gallery?city_id=123&service_id=123",
+		Url: "https://bot-dev-domain.com:1445/bot-webapp/gallery?city_id=123&service_id=123",
 	}}})
 	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
 	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
