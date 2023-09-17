@@ -56,7 +56,7 @@ func (d *DBAdapter) AutoMigrate() error {
 		return err
 	}
 	if err := d.DBConn.AutoMigrate(&models.MasterImages{}); err != nil {
-		return err;
+		return err
 	}
 	d.logger.Info("Auto-migration: success")
 	return nil
@@ -98,7 +98,7 @@ func (d *DBAdapter) GetCitiesByService(servID uint, page, limit int) ([]*entitie
 		})
 	}
 
-	return nil, nil
+	return result, nil
 }
 
 func (d *DBAdapter) GetServCategories(cityID uint, page, limit int) ([]*entities.ServiceCategory, error) {

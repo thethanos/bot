@@ -83,7 +83,7 @@ func (s *ServiceCategorySelection) Request(msg *ma.Message) *ma.Message {
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 		if len(categories) == 0 {
-			return ma.NewTextMessage("Услуги не найдены", msg, keyboard, false)
+			return ma.NewTextMessage("По вашему запросу ничего не найдено", msg, keyboard, false)
 		}
 
 		s.categories = categories
