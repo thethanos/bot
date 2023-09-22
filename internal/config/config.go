@@ -14,9 +14,6 @@ const (
 type Config struct {
 	TgToken     string
 	Mode        Mode
-	ReleasePort int64
-	DebugPort   int64
-	ImagePrefix string
 	PsqlHost    string
 	PsqlPort    int64
 	PsqlUser    string
@@ -34,9 +31,6 @@ func Load(path string) (*Config, error) {
 	return &Config{
 		TgToken:     cfg.Get("bot.tg_token").(string),
 		Mode:        Mode(cfg.Get("bot.mode").(string)),
-		ReleasePort: cfg.Get("bot.release_port").(int64),
-		DebugPort:   cfg.Get("bot.debug_port").(int64),
-		ImagePrefix: cfg.Get("bot.image_prefix").(string),
 		PsqlHost:    cfg.Get("postgres.host").(string),
 		PsqlPort:    cfg.Get("postgres.port").(int64),
 		PsqlUser:    cfg.Get("postgres.user").(string),

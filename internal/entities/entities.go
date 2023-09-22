@@ -44,23 +44,3 @@ type Service struct {
 	CatID   uint   `json:"catID" validate:"required"`
 	CatName string `json:"catName"`
 }
-
-type MasterRegForm struct {
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description,omitempty"`
-	Contact     string `json:"contact" validate:"required"`
-	CityID      uint   `json:"cityID" validate:"required"`
-	ServCatID   uint   `json:"servCatID" validate:"required"`
-	ServIDs     []uint `json:"servIDs" validate:"required"`
-}
-
-type Master struct {
-	ID          uint     `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Contact     string   `json:"contact"`
-	CityName    string   `json:"cityName"`
-	ServCatName string   `json:"servCatName"`
-	RegDate     string   `json:"regDate"`
-	ImageURLs   []string `json:"imageURLs"`
-}
