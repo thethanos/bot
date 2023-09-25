@@ -2,9 +2,16 @@ package bot
 
 import (
 	ma "bot/internal/msgadapter"
+	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
+
+func Compare(input, option string) bool {
+	input = strings.ToLower(strings.Replace(input, " ", "", -1))
+	option = strings.ToLower(strings.Replace(option, " ", "", -1))
+	return input == option
+}
 
 type StepType uint
 

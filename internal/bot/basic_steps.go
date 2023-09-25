@@ -49,8 +49,7 @@ func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	y.logger.Infof("YesNo step is processing response")
 	y.inProgress = false
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "да" || userAnswer == "1" {
+	if Compare(msg.Text, "да") || Compare(msg.Text, "1") {
 		y.logger.Infof("Next step is %s", getStepTypeName(y.yesStep))
 		return nil, y.yesStep
 	}
@@ -77,8 +76,7 @@ func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	p.logger.Infof("Prompt step is processing response")
 	p.inProgress = false
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "назад" {
+	if Compare(msg.Text, "назад") {
 		p.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
@@ -147,12 +145,11 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	m.logger.Infof("MasterSelection step is processing response")
 	m.inProgress = false
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "вернуться назад" {
+	if Compare(msg.Text, "вернуться назад") {
 		m.logger.Infof("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	if userAnswer == "вернуться на главную" {
+	if Compare(msg.Text, "вернуться на главную") {
 		m.logger.Infof("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
@@ -182,8 +179,7 @@ func (f *FindModel) Request(msg *ma.Message) *ma.Message {
 func (f *FindModel) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	f.logger.Infof("FindModel step is processing response")
 	f.inProgress = false
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "вернуться на главную" {
+	if Compare(msg.Text, "вернуться на главную") {
 		f.logger.Infof("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
@@ -209,8 +205,7 @@ func (c *Collaboration) Request(msg *ma.Message) *ma.Message {
 func (c *Collaboration) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	c.logger.Infof("Collaboration step is processing response")
 	c.inProgress = false
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "вернуться на главную" {
+	if Compare(msg.Text, "вернуться на главную") {
 		c.logger.Infof("Next step is MainMenuStep")
 		return nil, PreviousStep
 	}

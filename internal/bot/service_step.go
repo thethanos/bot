@@ -5,7 +5,6 @@ import (
 	"bot/internal/entities"
 	ma "bot/internal/msgadapter"
 	"fmt"
-	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
@@ -96,18 +95,17 @@ func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message
 	s.logger.Info("ServiceCategorySelection step is processing response")
 	s.inProgress = false
 
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "вернуться назад" {
+	if Compare(msg.Text, "вернуться назад") {
 		s.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	if userAnswer == "вернуться на главную" {
+	if Compare(msg.Text, "вернуться на главную") {
 		s.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
 
 	for idx, service := range s.categories {
-		if userAnswer == strings.ToLower(service.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
+		if Compare(msg.Text, service.Name) || Compare(msg.Text, fmt.Sprintf("%d", idx+1)) {
 			s.state.ServiceCategory = service
 			s.logger.Infof("Next step is %s", getStepTypeName(s.mode.NextStep()))
 			return nil, s.mode.NextStep()
@@ -198,17 +196,16 @@ func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	s.logger.Info("ServiceSelection step is processing response")
 	s.inProgress = false
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "вернуться назад" {
+	if Compare(msg.Text, "вернуться назад") {
 		s.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	if userAnswer == "вернуться на главную" {
+	if Compare(msg.Text, "вернуться на главную") {
 		s.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
 	for idx, service := range s.services {
-		if userAnswer == strings.ToLower(service.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
+		if Compare(msg.Text, service.Name) || Compare(msg.Text, fmt.Sprintf("%d", idx+1)) {
 			s.state.Service = service
 			s.logger.Infof("Next step is %s", getStepTypeName(s.mode.NextStep()))
 			return nil, s.mode.NextStep()

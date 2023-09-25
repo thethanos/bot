@@ -5,7 +5,6 @@ import (
 	"bot/internal/entities"
 	ma "bot/internal/msgadapter"
 	"fmt"
-	"strings"
 
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
 )
@@ -84,18 +83,17 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType)
 	c.logger.Infof("CitySelection step is processing response")
 	c.inProgress = false
 
-	userAnswer := strings.ToLower(msg.Text)
-	if userAnswer == "вернуться назад" {
+	if Compare(msg.Text, "вернуться назад") {
 		c.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	if userAnswer == "вернуться на главную" {
+	if Compare(msg.Text, "вернуться на главную") {
 		c.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
 
 	for idx, city := range c.cities {
-		if userAnswer == strings.ToLower(city.Name) || userAnswer == fmt.Sprintf("%d", idx+1) {
+		if Compare(msg.Text, city.Name) || Compare(msg.Text, fmt.Sprintf("%d", idx+1)) {
 			c.state.City = city
 			c.logger.Infof("Next step is %s", getStepTypeName(c.mode.NextStep()))
 			return nil, c.mode.NextStep()
