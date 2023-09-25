@@ -45,7 +45,7 @@ func (d *DBAdapter) GetCities(servID uint, page, limit int) ([]*entities.City, e
 	}
 
 	cities := make([]*models.City, 0)
-	if err := d.DBConn.Offset(page * limit).Limit(limit).Find(&cities).Error; err != nil {
+	if err := d.DBConn.Offset(page * limit).Limit(limit).Order("name ASC").Find(&cities).Error; err != nil {
 		return nil, err
 	}
 
@@ -60,7 +60,7 @@ func (d *DBAdapter) GetCities(servID uint, page, limit int) ([]*entities.City, e
 func (d *DBAdapter) GetCitiesByService(servID uint, page, limit int) ([]*entities.City, error) {
 
 	masterServRelations := make([]*models.MasterServRelation, 0)
-	query := d.DBConn.Offset(page * limit).Limit(limit)
+	query := d.DBConn.Offset(page * limit).Limit(limit).Order("city_name ASC")
 	query = query.Where("serv_id = ?", servID).Select("DISTINCT ON (city_id) city_id, city_name")
 	if err := query.Find(&masterServRelations).Error; err != nil {
 		return nil, err
