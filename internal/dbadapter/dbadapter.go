@@ -84,7 +84,7 @@ func (d *DBAdapter) GetServCategories(cityID uint, page, limit int) ([]*entities
 	}
 
 	categories := make([]*models.ServiceCategory, 0)
-	if err := d.DBConn.Offset(page * limit).Limit(limit).Find(&categories).Error; err != nil {
+	if err := d.DBConn.Offset(page * limit).Limit(limit).Order("name ASC").Find(&categories).Error; err != nil {
 		return nil, err
 	}
 
@@ -98,15 +98,15 @@ func (d *DBAdapter) GetServCategories(cityID uint, page, limit int) ([]*entities
 
 func (d *DBAdapter) GetServCategoriesByCity(cityID uint, page, limit int) ([]*entities.ServiceCategory, error) {
 
-	masterServRelations := make([]*models.MasterServRelation, 0)
-	query := d.DBConn.Offset(page * limit).Limit(limit)
-	query = query.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_cat_id) serv_cat_id, serv_cat_name")
-	if err := query.Find(&masterServRelations).Error; err != nil {
+	relations := make([]*models.MasterServRelation, 0)
+	subquery := d.DBConn.Table("master_serv_relations").Offset(page * limit).Limit(limit)
+	subquery = subquery.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_cat_id) serv_cat_id, serv_cat_name, deleted_at")
+	if err := d.DBConn.Table("(?) as subquery", subquery).Order("serv_cat_name ASC").Find(&relations).Error; err != nil {
 		return nil, err
 	}
 
 	result := make([]*entities.ServiceCategory, 0)
-	for _, relation := range masterServRelations {
+	for _, relation := range relations {
 		result = append(result, &entities.ServiceCategory{
 			ID:   relation.ServCatID,
 			Name: relation.ServCatName,
@@ -127,19 +127,19 @@ func (d *DBAdapter) GetServices(categoryID, cityID uint, page, limit int) ([]*en
 
 func (d *DBAdapter) GetServicesByCity(categoryID, cityID uint, page, limit int) ([]*entities.Service, error) {
 
-	masterServRelations := make([]*models.MasterServRelation, 0)
-	query := d.DBConn.Offset(page * limit).Limit(limit)
+	relations := make([]*models.MasterServRelation, 0)
+	subquery := d.DBConn.Offset(page * limit).Limit(limit)
 	if categoryID != 0 {
-		query = query.Where("serv_cat_id = ?", categoryID)
+		subquery = subquery.Where("serv_cat_id = ?", categoryID)
 	}
 
-	query = query.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_id) serv_id, serv_name, serv_cat_id, serv_cat_name")
-	if err := query.Find(&masterServRelations).Error; err != nil {
+	subquery = subquery.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_id) serv_id, serv_name, serv_cat_id, serv_cat_name, deleted_at")
+	if err := d.DBConn.Table("(?) as subquery", subquery).Order("serv_name ASC").Find(&relations).Error; err != nil {
 		return nil, err
 	}
 
 	result := make([]*entities.Service, 0)
-	for _, relation := range masterServRelations {
+	for _, relation := range relations {
 		result = append(result, &entities.Service{
 			ID:      relation.ServID,
 			Name:    relation.ServName,
@@ -153,7 +153,7 @@ func (d *DBAdapter) GetServicesByCity(categoryID, cityID uint, page, limit int) 
 
 func (d *DBAdapter) GetServicesByCategory(categoryID uint, page, limit int) ([]*entities.Service, error) {
 
-	query := d.DBConn.Offset(page * limit).Limit(limit)
+	query := d.DBConn.Offset(page * limit).Limit(limit).Order("name ASC")
 	if categoryID != 0 {
 		query = query.Where("cat_id = ?", categoryID)
 	}
