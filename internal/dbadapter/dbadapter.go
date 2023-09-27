@@ -128,7 +128,7 @@ func (d *DBAdapter) GetServices(categoryID, cityID uint, page, limit int) ([]*en
 func (d *DBAdapter) GetServicesByCity(categoryID, cityID uint, page, limit int) ([]*entities.Service, error) {
 
 	relations := make([]*models.MasterServRelation, 0)
-	subquery := d.DBConn.Offset(page * limit).Limit(limit)
+	subquery := d.DBConn.Table("master_serv_relations").Offset(page * limit).Limit(limit)
 	if categoryID != 0 {
 		subquery = subquery.Where("serv_cat_id = ?", categoryID)
 	}
