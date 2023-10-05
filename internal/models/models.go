@@ -1,28 +1,24 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 type City struct {
-	gorm.Model
+	ID   uint   `gorm:"id"`
 	Name string `gorm:"name"`
 }
 
 type ServiceCategory struct {
-	gorm.Model
+	ID   uint   `gorm:"id"`
 	Name string `gorm:"name"`
 }
 
 type Service struct {
-	gorm.Model
+	ID      uint   `gorm:"id"`
 	Name    string `gorm:"name"`
 	CatID   uint   `gorm:"cat_id"`
 	CatName string `gorm:"cat_name"`
 }
 
 type MasterServRelation struct {
-	gorm.Model
+	ID          uint   `gorm:"id"`
 	MasterID    uint   `gorm:"master_id"`
 	Name        string `gorm:"name"`
 	Description string `gorm:"description"`

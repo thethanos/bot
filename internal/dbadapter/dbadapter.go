@@ -61,7 +61,7 @@ func (d *DBAdapter) GetCitiesByService(servID uint, page, limit int) ([]*entitie
 
 	relations := make([]*models.MasterServRelation, 0)
 	subquery := d.DBConn.Table("master_serv_relations").Offset(page * limit).Limit(limit)
-	subquery = subquery.Where("serv_id = ?", servID).Select("DISTINCT ON (city_id) city_id, city_name, deleted_at")
+	subquery = subquery.Where("serv_id = ?", servID).Select("DISTINCT ON (city_id) city_id, city_name")
 	if err := d.DBConn.Table("(?) as subquery", subquery).Order("city_name ASC").Find(&relations).Error; err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (d *DBAdapter) GetServCategoriesByCity(cityID uint, page, limit int) ([]*en
 
 	relations := make([]*models.MasterServRelation, 0)
 	subquery := d.DBConn.Table("master_serv_relations").Offset(page * limit).Limit(limit)
-	subquery = subquery.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_cat_id) serv_cat_id, serv_cat_name, deleted_at")
+	subquery = subquery.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_cat_id) serv_cat_id, serv_cat_name")
 	if err := d.DBConn.Table("(?) as subquery", subquery).Order("serv_cat_name ASC").Find(&relations).Error; err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (d *DBAdapter) GetServicesByCity(categoryID, cityID uint, page, limit int) 
 		subquery = subquery.Where("serv_cat_id = ?", categoryID)
 	}
 
-	subquery = subquery.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_id) serv_id, serv_name, serv_cat_id, serv_cat_name, deleted_at")
+	subquery = subquery.Where("city_id = ?", cityID).Select("DISTINCT ON (serv_id) serv_id, serv_name, serv_cat_id, serv_cat_name")
 	if err := d.DBConn.Table("(?) as subquery", subquery).Order("serv_name ASC").Find(&relations).Error; err != nil {
 		return nil, err
 	}
