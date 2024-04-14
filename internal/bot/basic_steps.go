@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"bot/internal/config"
 	"bot/internal/dbadapter"
 	"bot/internal/entities"
 	"bot/internal/logger"
@@ -15,6 +16,7 @@ type StepBase struct {
 	logger    logger.Logger
 	state     *entities.UserState
 	DBAdapter *dbadapter.DBAdapter
+	config    *config.Config
 }
 
 func (s *StepBase) Reset() {
@@ -109,6 +111,7 @@ func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 
 type MasterSelection struct {
 	StepBase
+	GalleryURL string
 }
 
 func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
@@ -116,7 +119,7 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог мастеров", WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("https://bot-dev-domain.com:1445/bot-webapp/gallery?city_id=%d&service_id=%d", m.state.GetCityID(), m.state.GetServiceID()),
+			Url: fmt.Sprintf("%s?city_id=%d&service_id=%d", m.GalleryURL, m.state.GetCityID(), m.state.GetServiceID()),
 		}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: Back}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
@@ -142,6 +145,7 @@ func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepTyp
 
 type FindModel struct {
 	StepBase
+	ModelsURL string
 }
 
 func (f *FindModel) Request(msg *ma.Message) *ma.Message {
@@ -149,9 +153,9 @@ func (f *FindModel) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог моделей", WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("https://bot-dev-domain.com:1445/bot-webapp/masters?city_id=%d&service_id=%d", f.state.GetCityID(), f.state.GetServiceID()),
+			Url: fmt.Sprintf("%s?city_id=%d&service_id=%d", f.ModelsURL, f.state.GetCityID(), f.state.GetServiceID()),
 		}}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewTextMessage("Поиск моделей", msg, keyboard, false)
 	}
@@ -160,7 +164,7 @@ func (f *FindModel) Request(msg *ma.Message) *ma.Message {
 
 func (f *FindModel) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	f.logger.Infof("FindModel step is processing response")
-	if Compare(msg.Text, "вернуться на главную") {
+	if Compare(msg.Text, BackToMain) {
 		f.logger.Infof("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
@@ -175,7 +179,7 @@ func (c *Collaboration) Request(msg *ma.Message) *ma.Message {
 	c.logger.Info("Collaboration step is sending request")
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewTextMessage("Всем привет! Меня зовут Маша и я алкоголик. Давайте сотрудничать.", msg, keyboard, false)
 	}
@@ -184,7 +188,7 @@ func (c *Collaboration) Request(msg *ma.Message) *ma.Message {
 
 func (c *Collaboration) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	c.logger.Infof("Collaboration step is processing response")
-	if Compare(msg.Text, "вернуться на главную") {
+	if Compare(msg.Text, BackToMain) {
 		c.logger.Infof("Next step is MainMenuStep")
 		return nil, PreviousStep
 	}

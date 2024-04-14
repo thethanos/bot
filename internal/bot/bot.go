@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"bot/internal/config"
 	"bot/internal/dbadapter"
 	"bot/internal/entities"
 	"bot/internal/logger"
@@ -18,6 +19,7 @@ type UserSession struct {
 
 type Bot struct {
 	logger       logger.Logger
+	cfg          *config.Config
 	clients      map[ma.MessageSource]ma.ClientInterface
 	userSessions map[string]*UserSession
 	recvMsgChan  chan *ma.Message
@@ -25,7 +27,7 @@ type Bot struct {
 	DBAdapter    *dbadapter.DBAdapter
 }
 
-func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, DBAdapter *dbadapter.DBAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
+func NewBot(logger logger.Logger, cfg *config.Config, clientArray []ma.ClientInterface, DBAdapter *dbadapter.DBAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
 
 	clients := make(map[ma.MessageSource]ma.ClientInterface)
 	for _, client := range clientArray {
@@ -37,6 +39,7 @@ func NewBot(logger logger.Logger, clientArray []ma.ClientInterface, DBAdapter *d
 
 	bot := &Bot{
 		logger:       logger,
+		cfg:          cfg,
 		clients:      clients,
 		userSessions: userSessions,
 		recvMsgChan:  recvMsgChan,
@@ -147,11 +150,13 @@ func (b *Bot) createStep(step StepType, state *entities.UserState) Step {
 		}
 	case MasterSelectionStep:
 		return &MasterSelection{
-			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
+			StepBase:   StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
+			GalleryURL: b.cfg.GalleryURL,
 		}
 	case FindModelStep:
 		return &FindModel{
-			StepBase: StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
+			StepBase:  StepBase{logger: b.logger, state: state, DBAdapter: b.DBAdapter},
+			ModelsURL: b.cfg.ModelsURL,
 		}
 	case CollaborationStep:
 		return &Collaboration{

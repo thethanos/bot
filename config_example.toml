@@ -1,0 +1,11 @@
+[bot]
+tg_token = "token"
+models_url = "url"
+gallery_url = "url"
+
+[postgres]
+host     = "host"
+port     = 5432
+user     = "user"
+password = "password"
+dbname   = "dbname"

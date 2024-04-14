@@ -44,7 +44,7 @@ type MainMenuCitySelectionMode struct {
 
 func (m *MainMenuCitySelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 	return rows
 }
 

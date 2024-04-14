@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"bot/internal/config"
 	"bot/internal/entities"
 	"bot/internal/logger"
 	ma "bot/internal/msgadapter"
@@ -20,7 +19,7 @@ func TestYesNoStep(t *testing.T) {
 	text := "test text"
 	step := &YesNo{
 		StepBase: StepBase{
-			logger: logger.NewLogger(config.RELEASE),
+			logger: logger.NewLogger(),
 		},
 		question: Question{
 			Text: text,
@@ -67,7 +66,7 @@ func TestPromptStep(t *testing.T) {
 	text := "test text"
 	step := &Prompt{
 		StepBase: StepBase{
-			logger: logger.NewLogger(config.RELEASE),
+			logger: logger.NewLogger(),
 			state: &entities.UserState{
 				RawInput: make(map[string]string),
 			},
@@ -115,7 +114,7 @@ func TestMainMenuStep(t *testing.T) {
 
 	step := &MainMenu{
 		StepBase: StepBase{
-			logger: logger.NewLogger(config.RELEASE),
+			logger: logger.NewLogger(),
 			state:  &entities.UserState{},
 		},
 	}
@@ -165,7 +164,7 @@ func TestMasterSelectionStep(t *testing.T) {
 
 	step := MasterSelection{
 		StepBase: StepBase{
-			logger: logger.NewLogger(config.RELEASE),
+			logger: logger.NewLogger(),
 			state: &entities.UserState{
 				City: &entities.City{
 					ID: 0,
@@ -179,7 +178,7 @@ func TestMasterSelectionStep(t *testing.T) {
 
 	rows := make([][]tgbotapi.KeyboardButton, 0)
 	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог мастеров", WebApp: &tgbotapi.WebAppInfo{
-		Url: "https://bot-dev-domain.com:1445/bot-webapp/gallery?city_id=123&service_id=123",
+		Url: "url",
 	}}})
 	rows = append(rows, []tgbotapi.KeyboardButton{{Text: Back}})
 	rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})

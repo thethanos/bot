@@ -22,7 +22,7 @@ func main() {
 		panic(fmt.Sprintf("main::config::Load::%s", err))
 	}
 
-	logger := logger.NewLogger(cfg.Mode)
+	logger := logger.NewLogger()
 
 	DBAdapter, err := dbadapter.NewDbAdapter(logger, cfg)
 	if err != nil {
@@ -34,7 +34,7 @@ func main() {
 	tgClient, _ := telegram.NewTelegramClient(logger, cfg, recvMsgChan)
 	//waClient, _ := whatsapp.NewWhatsAppClient(logger, cfg, waContainer, recvMsgChan)
 
-	bot, err := bot.NewBot(logger, []ma.ClientInterface{tgClient}, DBAdapter, recvMsgChan)
+	bot, err := bot.NewBot(logger, cfg, []ma.ClientInterface{tgClient}, DBAdapter, recvMsgChan)
 	if err != nil {
 		logger.Error("main::bot::NewBot", err)
 	}

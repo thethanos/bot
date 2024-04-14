@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"bot/internal/config"
 	"bytes"
 	"log"
 	"os"
@@ -28,17 +27,7 @@ type Logger interface {
 	Fatalf(template string, args ...interface{})
 }
 
-type ReleaseLogger struct {
-	*zap.SugaredLogger
-}
-
-func (r *ReleaseLogger) Info(args ...interface{}) {
-}
-
-func (r *ReleaseLogger) Infof(template string, args ...interface{}) {
-}
-
-func NewLogger(mode config.Mode) Logger {
+func NewLogger() Logger {
 
 	cfg := zap.NewProductionEncoderConfig()
 	cfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
@@ -51,13 +40,5 @@ func NewLogger(mode config.Mode) Logger {
 
 	log.SetFlags(0)
 	log.SetOutput(Printer(logger.Debug))
-
-	switch mode {
-	case config.RELEASE:
-		return &ReleaseLogger{SugaredLogger: logger.Sugar()}
-	case config.DEBUG:
-		fallthrough
-	default:
-		return logger.Sugar()
-	}
+	return logger.Sugar()
 }
