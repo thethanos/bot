@@ -12,5 +12,9 @@
                 "golang.go-nightly"
             ]
         }
-    }
+    },
+
+    "runArgs": [
+        "--network=home_default",
+    ],
 }
