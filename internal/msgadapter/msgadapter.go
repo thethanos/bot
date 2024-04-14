@@ -28,14 +28,6 @@ const (
 	TELEGRAM
 )
 
-type ClientInterface interface {
-	Connect() error
-	Disconnect()
-	SendMessage(*Message) error
-	GetType() MessageSource
-	DownloadFile(FileType, *Message) []byte
-}
-
 type MessageData struct {
 	WaData       types.MessageInfo
 	TgData       *tgbotapi.Message

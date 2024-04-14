@@ -5,8 +5,11 @@ import (
 	"bot/internal/dbadapter"
 	"bot/internal/entities"
 	"bot/internal/logger"
+	client "bot/internal/messenger_client"
 	ma "bot/internal/msgadapter"
+	"context"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -20,22 +23,22 @@ type UserSession struct {
 type Bot struct {
 	logger       logger.Logger
 	cfg          *config.Config
-	clients      map[ma.MessageSource]ma.ClientInterface
+	clients      map[ma.MessageSource]client.ClientInterface
 	userSessions map[string]*UserSession
 	recvMsgChan  chan *ma.Message
 	sendMsgChan  chan *ma.Message
-	DBAdapter    *dbadapter.DBAdapter
+	DBAdapter    dbadapter.DBInterface
 }
 
-func NewBot(logger logger.Logger, cfg *config.Config, clientArray []ma.ClientInterface, DBAdapter *dbadapter.DBAdapter, recvMsgChan chan *ma.Message) (*Bot, error) {
+func NewBot(logger logger.Logger, cfg *config.Config, clientArray []client.ClientInterface, DBAdapter dbadapter.DBInterface, recvMsgChan chan *ma.Message) (*Bot, error) {
 
-	clients := make(map[ma.MessageSource]ma.ClientInterface)
+	clients := make(map[ma.MessageSource]client.ClientInterface)
 	for _, client := range clientArray {
 		clients[client.GetType()] = client
 	}
 
 	userSessions := make(map[string]*UserSession)
-	sendMsgChan := make(chan *ma.Message)
+	sendMsgChan := make(chan *ma.Message, cfg.SendBufSize)
 
 	bot := &Bot{
 		logger:       logger,
@@ -50,7 +53,7 @@ func NewBot(logger logger.Logger, cfg *config.Config, clientArray []ma.ClientInt
 	return bot, nil
 }
 
-func (b *Bot) Run() {
+func (b *Bot) Run(ctx context.Context, wg *sync.WaitGroup) {
 
 	for _, client := range b.clients {
 		if err := client.Connect(); err != nil {
@@ -58,47 +61,38 @@ func (b *Bot) Run() {
 		}
 	}
 
-	go func() {
-		for msg := range b.recvMsgChan {
-			if _, exists := b.userSessions[msg.UserID]; !exists || strings.ToLower(msg.Text) == "/start" {
-				state := &entities.UserState{RawInput: make(map[string]string)}
-				b.userSessions[msg.UserID] = &UserSession{
-					State:       state,
-					CurrentStep: b.createStep(MainMenuStep, state),
-					PrevSteps:   StepStack{},
-				}
-				b.send(b.userSessions[msg.UserID].CurrentStep.Request(msg))
-			} else {
-				b.processUserSession(msg)
-			}
-			b.userSessions[msg.UserID].LastActivity = time.Now()
-		}
-	}()
-
-	go func() {
-		for msg := range b.sendMsgChan {
-			if err := b.clients[msg.Source].SendMessage(msg); err != nil {
-				b.logger.Error("bot::Run::SendMessage", err)
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			time.Sleep(time.Hour)
-			for id, user := range b.userSessions {
-				if time.Since(user.LastActivity) >= (time.Hour * 24) {
-					b.logger.Infof("User session %s has been deleted due to inactivity for the last 24 hours", id)
-					delete(b.userSessions, id)
-				}
-			}
-		}
-	}()
+	go b.processMessages(ctx, wg)
+	go b.processSend(ctx, wg)
+	go b.cleanUpUserSessions(ctx, wg)
 }
 
 func (b *Bot) Shutdown() {
 	for _, client := range b.clients {
 		client.Disconnect()
+	}
+}
+
+func (b *Bot) processMessages(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for msg := range b.recvMsgChan {
+		if _, exists := b.userSessions[msg.UserID]; !exists || strings.ToLower(msg.Text) == "/start" {
+			state := &entities.UserState{RawInput: make(map[string]string)}
+			b.userSessions[msg.UserID] = &UserSession{
+				State:       state,
+				CurrentStep: b.createStep(MainMenuStep, state),
+				PrevSteps:   StepStack{},
+			}
+			b.send(b.userSessions[msg.UserID].CurrentStep.Request(msg))
+		} else {
+			b.processUserSession(msg)
+		}
+		b.userSessions[msg.UserID].LastActivity = time.Now()
+
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 	}
 }
 
@@ -178,6 +172,21 @@ func (b *Bot) send(msg *ma.Message) bool {
 	return true
 }
 
+func (b *Bot) processSend(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for msg := range b.sendMsgChan {
+		if err := b.clients[msg.Source].SendMessage(msg); err != nil {
+			b.logger.Error("bot::Run::SendMessage", err)
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+	}
+}
+
 func (b *Bot) processUserSession(msg *ma.Message) {
 	curStep := b.userSessions[msg.UserID].CurrentStep
 	state := b.userSessions[msg.UserID].State
@@ -207,5 +216,24 @@ func (b *Bot) processUserSession(msg *ma.Message) {
 		b.send(step.Request(msg))
 		b.userSessions[msg.UserID].CurrentStep = step
 		b.userSessions[msg.UserID].PrevSteps.Push(curStep)
+	}
+}
+
+func (b *Bot) cleanUpUserSessions(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for {
+		time.Sleep(time.Hour)
+		for id, user := range b.userSessions {
+			if time.Since(user.LastActivity) >= (time.Hour * 24) {
+				b.logger.Infof("User session %s has been deleted due to inactivity for the last 24 hours", id)
+				delete(b.userSessions, id)
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 	}
 }

@@ -15,7 +15,7 @@ import (
 type StepBase struct {
 	logger    logger.Logger
 	state     *entities.UserState
-	DBAdapter *dbadapter.DBAdapter
+	DBAdapter dbadapter.DBInterface
 	config    *config.Config
 }
 

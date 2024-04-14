@@ -5,11 +5,14 @@ import (
 	"bot/internal/config"
 	"bot/internal/dbadapter"
 	"bot/internal/logger"
+	client "bot/internal/messenger_client"
+	"bot/internal/messenger_client/telegram"
 	ma "bot/internal/msgadapter"
-	"bot/internal/telegram"
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -30,19 +33,26 @@ func main() {
 		return
 	}
 
-	recvMsgChan := make(chan *ma.Message)
+	recvMsgChan := make(chan *ma.Message, cfg.RcvBufSize)
 	tgClient, _ := telegram.NewTelegramClient(logger, cfg, recvMsgChan)
 	//waClient, _ := whatsapp.NewWhatsAppClient(logger, cfg, waContainer, recvMsgChan)
 
-	bot, err := bot.NewBot(logger, cfg, []ma.ClientInterface{tgClient}, DBAdapter, recvMsgChan)
+	bot, err := bot.NewBot(logger, cfg, []client.ClientInterface{tgClient}, DBAdapter, recvMsgChan)
 	if err != nil {
 		logger.Error("main::bot::NewBot", err)
 	}
-	bot.Run()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+
+	bot.Run(ctx, &wg)
 
 	signalHandler := setupSignalHandler()
 	<-signalHandler
 
+	cancel()
+	wg.Wait()
 	bot.Shutdown()
 }
 

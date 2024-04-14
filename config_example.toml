@@ -2,6 +2,8 @@
 tg_token = "token"
 models_url = "url"
 gallery_url = "url"
+receive_buffer = 10
+send_buffer = 10
 
 [postgres]
 host     = "host"

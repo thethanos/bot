@@ -10,8 +10,8 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 
 	"bot/internal/config"
+	handler "bot/internal/messenger_client/whatsapp/event_handler"
 	ma "bot/internal/msgadapter"
-	handler "bot/internal/whatsapp/event_handler"
 
 	"github.com/mdp/qrterminal"
 )

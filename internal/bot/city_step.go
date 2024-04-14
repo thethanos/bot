@@ -16,7 +16,7 @@ type CitySelectionStepMode interface {
 }
 
 type BaseCitySelectionMode struct {
-	dbAdapter *dbadapter.DBAdapter
+	dbAdapter dbadapter.DBInterface
 }
 
 func (b *BaseCitySelectionMode) MenuItems(cities []*entities.City) [][]tgbotapi.KeyboardButton {

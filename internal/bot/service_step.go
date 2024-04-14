@@ -17,7 +17,7 @@ type ServiceCategoryStepMode interface {
 }
 
 type BaseServiceCategoryMode struct {
-	dbAdapter *dbadapter.DBAdapter
+	dbAdapter dbadapter.DBInterface
 }
 
 func (b *BaseServiceCategoryMode) GetServCategories(cityId uint) ([]*entities.ServiceCategory, error) {
@@ -126,7 +126,7 @@ type ServiceSelectionStepMode interface {
 }
 
 type BaseServiceSelectionMode struct {
-	dbAdapter *dbadapter.DBAdapter
+	dbAdapter dbadapter.DBInterface
 }
 
 func (b *BaseServiceSelectionMode) GetServicesList(categoryId, cityId uint) ([]*entities.Service, error) {

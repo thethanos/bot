@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	handler "bot/internal/telegram/event_handler"
+	handler "bot/internal/messenger_client/telegram/event_handler"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	tgbotapi "github.com/PaulSonOfLars/gotgbot/v2"
