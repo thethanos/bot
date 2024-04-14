@@ -73,7 +73,7 @@ func makeKeyboard(btnsCreate []string, btnsAppend ...[]tgbotapi.KeyboardButton) 
 	if len(rows) > 0 {
 		rows = append(rows, btnsAppend...)
 	}
-	return &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true, OneTimeKeyboard: true}
+	return &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 }
 
 type Question struct {
