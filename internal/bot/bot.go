@@ -64,9 +64,11 @@ func (b *Bot) Run() {
 					CurrentStep: b.createStep(MainMenuStep, state),
 					PrevSteps:   StepStack{},
 				}
+				b.send(b.userSessions[msg.UserID].CurrentStep.Request(msg))
+			} else {
+				b.processUserSession(msg)
 			}
 			b.userSessions[msg.UserID].LastActivity = time.Now()
-			b.processUserSession(msg)
 		}
 	}()
 
@@ -171,41 +173,34 @@ func (b *Bot) send(msg *ma.Message) bool {
 	return true
 }
 
-func (b *Bot) processMessage(msg *ma.Message) {
+func (b *Bot) processUserSession(msg *ma.Message) {
 	curStep := b.userSessions[msg.UserID].CurrentStep
 	state := b.userSessions[msg.UserID].State
-	if !curStep.IsInProgress() {
-		b.send(curStep.Request(msg))
-	} else {
-		res, next := curStep.ProcessResponse(msg)
-		b.send(res)
 
-		switch step := b.createStep(next, state); next {
-		case PreviousStep:
-			var prevStep Step
-			if b.userSessions[msg.UserID].PrevSteps.Empty() {
-				prevStep = b.createStep(MainMenuStep, state)
-			} else {
-				prevStep = b.userSessions[msg.UserID].PrevSteps.Top()
-				b.userSessions[msg.UserID].PrevSteps.Pop()
-			}
+	res, next := curStep.ProcessResponse(msg)
+	b.send(res)
+
+	switch step := b.createStep(next, state); next {
+	case PreviousStep:
+		var prevStep Step
+		if b.userSessions[msg.UserID].PrevSteps.Empty() {
+			prevStep = b.createStep(MainMenuStep, state)
+		} else {
+			prevStep = b.userSessions[msg.UserID].PrevSteps.Top()
+			b.userSessions[msg.UserID].PrevSteps.Pop()
 			prevStep.Reset()
-
-			b.send(prevStep.Request(msg))
-			b.userSessions[msg.UserID].CurrentStep = prevStep
-		case EmptyStep:
-		case MainMenuStep:
-			b.send(step.Request(msg))
-			b.userSessions[msg.UserID].CurrentStep = step
-			b.userSessions[msg.UserID].PrevSteps.Clear()
-		default:
-			b.send(step.Request(msg))
-			b.userSessions[msg.UserID].CurrentStep = step
-			b.userSessions[msg.UserID].PrevSteps.Push(curStep)
 		}
-	}
-}
 
-func (b *Bot) processUserSession(msg *ma.Message) {
-	b.processMessage(msg)
+		b.send(prevStep.Request(msg))
+		b.userSessions[msg.UserID].CurrentStep = prevStep
+	case EmptyStep:
+	case MainMenuStep:
+		b.send(step.Request(msg))
+		b.userSessions[msg.UserID].CurrentStep = step
+		b.userSessions[msg.UserID].PrevSteps.Clear()
+	default:
+		b.send(step.Request(msg))
+		b.userSessions[msg.UserID].CurrentStep = step
+		b.userSessions[msg.UserID].PrevSteps.Push(curStep)
+	}
 }

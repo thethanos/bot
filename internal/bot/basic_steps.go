@@ -12,21 +12,12 @@ import (
 )
 
 type StepBase struct {
-	logger     logger.Logger
-	inProgress bool
-	state      *entities.UserState
-	DBAdapter  *dbadapter.DBAdapter
-}
-
-func (s *StepBase) IsInProgress() bool {
-	return s.inProgress
+	logger    logger.Logger
+	state     *entities.UserState
+	DBAdapter *dbadapter.DBAdapter
 }
 
 func (s *StepBase) Reset() {
-}
-
-func (s *StepBase) SetInProgress(flag bool) {
-	s.inProgress = flag
 }
 
 type YesNo struct {
@@ -38,7 +29,6 @@ type YesNo struct {
 
 func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 	y.logger.Infof("YesNo step is sending request")
-	y.inProgress = true
 	if msg.Source == ma.TELEGRAM {
 		keyboard := makeKeyboard([]string{"Да", "Нет"})
 		return ma.NewTextMessage(y.question.Text, msg, keyboard, false)
@@ -48,7 +38,6 @@ func (y *YesNo) Request(msg *ma.Message) *ma.Message {
 
 func (y *YesNo) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	y.logger.Infof("YesNo step is processing response")
-	y.inProgress = false
 	if Compare(msg.Text, "да") || Compare(msg.Text, "1") {
 		y.logger.Infof("Next step is %s", getStepTypeName(y.yesStep))
 		return nil, y.yesStep
@@ -65,9 +54,8 @@ type Prompt struct {
 
 func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 	p.logger.Infof("Prompt step is sending request")
-	p.inProgress = true
 	if msg.Source == ma.TELEGRAM {
-		keyboard := makeKeyboard([]string{"Назад"})
+		keyboard := makeKeyboard([]string{Back})
 		return ma.NewTextMessage(p.question.Text, msg, keyboard, false)
 	}
 	return ma.NewTextMessage("this messenger is unsupported yet", msg, nil, true)
@@ -75,8 +63,7 @@ func (p *Prompt) Request(msg *ma.Message) *ma.Message {
 
 func (p *Prompt) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	p.logger.Infof("Prompt step is processing response")
-	p.inProgress = false
-	if Compare(msg.Text, "назад") {
+	if Compare(msg.Text, Back) {
 		p.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
@@ -91,7 +78,6 @@ type MainMenu struct {
 
 func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 	m.logger.Infof("MainMenu step is sending request")
-	m.inProgress = true
 	m.state.Reset()
 	if msg.Source == ma.TELEGRAM {
 		keyboard := makeKeyboard([]string{"Город", "Услуги", "Поиск моделей", "По вопросам сотрудничества"})
@@ -102,7 +88,6 @@ func (m *MainMenu) Request(msg *ma.Message) *ma.Message {
 
 func (m *MainMenu) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	m.logger.Infof("MainMenu step is processing response")
-	m.inProgress = false
 
 	switch strings.ToLower(msg.Text) {
 	case "город":
@@ -128,14 +113,13 @@ type MasterSelection struct {
 
 func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 	m.logger.Info("MasterSelection step is sending request")
-	m.inProgress = true
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог мастеров", WebApp: &tgbotapi.WebAppInfo{
 			Url: fmt.Sprintf("https://bot-dev-domain.com:1445/bot-webapp/gallery?city_id=%d&service_id=%d", m.state.GetCityID(), m.state.GetServiceID()),
 		}}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
-		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: Back}})
+		rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 		return ma.NewTextMessage("Выбор мастера", msg, keyboard, false)
 	}
@@ -144,12 +128,11 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 
 func (m *MasterSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	m.logger.Infof("MasterSelection step is processing response")
-	m.inProgress = false
-	if Compare(msg.Text, "вернуться назад") {
+	if Compare(msg.Text, Back) {
 		m.logger.Infof("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	if Compare(msg.Text, "вернуться на главную") {
+	if Compare(msg.Text, BackToMain) {
 		m.logger.Infof("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
@@ -163,7 +146,6 @@ type FindModel struct {
 
 func (f *FindModel) Request(msg *ma.Message) *ma.Message {
 	f.logger.Info("FindModel step is sending request")
-	f.inProgress = true
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог моделей", WebApp: &tgbotapi.WebAppInfo{
@@ -178,7 +160,6 @@ func (f *FindModel) Request(msg *ma.Message) *ma.Message {
 
 func (f *FindModel) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	f.logger.Infof("FindModel step is processing response")
-	f.inProgress = false
 	if Compare(msg.Text, "вернуться на главную") {
 		f.logger.Infof("Next step is MainMenuStep")
 		return nil, MainMenuStep
@@ -192,7 +173,6 @@ type Collaboration struct {
 
 func (c *Collaboration) Request(msg *ma.Message) *ma.Message {
 	c.logger.Info("Collaboration step is sending request")
-	c.inProgress = true
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
@@ -204,7 +184,6 @@ func (c *Collaboration) Request(msg *ma.Message) *ma.Message {
 
 func (c *Collaboration) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	c.logger.Infof("Collaboration step is processing response")
-	c.inProgress = false
 	if Compare(msg.Text, "вернуться на главную") {
 		c.logger.Infof("Next step is MainMenuStep")
 		return nil, PreviousStep

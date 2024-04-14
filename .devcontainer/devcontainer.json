@@ -15,6 +15,6 @@
     },
 
     "runArgs": [
-        "--network=home_default",
-    ],
+        "--network=home_default"
+    ]
 }

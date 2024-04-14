@@ -30,8 +30,8 @@ func (b *BaseServiceCategoryMode) Text() string {
 
 func (b *BaseServiceCategoryMode) Buttons() [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: Back}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 	return rows
 }
 
@@ -53,7 +53,7 @@ func (m *MainMenuServiceCategoryMode) Text() string {
 
 func (m *MainMenuServiceCategoryMode) Buttons() [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 	return rows
 }
 
@@ -69,7 +69,6 @@ type ServiceCategorySelection struct {
 
 func (s *ServiceCategorySelection) Request(msg *ma.Message) *ma.Message {
 	s.logger.Infof("ServiceCategorySelection step is sending request")
-	s.inProgress = true
 
 	categories, _ := s.mode.GetServCategories(s.state.GetCityID())
 
@@ -93,13 +92,12 @@ func (s *ServiceCategorySelection) Request(msg *ma.Message) *ma.Message {
 
 func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	s.logger.Info("ServiceCategorySelection step is processing response")
-	s.inProgress = false
 
-	if Compare(msg.Text, "вернуться назад") {
+	if Compare(msg.Text, Back) {
 		s.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	if Compare(msg.Text, "вернуться на главную") {
+	if Compare(msg.Text, BackToMain) {
 		s.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
@@ -112,7 +110,6 @@ func (s *ServiceCategorySelection) ProcessResponse(msg *ma.Message) (*ma.Message
 		}
 	}
 
-	s.inProgress = true
 	s.logger.Info("Next step is EmptyStep")
 	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false), EmptyStep
 }
@@ -146,8 +143,8 @@ func (b *BaseServiceSelectionMode) MenuItems(services []*entities.Service) [][]t
 
 func (b *BaseServiceSelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: Back}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 	return rows
 }
 
@@ -175,7 +172,7 @@ type ServiceSelection struct {
 
 func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 	s.logger.Infof("ServiceSelection step is sending request")
-	s.inProgress = true
+
 	services, _ := s.mode.GetServicesList(s.state.ServiceCategory.ID, s.state.GetCityID())
 
 	if msg.Source == ma.TELEGRAM {
@@ -195,12 +192,11 @@ func (s *ServiceSelection) Request(msg *ma.Message) *ma.Message {
 
 func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	s.logger.Info("ServiceSelection step is processing response")
-	s.inProgress = false
-	if Compare(msg.Text, "вернуться назад") {
+	if Compare(msg.Text, Back) {
 		s.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	if Compare(msg.Text, "вернуться на главную") {
+	if Compare(msg.Text, BackToMain) {
 		s.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
@@ -212,7 +208,6 @@ func (s *ServiceSelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepTy
 		}
 	}
 
-	s.inProgress = true
 	s.logger.Infof("Next step is EmptyStep")
 	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false), EmptyStep
 }

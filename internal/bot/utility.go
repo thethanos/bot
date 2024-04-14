@@ -30,6 +30,11 @@ const (
 	EmptyStep
 )
 
+const (
+	Back       string = "Вернуться назад"
+	BackToMain string = "Вернуться на главную"
+)
+
 func getStepTypeName(step StepType) string {
 	switch step {
 	case MainMenuStep:
@@ -109,7 +114,5 @@ func (s *StepStack) Clear() {
 type Step interface {
 	ProcessResponse(*ma.Message) (*ma.Message, StepType)
 	Request(*ma.Message) *ma.Message
-	IsInProgress() bool
 	Reset()
-	SetInProgress(bool)
 }

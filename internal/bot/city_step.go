@@ -29,8 +29,8 @@ func (b *BaseCitySelectionMode) MenuItems(cities []*entities.City) [][]tgbotapi.
 
 func (b *BaseCitySelectionMode) Buttons() [][]tgbotapi.KeyboardButton {
 	rows := make([][]tgbotapi.KeyboardButton, 0)
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: Back}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 	return rows
 }
 
@@ -60,7 +60,6 @@ type CitySelection struct {
 
 func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 	c.logger.Infof("CitySelection step is sending request")
-	c.inProgress = true
 
 	cities, _ := c.DBAdapter.GetCities(c.state.GetServiceID(), 0, -1)
 
@@ -81,13 +80,12 @@ func (c *CitySelection) Request(msg *ma.Message) *ma.Message {
 
 func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType) {
 	c.logger.Infof("CitySelection step is processing response")
-	c.inProgress = false
 
-	if Compare(msg.Text, "вернуться назад") {
+	if Compare(msg.Text, Back) {
 		c.logger.Info("Next step is PreviousStep")
 		return nil, PreviousStep
 	}
-	if Compare(msg.Text, "вернуться на главную") {
+	if Compare(msg.Text, BackToMain) {
 		c.logger.Info("Next step is MainMenuStep")
 		return nil, MainMenuStep
 	}
@@ -100,7 +98,6 @@ func (c *CitySelection) ProcessResponse(msg *ma.Message) (*ma.Message, StepType)
 		}
 	}
 
-	c.inProgress = true
 	c.logger.Info("Next step is EmptyStep")
 	return ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false), EmptyStep
 }

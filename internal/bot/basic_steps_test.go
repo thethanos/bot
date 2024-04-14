@@ -15,20 +15,6 @@ const (
 	unsupported = "this messenger is unsupported yet"
 )
 
-func TestStepBase(t *testing.T) {
-
-	base := StepBase{}
-	base.SetInProgress(true)
-	if base.IsInProgress() != true {
-		t.Error("Step is not in progress")
-	}
-
-	base.SetInProgress(false)
-	if base.IsInProgress() != false {
-		t.Error("Step is in progress")
-	}
-}
-
 func TestYesNoStep(t *testing.T) {
 
 	text := "test text"
@@ -61,16 +47,8 @@ func TestYesNoStep(t *testing.T) {
 		t.Error("YesNo step returned wrong message")
 	}
 
-	if step.IsInProgress() != true {
-		t.Error("YesNo step is not in progress after sending request")
-	}
-
 	if res, _ := step.ProcessResponse(msg); res != nil {
 		t.Error("YesNo step ProcessResponse returned not nil message")
-	}
-
-	if step.IsInProgress() != false {
-		t.Error("YesNo step is in progress after processing response")
 	}
 
 	resp := ma.NewTextMessage("Да", msg, nil, true)
@@ -104,7 +82,7 @@ func TestPromptStep(t *testing.T) {
 		Text:   text,
 		Source: ma.TELEGRAM,
 		Data: &ma.MessageData{
-			TgMarkup:     makeKeyboard([]string{"Назад"}),
+			TgMarkup:     makeKeyboard([]string{Back}),
 			RemoveMarkup: false,
 		},
 	}
@@ -118,19 +96,11 @@ func TestPromptStep(t *testing.T) {
 		t.Error("Prompt step returned wrong message")
 	}
 
-	if step.IsInProgress() != true {
-		t.Error("Prompt step is not in progress after sending request")
-	}
-
 	if res, _ := step.ProcessResponse(msg); res != nil {
 		t.Error("Prompt step ProcessResponse returned not nil message")
 	}
 
-	if step.IsInProgress() != false {
-		t.Error("Prompt step is in progress after processing response")
-	}
-
-	resp := ma.NewTextMessage("Назад", msg, nil, true)
+	resp := ma.NewTextMessage(Back, msg, nil, true)
 	if _, nextStep := step.ProcessResponse(resp); nextStep != PreviousStep {
 		t.Error("Prompt step returned wrong next step")
 	}
@@ -160,26 +130,14 @@ func TestMainMenuStep(t *testing.T) {
 		},
 	}
 
-	if res := step.Request(msg); !reflect.DeepEqual(res, msg) {
-		t.Error("MainMenu step returned wrong message")
-	}
-
 	msg.Source = ma.WHATSAPP
 	if res := step.Request(msg); res.Text != unsupported {
 		t.Error("MainMenu step returned wrong message")
 	}
 
-	if step.IsInProgress() != true {
-		t.Error("MainMenu step is not in progress after sending request")
-	}
-
 	msg = ma.NewTextMessage("Пожалуйста выберите ответ из списка.", msg, nil, false)
 	if res, nextStep := step.ProcessResponse(msg); !reflect.DeepEqual(res, msg) || nextStep != EmptyStep {
 		t.Error("MainMenu step ProcessResponse returned wrong message")
-	}
-
-	if step.IsInProgress() != false {
-		t.Error("MainMenu step is in progress after processing response")
 	}
 
 	resp := ma.NewTextMessage("Город", msg, nil, true)
@@ -223,22 +181,19 @@ func TestMasterSelectionStep(t *testing.T) {
 	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог мастеров", WebApp: &tgbotapi.WebAppInfo{
 		Url: "https://bot-dev-domain.com:1445/bot-webapp/gallery?city_id=123&service_id=123",
 	}}})
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться назад"}})
-	rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Вернуться на главную"}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: Back}})
+	rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 	keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
 
 	text := "Выбор мастера"
 	msg := &ma.Message{
 		Text:   text,
 		Source: ma.TELEGRAM,
+		UserID: "test",
 		Data: &ma.MessageData{
 			TgMarkup:     keyboard,
 			RemoveMarkup: false,
 		},
-	}
-
-	if res := step.Request(msg); !reflect.DeepEqual(res, msg) {
-		t.Error("MasterSelection step returned wrong message")
 	}
 
 	msg.Source = ma.WHATSAPP
@@ -246,20 +201,12 @@ func TestMasterSelectionStep(t *testing.T) {
 		t.Error("MasterSelection step returned wrong message")
 	}
 
-	if step.IsInProgress() != true {
-		t.Error("MasterSelection step is not in progress after sending request")
-	}
-
-	resp := ma.NewTextMessage("Вернуться назад", msg, nil, true)
+	resp := ma.NewTextMessage(Back, msg, nil, true)
 	if _, nextStep := step.ProcessResponse(resp); nextStep != PreviousStep {
 		t.Error("MasterSelection step returned wrong next step")
 	}
 
-	if step.IsInProgress() != false {
-		t.Error("MasterSelection step is in progress after processing response")
-	}
-
-	resp = ma.NewTextMessage("Вернуться на главную", msg, nil, true)
+	resp = ma.NewTextMessage(BackToMain, msg, nil, true)
 	if _, nextStep := step.ProcessResponse(resp); nextStep != MainMenuStep {
 		t.Error("MasterSelection step returned wrong next step")
 	}
