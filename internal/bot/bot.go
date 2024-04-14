@@ -63,7 +63,7 @@ func (b *Bot) Run(ctx context.Context, wg *sync.WaitGroup) {
 
 	go b.processMessages(ctx, wg)
 	go b.processSend(ctx, wg)
-	go b.cleanUpUserSessions(ctx, wg)
+	go b.cleanUpUserSessions()
 }
 
 func (b *Bot) Shutdown() {
@@ -74,24 +74,23 @@ func (b *Bot) Shutdown() {
 
 func (b *Bot) processMessages(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	for msg := range b.recvMsgChan {
-		if _, exists := b.userSessions[msg.UserID]; !exists || strings.ToLower(msg.Text) == "/start" {
-			state := &entities.UserState{RawInput: make(map[string]string)}
-			b.userSessions[msg.UserID] = &UserSession{
-				State:       state,
-				CurrentStep: b.createStep(MainMenuStep, state),
-				PrevSteps:   StepStack{},
-			}
-			b.send(b.userSessions[msg.UserID].CurrentStep.Request(msg))
-		} else {
-			b.processUserSession(msg)
-		}
-		b.userSessions[msg.UserID].LastActivity = time.Now()
-
+	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
+		case msg := <-b.recvMsgChan:
+			if _, exists := b.userSessions[msg.UserID]; !exists || strings.ToLower(msg.Text) == "/start" {
+				state := &entities.UserState{RawInput: make(map[string]string)}
+				b.userSessions[msg.UserID] = &UserSession{
+					State:       state,
+					CurrentStep: b.createStep(MainMenuStep, state),
+					PrevSteps:   StepStack{},
+				}
+				b.send(b.userSessions[msg.UserID].CurrentStep.Request(msg))
+			} else {
+				b.processUserSession(msg)
+			}
+			b.userSessions[msg.UserID].LastActivity = time.Now()
 		}
 	}
 }
@@ -174,15 +173,14 @@ func (b *Bot) send(msg *ma.Message) bool {
 
 func (b *Bot) processSend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	for msg := range b.sendMsgChan {
-		if err := b.clients[msg.Source].SendMessage(msg); err != nil {
-			b.logger.Error("bot::Run::SendMessage", err)
-		}
-
+	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
+		case msg := <-b.sendMsgChan:
+			if err := b.clients[msg.Source].SendMessage(msg); err != nil {
+				b.logger.Error("bot::Run::SendMessage", err)
+			}
 		}
 	}
 }
@@ -219,8 +217,7 @@ func (b *Bot) processUserSession(msg *ma.Message) {
 	}
 }
 
-func (b *Bot) cleanUpUserSessions(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (b *Bot) cleanUpUserSessions() {
 	for {
 		time.Sleep(time.Hour)
 		for id, user := range b.userSessions {
@@ -228,12 +225,6 @@ func (b *Bot) cleanUpUserSessions(ctx context.Context, wg *sync.WaitGroup) {
 				b.logger.Infof("User session %s has been deleted due to inactivity for the last 24 hours", id)
 				delete(b.userSessions, id)
 			}
-		}
-
-		select {
-		case <-ctx.Done():
-			return
-		default:
 		}
 	}
 }

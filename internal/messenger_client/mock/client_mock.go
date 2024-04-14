@@ -1,8 +1,14 @@
 package messenger_client
 
-import ma "bot/internal/msgadapter"
+import (
+	ma "bot/internal/msgadapter"
+	"fmt"
+	"sync"
+)
 
 type ClientMock struct {
+	Result chan *ma.Message
+	Wg     *sync.WaitGroup
 }
 
 func (c *ClientMock) Connect() error {
@@ -13,7 +19,9 @@ func (c *ClientMock) Disconnect() {
 
 }
 
-func (c *ClientMock) SendMessage(*ma.Message) error {
+func (c *ClientMock) SendMessage(msg *ma.Message) error {
+	fmt.Println(msg.Text)
+	c.Wg.Done()
 	return nil
 }
 

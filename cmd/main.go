@@ -44,7 +44,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(2)
 
 	bot.Run(ctx, &wg)
 
