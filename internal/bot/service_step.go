@@ -10,7 +10,7 @@ import (
 )
 
 type ServiceCategoryStepMode interface {
-	GetServCategories(cityId uint) ([]*entities.ServiceCategory, error)
+	GetServCategories(cityId string) ([]*entities.ServiceCategory, error)
 	Text() string
 	Buttons() [][]tgbotapi.KeyboardButton
 	NextStep() StepType
@@ -20,7 +20,7 @@ type BaseServiceCategoryMode struct {
 	dbAdapter dbadapter.DBInterface
 }
 
-func (b *BaseServiceCategoryMode) GetServCategories(cityId uint) ([]*entities.ServiceCategory, error) {
+func (b *BaseServiceCategoryMode) GetServCategories(cityId string) ([]*entities.ServiceCategory, error) {
 	return b.dbAdapter.GetServCategories(cityId, 0, -1)
 }
 
@@ -43,8 +43,8 @@ type MainMenuServiceCategoryMode struct {
 	BaseServiceCategoryMode
 }
 
-func (m *MainMenuServiceCategoryMode) GetServCategories(cityId uint) ([]*entities.ServiceCategory, error) {
-	return m.dbAdapter.GetServCategories(0, 0, -1)
+func (m *MainMenuServiceCategoryMode) GetServCategories(cityId string) ([]*entities.ServiceCategory, error) {
+	return m.dbAdapter.GetServCategories("", 0, -1)
 }
 
 func (m *MainMenuServiceCategoryMode) Text() string {
@@ -119,7 +119,7 @@ func (s *ServiceCategorySelection) Reset() {
 }
 
 type ServiceSelectionStepMode interface {
-	GetServicesList(categoryId, cityId uint) ([]*entities.Service, error)
+	GetServicesList(categoryId, cityId string) ([]*entities.Service, error)
 	MenuItems([]*entities.Service) [][]tgbotapi.KeyboardButton
 	Buttons() [][]tgbotapi.KeyboardButton
 	NextStep() StepType
@@ -129,7 +129,7 @@ type BaseServiceSelectionMode struct {
 	dbAdapter dbadapter.DBInterface
 }
 
-func (b *BaseServiceSelectionMode) GetServicesList(categoryId, cityId uint) ([]*entities.Service, error) {
+func (b *BaseServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
 	return b.dbAdapter.GetServices(categoryId, cityId, 0, -1)
 }
 
@@ -156,8 +156,8 @@ type MainMenuServiceSelectionMode struct {
 	BaseServiceSelectionMode
 }
 
-func (m *MainMenuServiceSelectionMode) GetServicesList(categoryId, cityId uint) ([]*entities.Service, error) {
-	return m.dbAdapter.GetServices(categoryId, 0, 0, -1)
+func (m *MainMenuServiceSelectionMode) GetServicesList(categoryId, cityId string) ([]*entities.Service, error) {
+	return m.dbAdapter.GetServices(categoryId, "", 0, -1)
 }
 
 func (m *MainMenuServiceSelectionMode) NextStep() StepType {

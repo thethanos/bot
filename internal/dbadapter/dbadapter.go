@@ -38,9 +38,9 @@ func NewDbAdapter(logger logger.Logger, cfg *config.Config) (*DBAdapter, error) 
 	return &DBAdapter{logger: logger, cfg: cfg, DBConn: DBConn}, nil
 }
 
-func (d *DBAdapter) GetCities(servID uint, page, limit int) ([]*entities.City, error) {
+func (d *DBAdapter) GetCities(servID string, page, limit int) ([]*entities.City, error) {
 
-	if servID != 0 {
+	if len(servID) != 0 {
 		return d.GetCitiesByService(servID, page, limit)
 	}
 
@@ -57,7 +57,7 @@ func (d *DBAdapter) GetCities(servID uint, page, limit int) ([]*entities.City, e
 	return result, nil
 }
 
-func (d *DBAdapter) GetCitiesByService(servID uint, page, limit int) ([]*entities.City, error) {
+func (d *DBAdapter) GetCitiesByService(servID string, page, limit int) ([]*entities.City, error) {
 
 	relations := make([]*models.MasterServRelation, 0)
 	subquery := d.DBConn.Table("master_serv_relations").Offset(page * limit).Limit(limit)
@@ -77,9 +77,9 @@ func (d *DBAdapter) GetCitiesByService(servID uint, page, limit int) ([]*entitie
 	return result, nil
 }
 
-func (d *DBAdapter) GetServCategories(cityID uint, page, limit int) ([]*entities.ServiceCategory, error) {
+func (d *DBAdapter) GetServCategories(cityID string, page, limit int) ([]*entities.ServiceCategory, error) {
 
-	if cityID != 0 {
+	if len(cityID) != 0 {
 		return d.GetServCategoriesByCity(cityID, page, limit)
 	}
 
@@ -96,7 +96,7 @@ func (d *DBAdapter) GetServCategories(cityID uint, page, limit int) ([]*entities
 	return result, nil
 }
 
-func (d *DBAdapter) GetServCategoriesByCity(cityID uint, page, limit int) ([]*entities.ServiceCategory, error) {
+func (d *DBAdapter) GetServCategoriesByCity(cityID string, page, limit int) ([]*entities.ServiceCategory, error) {
 
 	relations := make([]*models.MasterServRelation, 0)
 	subquery := d.DBConn.Table("master_serv_relations").Offset(page * limit).Limit(limit)
@@ -116,20 +116,20 @@ func (d *DBAdapter) GetServCategoriesByCity(cityID uint, page, limit int) ([]*en
 	return result, nil
 }
 
-func (d *DBAdapter) GetServices(categoryID, cityID uint, page, limit int) ([]*entities.Service, error) {
+func (d *DBAdapter) GetServices(categoryID, cityID string, page, limit int) ([]*entities.Service, error) {
 
-	if cityID != 0 {
+	if len(cityID) != 0 {
 		return d.GetServicesByCity(categoryID, cityID, page, limit)
 	}
 
 	return d.GetServicesByCategory(categoryID, page, limit)
 }
 
-func (d *DBAdapter) GetServicesByCity(categoryID, cityID uint, page, limit int) ([]*entities.Service, error) {
+func (d *DBAdapter) GetServicesByCity(categoryID, cityID string, page, limit int) ([]*entities.Service, error) {
 
 	relations := make([]*models.MasterServRelation, 0)
 	subquery := d.DBConn.Table("master_serv_relations").Offset(page * limit).Limit(limit)
-	if categoryID != 0 {
+	if len(categoryID) != 0 {
 		subquery = subquery.Where("serv_cat_id = ?", categoryID)
 	}
 
@@ -151,10 +151,10 @@ func (d *DBAdapter) GetServicesByCity(categoryID, cityID uint, page, limit int) 
 	return result, nil
 }
 
-func (d *DBAdapter) GetServicesByCategory(categoryID uint, page, limit int) ([]*entities.Service, error) {
+func (d *DBAdapter) GetServicesByCategory(categoryID string, page, limit int) ([]*entities.Service, error) {
 
 	query := d.DBConn.Offset(page * limit).Limit(limit).Order("name ASC")
-	if categoryID != 0 {
+	if len(categoryID) != 0 {
 		query = query.Where("cat_id = ?", categoryID)
 	}
 

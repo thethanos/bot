@@ -14,33 +14,33 @@ func (u *UserState) Reset() {
 	u.RawInput = make(map[string]string)
 }
 
-func (u UserState) GetCityID() uint {
+func (u UserState) GetCityID() string {
 	if u.City != nil {
 		return u.City.ID
 	}
-	return 0
+	return ""
 }
 
-func (u UserState) GetServiceID() uint {
+func (u UserState) GetServiceID() string {
 	if u.Service != nil {
 		return u.Service.ID
 	}
-	return 0
+	return ""
 }
 
 type City struct {
-	ID   uint   `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
 type ServiceCategory struct {
-	ID   uint   `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
 type Service struct {
-	ID      uint   `json:"id"`
+	ID      string `json:"id"`
 	Name    string `json:"name" validate:"required"`
-	CatID   uint   `json:"catID" validate:"required"`
+	CatID   string `json:"catID" validate:"required"`
 	CatName string `json:"catName"`
 }

@@ -167,10 +167,10 @@ func TestMasterSelectionStep(t *testing.T) {
 			logger: logger.NewLogger(),
 			state: &entities.UserState{
 				City: &entities.City{
-					ID: 0,
+					ID: "0",
 				},
 				Service: &entities.Service{
-					ID: 0,
+					ID: "0",
 				},
 			},
 		},
