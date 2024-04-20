@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"bot/internal/config"
 	"bot/internal/dbadapter"
 	"bot/internal/entities"
 	"bot/internal/logger"
@@ -16,7 +15,6 @@ type StepBase struct {
 	logger    logger.Logger
 	state     *entities.UserState
 	DBAdapter dbadapter.DBInterface
-	config    *config.Config
 }
 
 func (s *StepBase) Reset() {
@@ -119,7 +117,7 @@ func (m *MasterSelection) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог мастеров", WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("%s?city_id=%d&service_id=%d", m.GalleryURL, m.state.GetCityID(), m.state.GetServiceID()),
+			Url: fmt.Sprintf("%s?city_id=%s&service_id=%s", m.GalleryURL, m.state.GetCityID(), m.state.GetServiceID()),
 		}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: Back}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
@@ -153,7 +151,7 @@ func (f *FindModel) Request(msg *ma.Message) *ma.Message {
 	if msg.Source == ma.TELEGRAM {
 		rows := make([][]tgbotapi.KeyboardButton, 0)
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: "Каталог моделей", WebApp: &tgbotapi.WebAppInfo{
-			Url: fmt.Sprintf("%s?city_id=%d&service_id=%d", f.ModelsURL, f.state.GetCityID(), f.state.GetServiceID()),
+			Url: fmt.Sprintf("%s?city_id=%s&service_id=%s", f.ModelsURL, f.state.GetCityID(), f.state.GetServiceID()),
 		}}})
 		rows = append(rows, []tgbotapi.KeyboardButton{{Text: BackToMain}})
 		keyboard := &tgbotapi.ReplyKeyboardMarkup{Keyboard: rows, ResizeKeyboard: true}
